@@ -12,7 +12,7 @@
 
 //PIT_IMU_calc_finish_flag
 uint8_t pit_imu_flag    = 0;   
-//Virtual multi-threaded allocation of main function (use volatitle Keyword to modify variables that change quickly to prevent optimization by the compiler)
+//Virtual multi-threaded allocation of main function (use volatile Keyword to modify variables that change quickly to prevent optimization by the compiler)
 volatile int task[4] = {20,0,0,0};         
 
 int main (void)
