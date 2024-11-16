@@ -1,0 +1,263 @@
+%%{
+/*
+ * Copyright (c) 2023 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== UART.Board.h.xdt ========
+ */
+
+    let UART = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = UART.$instances;
+
+    /* Identify UART Peripheral */
+    let isLIN = (UART.$name == "/ti/driverlib/uartLIN");
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+
+
+% function printDefine() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let nameStr = "#define "+inst.$name+"_INST"
+/* Defines for `inst.$name` */
+`nameStr.padEnd(40," ")+flavor.padStart(40," ")`
+%       let irqNameStr = nameStr+"_IRQHandler"
+%       let flavorIRQ = inst.peripheral.$solution.peripheralName+"_IRQHandler";
+`irqNameStr.padEnd(40," ")+flavorIRQ.padStart(40," ")`
+%       let intirqNameStr = nameStr+"_INT_IRQN"
+%       let flavorINTIRQ = inst.peripheral.$solution.peripheralName+"_INT_IRQn";
+`intirqNameStr.padEnd(40," ")+flavorINTIRQ.padStart(40," ")`
+%   let useRX = true;
+%   let useTX = true;
+%   if(inst.direction.match(/^TX$/) !== null) {
+%       useRX = false;
+%   }
+%   if(inst.direction.match(/^RX$/) !== null) {
+%       useTX = false;
+%   }
+%   /* This is one possible way to do GPIO defines. Good if you need to find out PINCM */
+%       let gpioStr = "GPIO_"+inst.$name;
+% /* figure out pin number and pinCMx */
+%   let rxPackagePin;
+%   let rxPinCM;
+%   let rxIOmux;
+%   let rxGpioName;
+%   let rxGpioPin;
+%   let rxPort;
+%   if(useRX) { // receive defines are necessary
+%       rxPackagePin = inst.peripheral.rxPin.$solution.packagePinName;
+%       rxPinCM = Common.getPinCM(rxPackagePin,inst,"RX");
+%       rxGpioName = system.deviceData.devicePins[rxPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       rxGpioPin = Common.getGPIONumberMultiPad(rxPackagePin,inst,"RX");
+%       rxPort = Common.getGPIOPortMultiPad(rxPackagePin,inst,"RX");
+%   }
+%   let txPackagePin;
+%   let txPinCM;
+%   let txIOmux;
+%   let txGpioName;
+%   let txGpioPin;
+%   let txPort;
+%   if(useTX) { // transmission defines are necessary
+%       txPackagePin = inst.peripheral.txPin.$solution.packagePinName;
+%       txPinCM = Common.getPinCM(txPackagePin,inst,"TX");
+%       txGpioName = system.deviceData.devicePins[txPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       txGpioPin = Common.getGPIONumberMultiPad(txPackagePin,inst,"TX");
+%       txPort = Common.getGPIOPortMultiPad(txPackagePin,inst,"TX");
+%   }
+%   if(useRX) { // receive defines are necessary
+%   let rxPortStr = "#define "+gpioStr+"_RX_PORT";
+`rxPortStr.padEnd(40," ")+rxPort.padStart(40, " ")`
+%   }
+%   if(useTX) { // transmit defines are necessary
+%   let txPortStr = "#define "+gpioStr+"_TX_PORT";
+`txPortStr.padEnd(40," ")+txPort.padStart(40, " ")`
+%   }
+%   if(useRX) { // receive defines are necessary
+%   let rxPinStr = "#define "+gpioStr+"_RX_PIN";
+%   let rxPinStr2 = "DL_GPIO_PIN_"+rxGpioPin;
+`rxPinStr.padEnd(40," ")+rxPinStr2.padStart(40," ")`
+%   }
+%   if(useTX) { // transmit defines are necessary
+%   let txPinStr = "#define "+gpioStr+"_TX_PIN";
+%   let txPinStr2 = "DL_GPIO_PIN_"+txGpioPin;
+`txPinStr.padEnd(40," ")+txPinStr2.padStart(40," ")`
+%   }
+%   if(useRX) { // receive defines are necessary
+%   let rxIOmuxStr = "#define "+gpioStr+"_IOMUX_RX";
+%   let rxIOmuxStr2 = "(IOMUX_PINCM"+rxPinCM.toString()+")";
+`rxIOmuxStr.padEnd(40," ")+rxIOmuxStr2.padStart(40," ")`
+%   }
+%   if(useTX) { // transmit defines are necessary
+%   let txIOmuxStr = "#define "+gpioStr+"_IOMUX_TX";
+%   let txIOmuxStr2 = "(IOMUX_PINCM"+txPinCM.toString()+")";
+`txIOmuxStr.padEnd(40," ")+txIOmuxStr2.padStart(40," ")`
+%   }
+%   if(useRX) { // receive defines are necessary
+%   let rxFuncStr = "#define "+gpioStr+"_IOMUX_RX_FUNC";
+%   let rxFuncStr2 = "IOMUX_PINCM"+rxPinCM+"_PF_"+flavor+"_RX";
+`rxFuncStr.padEnd(40, " ")+rxFuncStr2.padStart(40, " ")`
+%   }
+%   if(useTX) { // transmit defines are necessary
+%   let txFuncStr = "#define "+gpioStr+"_IOMUX_TX_FUNC";
+%   let txFuncStr2 = "IOMUX_PINCM"+txPinCM+"_PF_"+flavor+"_TX";
+`txFuncStr.padEnd(40, " ")+txFuncStr2.padStart(40, " ")`
+%   }
+%   let useRTS = false;
+%   let useCTS = false;
+%   if(inst.flowControl == "RTS") {
+%       useRTS = true;
+%   } else if(inst.flowControl == "CTS") {
+%       useCTS = true;
+%   } else if(inst.flowControl == "RTS_CTS") {
+%       useRTS = true;
+%       useCTS = true;
+%   }
+%   /* This is one possible way to do GPIO defines. Good if you need to find out PINCM */
+%       let gpioStr2 = "GPIO_"+inst.$name;
+% /* figure out pin number and pinCMx */
+%   let rtsPackagePin;
+%   let rtsPinCM;
+%   let rtsIOmux;
+%   let rtsGpioName;
+%   let rtsGpioPin;
+%   let rtsPort;
+%   if(useRTS) { // receive defines are necessary
+%       rtsPackagePin = inst.peripheral.rtsPin.$solution.packagePinName;
+%       rtsPinCM = Common.getPinCM(rtsPackagePin,inst,"RTS");
+%       rtsGpioName = system.deviceData.devicePins[rtsPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       rtsGpioPin = Common.getGPIONumberMultiPad(rtsPackagePin,inst,"RTS");
+%       rtsPort = Common.getGPIOPortMultiPad(rtsPackagePin,inst,"RTS");
+%   }
+%   let ctsPackagePin;
+%   let ctsPinCM;
+%   let ctsIOmux;
+%   let ctsGpioName;
+%   let ctsGpioPin;
+%   let ctsPort;
+%   if(useCTS) { // transmission defines are necessary
+%       ctsPackagePin = inst.peripheral.ctsPin.$solution.packagePinName;
+%       ctsPinCM = Common.getPinCM(ctsPackagePin,inst,"CTS");
+%       ctsGpioName = system.deviceData.devicePins[ctsPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       ctsGpioPin = Common.getGPIONumberMultiPad(ctsPackagePin,inst,"CTS");
+%       ctsPort = Common.getGPIOPortMultiPad(ctsPackagePin,inst,"CTS");
+%   }
+%   if(useRTS) { // receive defines are necessary
+%   let rtsPortStr = "#define "+gpioStr2+"_RTS_PORT";
+`rtsPortStr.padEnd(40," ")+rtsPort.padStart(40, " ")`
+%   }
+%   if(useCTS) { // transmit defines are necessary
+%   let ctsPortStr = "#define "+gpioStr2+"_CTS_PORT";
+`ctsPortStr.padEnd(40," ")+ctsPort.padStart(40, " ")`
+%   }
+%   if(useRTS) { // receive defines are necessary
+%   let rtsPinStr = "#define "+gpioStr2+"_RTS_PIN";
+%   let rtsPinStr2 = "DL_GPIO_PIN_"+rtsGpioPin;
+`rtsPinStr.padEnd(40," ")+rtsPinStr2.padStart(40," ")`
+%   }
+%   if(useCTS) { // transmit defines are necessary
+%   let ctsPinStr = "#define "+gpioStr2+"_CTS_PIN";
+%   let ctsPinStr2 = "DL_GPIO_PIN_"+ctsGpioPin;
+`ctsPinStr.padEnd(40," ")+ctsPinStr2.padStart(40," ")`
+%   }
+%   if(useRTS) { // receive defines are necessary
+%   let rtsIOmuxStr = "#define "+gpioStr2+"_IOMUX_RTS";
+%   let rtsIOmuxStr2 = "(IOMUX_PINCM"+rtsPinCM.toString()+")";
+`rtsIOmuxStr.padEnd(40," ")+rtsIOmuxStr2.padStart(40," ")`
+%   }
+%   if(useCTS) { // transmit defines are necessary
+%   let ctsIOmuxStr = "#define "+gpioStr2+"_IOMUX_CTS";
+%   let ctsIOmuxStr2 = "(IOMUX_PINCM"+ctsPinCM.toString()+")";
+`ctsIOmuxStr.padEnd(40," ")+ctsIOmuxStr2.padStart(40," ")`
+%   }
+%   if(useRTS) { // receive defines are necessary
+%   let rtsFuncStr = "#define "+gpioStr2+"_IOMUX_RTS_FUNC";
+%   let rtsFuncStr2 = "IOMUX_PINCM"+rtsPinCM+"_PF_"+flavor+"_RTS";
+`rtsFuncStr.padEnd(40, " ")+rtsFuncStr2.padStart(40, " ")`
+%   }
+%   if(useCTS) { // transmit defines are necessary
+%   let ctsFuncStr = "#define "+gpioStr2+"_IOMUX_CTS_FUNC";
+%   let ctsFuncStr2 = "IOMUX_PINCM"+ctsPinCM+"_PF_"+flavor+"_CTS";
+`ctsFuncStr.padEnd(40, " ")+ctsFuncStr2.padStart(40, " ")`
+%   }
+%   let baudStr1 = "#define "+inst.$name+"_BAUD_RATE";
+%   let baudStr2 = "("+inst.targetBaudRate.toString()+")";
+`baudStr1.padEnd(40," ")+baudStr2.padStart(40," ")`
+%   let inputFreqStr = Common.getUnitPrefix(inst.basicClockSourceCalculatedHidden,0).str+"HZ";
+%   inputFreqStr = inputFreqStr.replace(" ","_");
+%   let baudIBRD = "#define "+inst.$name+"_IBRD_"+inputFreqStr+"_"+inst.targetBaudRate+"_BAUD";
+%   let ibrdValStr = "("+inst.ibrd+")";
+`baudIBRD.padEnd(60," ")+ibrdValStr.padStart(20," ")`
+%   let baudFBRD = "#define "+inst.$name+"_FBRD_"+inputFreqStr+"_"+inst.targetBaudRate+"_BAUD";
+%   let fbrdValStr = "("+inst.fbrd+")";
+`baudFBRD.padEnd(60," ")+fbrdValStr.padStart(20," ")`
+%   if(isLIN) {
+%   let lintbitwidthFuncStr = "#define "+inst.$name+"_TBIT_WIDTH";
+%   let lintbitwidthFuncStr2 = "("+inst.tbitWidth+")";
+`lintbitwidthFuncStr.padEnd(40, " ")+lintbitwidthFuncStr2.padStart(40, " ")`
+%   if (inst.enableLinCounterCompare) {
+%   let lintbitvalFuncStr = "#define "+inst.$name+"_TBIT_COUNTER_COEFFICIENT";
+%   let lintbitvalFuncStr2 = "("+inst.tbitVal+")";
+`lintbitvalFuncStr.padEnd(40, " ")+lintbitvalFuncStr2.padStart(40, " ")`
+%   let linccvalFuncStr = "#define "+inst.$name+"_COUNTER_COMPARE_VALUE";
+%   let linccvalFuncStr2 = "("+inst.setLinCounterCompare+")";
+`linccvalFuncStr.padEnd(40, " ")+linccvalFuncStr2.padStart(40, " ")`
+%       }
+%   } //if(isLIN)
+% }
+%
+% } // printDefine
+%
+% function printDeclare() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let name = inst.$name
+void SYSCFG_DL_`name`_init(void);
+%   }
+% } // print declare

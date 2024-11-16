@@ -1,0 +1,99 @@
+%%{
+	const { frequencyDict } = system.getScript("/ti/clockTree/components/powerPolicy.js");
+	let tableEntries = ["MCLK", "MFCLK", "MFPCLK", "LFCLK", "ULPCLK", "CPUCLK", "SYSOSC"];
+    const signals = _.filter(system.deviceData.clockTree.connectivity, (c) => {
+		return !_.isEmpty(c.displayName) && tableEntries.includes(c.displayName);
+		} );
+	let mod = system.modules["/ti/driverlib/SYSCTL"];
+	let runPolicy = "RUN0";
+	let powerPolicy = "SLEEP0";
+	let stat = "";
+	if(mod){
+		stat = mod.$static;
+		runPolicy = stat.runPowerPolicy;
+		powerPolicy = stat.powerPolicy;
+	}
+    function freqToString(freq) {
+		if (_.isArray(freq)) {
+			if (freq[0] !== freq[1]) {
+				if(freq[1] >= 1){
+					return `${freq[0]} - ${freq[1]} MHz`;
+				} else {
+					return `${(freq[0] * 1000)} - ${(freq[1] * 1000)} kHz`;
+				}
+			}
+
+			if(freq[0] >= 1){
+				return freq[0] + " MHz";
+			} else {
+				return (freq[0] * 1000) + " kHz";
+			}
+		}
+
+		if(freq >= 1){
+			return freq + " MHz";
+		} else {
+			return (freq * 1000) + " kHz";
+		}
+	}
+
+%%}
+% if(!mod || !stat || !stat.clockTreeEn){
+Add the SYSCTL module and select Use Clock Tree to view this table.
+% } else {
+Signal | `runPolicy` | `powerPolicy`
+--- | --- | ---
+% for (const signal of signals) {
+% // This generates a link - stuff in the [] is the link name, and we're using system.getReference for the location
+% // This allows us to name the signal, but also allow clicking on it to see where to configure it
+% const name = signal.displayName ?? signal.name;
+% const link = system.getReference(system.clockTree[signal.name]);
+%
+% let runSrcLookup = frequencyDict[runPolicy][name]; // find sources for power (mostly for disabled)
+% let runFreqStr = "";
+% if(runSrcLookup !== "OFF"){
+% 	let runFreq = system.clockTree[runSrcLookup].in;
+%	runFreqStr = runFreq != 0?freqToString(runFreq):"DISABLED";
+% } else {
+%   runFreqStr = "UNAVAILABLE";
+% }
+%
+% // sourceLookup will inherit the unavailability of the run policy,
+% // if disabled in RUN2 it shouldn't become enabled in STOP0, for example.
+% // else, find the new source for power mode
+% let sourceLookup = (runSrcLookup !== "OFF")?frequencyDict[powerPolicy][name]:"OFF";
+%
+% if(powerPolicy === "STOP0" && name == "ULPCLK"){
+%	// special case for RUN1/2 -> stop 0 or sub- 4MHz frequency for ULPCLK only.
+%	// all covered by check that ulpclk is less than 4 and should thus remain
+%   // sourced by ulpclk rather than lowered to 4MHz
+%	if(system.clockTree["net_ulpclk"].in < 4){
+% 		sourceLookup = "net_ulpclk";
+%	}
+% }
+% // this is superceded by an error
+% if(_.startsWith(powerPolicy, "STOP") && name == "MFPCLK" && system.clockTree[signal.name] !== 0){
+% 	// STOP Mode allows MFPCLK to remain running but it cannot be sourced from HFCLK externally
+%	let mod = system.modules["/ti/clockTree/mux.js"];
+%	let mfpclkMux = _.find(mod.$instances, ['$name', 'MFPCLKMUX']);
+%	if(mfpclkMux && mfpclkMux.inputSelect.match(/HFCLK/)){
+%		sourceLookup = "OFF";
+%	}
+% }
+% let lowPowerFreqStr = "";
+% if(sourceLookup !== "OFF"){
+% 	let lowPowerFreq = system.clockTree[sourceLookup].in;
+%	lowPowerFreqStr = lowPowerFreq != 0?freqToString(lowPowerFreq):"DISABLED";
+% } else {
+%   lowPowerFreqStr = "UNAVAILABLE";
+% }
+%
+% // const inUse = system.clockTree[signal.name].$isUsed;
+[`name`](`link`) | `runFreqStr` | `lowPowerFreqStr`
+% }
+% if(powerPolicy === "STOP1") {
+* SYSOSC is gear-shifted to 4MHz
+% } else if(powerPolicy === "STANDBY1"){
+* LFCLK only goes to TIMG0 and TIMG1
+% }
+% } // if not defined fully

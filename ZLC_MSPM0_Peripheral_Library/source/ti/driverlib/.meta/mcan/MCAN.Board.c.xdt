@@ -1,0 +1,413 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== MCAN.Board.c.xdt ========
+ */
+
+    let MCAN = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = MCAN.$instances;
+    if (instances.length == 0) return;
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        case "RetentionDeclare":
+            printRetentionDeclare();
+            break;
+        case "RetentionSave":
+            printRetentionSave();
+            break;
+        case "RetentionRestore":
+            printRetentionRestore();
+            break;
+        case "RetentionRdy":
+            printRetentionRdy();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% /* Retention Configuration Code */
+% function printRetentionDeclare(){
+`Common.getRetentionDeclareC(instances,"MCAN")`
+% }
+% function printRetentionRdy(){
+`Common.getRetentionRdyC(instances,"MCAN")`
+% }
+% function printRetentionSave(){
+`Common.getRetentionSaveC(instances,"MCAN")`
+% }
+% function printRetentionRestore(){
+`Common.getRetentionRestoreC(instances,"MCAN")`
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+    %let inst = instances[i];
+    DL_MCAN_reset(`inst.$name`_INST);
+%   }
+% } // printReset()
+%
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+    DL_MCAN_enablePower(`inst.$name`_INST);
+%   }
+% } // printPower()
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_"+inst.$name;
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["txPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_CAN_TX, `gpioStr`_IOMUX_CAN_TX_FUNC);
+%           }
+%       } catch (x){/* ignore any exception */}
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["rxPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `gpioStr`_IOMUX_CAN_RX, `gpioStr`_IOMUX_CAN_RX_FUNC);
+%           }
+%       } catch (x){/* ignore any exception */}
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+%   } // for (let i in instances)
+% } // printGPIO()
+%
+% /* Main Function */
+% function printFunction(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let instName = inst.$name;
+static const DL_MCAN_ClockConfig g`instName`ClockConf = {
+    .clockSel = DL_MCAN_FCLK_`inst.can_clk_freq_src`,
+    .divider  = DL_MCAN_FCLK_DIV_`inst.can_clk_freq_div`,
+};
+
+static const DL_MCAN_InitParams g`instName`InitParams= {
+
+/* Initialize MCAN Init parameters.    */
+    .fdMode            = `inst.fdMode`,
+    .brsEnable         = `inst.brsEnable`,
+    .txpEnable         = `inst.txpEnable`,
+    .efbi              = `inst.efbi`,
+    .pxhddisable       = `inst.pxhddisable`,
+    .darEnable         = `inst.darEnable`,
+    .wkupReqEnable     = `inst.wkupReqEnable`,
+    .autoWkupEnable    = `inst.autoWkupEnable`,
+    .emulationEnable   = `inst.emulationEnable`,
+    .tdcEnable         = `inst.tdcEnable`,
+    .wdcPreload        = `inst.wdcPreload`,
+
+/* Transmitter Delay Compensation parameters. */
+    .tdcConfig.tdcf    = `inst.tdcConfig_tdcf`,
+    .tdcConfig.tdco    = `inst.tdcConfig_tdco`,
+};
+
+%   if (inst.additionalCoreConfig){
+static const DL_MCAN_ConfigParams g`instName`ConfigParams={
+    /* Initialize MCAN Config parameters. */
+    .monEnable         = `inst.monEnable`,
+    .asmEnable         = `inst.asmEnable`,
+    .tsPrescalar       = `inst.tsPrescalar`,
+    .tsSelect          = `inst.tsSelect`,
+    .timeoutSelect     = `inst.timeoutSelect`,
+    .timeoutPreload    = `inst.timeoutPreload`,
+    .timeoutCntEnable  = `inst.timeoutCntEnable`,
+    .filterConfig.rrfs = `inst.rrfs`,
+    .filterConfig.rrfe = `inst.rrfe`,
+    .filterConfig.anfe = `inst.anfe`,
+    .filterConfig.anfs = `inst.anfs`,
+};
+%   } //if (inst.additionalCoreConfig)
+
+%   if (inst.msgRamConfig){
+static const DL_MCAN_MsgRAMConfigParams g`instName`MsgRAMConfigParams ={
+
+    /* Standard ID Filter List Start Address. */
+    .flssa                = `instName`_INST_MCAN_STD_ID_FILT_START_ADDR,
+    /* List Size: Standard ID. */
+    .lss                  = `instName`_INST_MCAN_STD_ID_FILTER_NUM,
+    /* Extended ID Filter List Start Address. */
+    .flesa                = `instName`_INST_MCAN_EXT_ID_FILT_START_ADDR,
+    /* List Size: Extended ID. */
+    .lse                  = `instName`_INST_MCAN_EXT_ID_FILTER_NUM,
+    /* Tx Buffers Start Address. */
+    .txStartAddr          = `instName`_INST_MCAN_TX_BUFF_START_ADDR,
+    /* Number of Dedicated Transmit Buffers. */
+    .txBufNum             = `instName`_INST_MCAN_TX_BUFF_SIZE,
+    .txFIFOSize           = `inst.txFIFOSize`,
+    /* Tx Buffer Element Size. */
+    .txBufMode            = `inst.txBufMode`,
+    .txBufElemSize        = `inst.txBufElemSize`,
+    /* Tx Event FIFO Start Address. */
+    .txEventFIFOStartAddr = `instName`_INST_MCAN_TX_EVENT_START_ADDR,
+    /* Event FIFO Size. */
+    .txEventFIFOSize      = `instName`_INST_MCAN_TX_EVENT_SIZE,
+    /* Level for Tx Event FIFO watermark interrupt. */
+    .txEventFIFOWaterMark = `inst.txEventFIFOWaterMark`,
+    /* Rx FIFO0 Start Address. */
+    .rxFIFO0startAddr     = `instName`_INST_MCAN_FIFO_0_START_ADDR,
+    /* Number of Rx FIFO elements. */
+    .rxFIFO0size          = `instName`_INST_MCAN_FIFO_0_NUM,
+    /* Rx FIFO0 Watermark. */
+    .rxFIFO0waterMark     = `inst.rxFIFO0waterMark`,
+    .rxFIFO0OpMode        = `inst.rxFIFO0OpMode`,
+    /* Rx FIFO1 Start Address. */
+    .rxFIFO1startAddr     = `instName`_INST_MCAN_FIFO_1_START_ADDR,
+    /* Number of Rx FIFO elements. */
+    .rxFIFO1size          = `instName`_INST_MCAN_FIFO_1_NUM,
+    /* Level for Rx FIFO 1 watermark interrupt. */
+    .rxFIFO1waterMark     = `inst.rxFIFO1waterMark`,
+    /* FIFO blocking mode. */
+    .rxFIFO1OpMode        = `inst.rxFIFO1OpMode`,
+    /* Rx Buffer Start Address. */
+    .rxBufStartAddr       = `instName`_INST_MCAN_RX_BUFF_START_ADDR,
+    /* Rx Buffer Element Size. */
+    .rxBufElemSize        = `inst.rxBufElemSize`,
+    /* Rx FIFO0 Element Size. */
+    .rxFIFO0ElemSize      = `inst.rxFIFO0ElemSize`,
+    /* Rx FIFO1 Element Size. */
+    .rxFIFO1ElemSize      = `inst.rxFIFO1ElemSize`,
+};
+%   } //if (inst.msgRamConfig)
+
+%if ((inst.stdFiltElem != "000") && (inst.lss > 0) ){
+static const DL_MCAN_StdMsgIDFilterElement g`instName`StdFiltelem = {
+    .sfec = 0x`(parseInt(inst.stdFiltElem, 2).toString(16).toUpperCase())`,
+    .sft  = 0x`(parseInt(inst.stdFiltType, 2).toString(16).toUpperCase())`,
+%   if(inst.stdFiltType != "11"){
+    .sfid1 = `inst.stdFiltID1`,
+    .sfid2 = `inst.stdFiltID2`,
+%   }else{
+    .sfid1 = 0,
+    .sfid2 = 0,
+%   } // if(inst.stdFiltType != "11")
+};
+%} //if (inst.stdFiltElem)
+
+%if ((inst.extFiltElem != "000") && (inst.lse > 0) ){
+static const DL_MCAN_ExtMsgIDFilterElement g`instName`ExtFiltelem = {
+    .efec = 0x`(parseInt(inst.extFiltElem, 2).toString(16).toUpperCase())`,
+    .eft  = 0x`(parseInt(inst.extFiltType, 2).toString(16).toUpperCase())`,
+    .efid1 = `inst.extFiltID1`,
+    .efid2 = `inst.extFiltID2`,
+};
+%} //if (inst.extFiltElem)
+
+static const DL_MCAN_BitTimingParams   g`instName`BitTimes = {
+    /* Arbitration Baud Rate Pre-scaler. */
+% if(inst.useCalcNomVal){
+    .nomRatePrescalar   = `inst.nomRatePrescalar_calc`,
+    /* Arbitration Time segment before sample point. */
+    .nomTimeSeg1        = `inst.nomTimeSeg1_calc`,
+    /* Arbitration Time segment after sample point. */
+    .nomTimeSeg2        = `inst.nomTimeSeg2_calc`,
+    /* Arbitration (Re)Synchronization Jump Width Range. */
+    .nomSynchJumpWidth  = `inst.nomSynchJumpWidth_calc`,
+%}else{
+    .nomRatePrescalar   = `inst.nomRatePrescalar_manual`,
+    /* Arbitration Time segment before sample point. */
+    .nomTimeSeg1        = `inst.nomTimeSeg1_manual`,
+    /* Arbitration Time segment after sample point. */
+    .nomTimeSeg2        = `inst.nomTimeSeg2_manual`,
+    /* Arbitration (Re)Synchronization Jump Width Range. */
+    .nomSynchJumpWidth  = `inst.nomSynchJumpWidth_manual`,
+%}
+    /* Data Baud Rate Pre-scaler. */
+% if(inst.useCalcDataVal){
+    .dataRatePrescalar  = `inst.dataRatePrescalar_calc`,
+    /* Data Time segment before sample point. */
+    .dataTimeSeg1       = `inst.dataTimeSeg1_calc`,
+    /* Data Time segment after sample point. */
+    .dataTimeSeg2       = `inst.dataTimeSeg2_calc`,
+    /* Data (Re)Synchronization Jump Width.   */
+    .dataSynchJumpWidth = `inst.dataSynchJumpWidth_calc`,
+%}else{
+    .dataRatePrescalar  = `inst.dataRatePrescalar_manual`,
+    /* Data Time segment before sample point. */
+    .dataTimeSeg1       = `inst.dataTimeSeg1_manual`,
+    /* Data Time segment after sample point. */
+    .dataTimeSeg2       = `inst.dataTimeSeg2_manual`,
+    /* Data (Re)Synchronization Jump Width.   */
+    .dataSynchJumpWidth = `inst.dataSynchJumpWidth_manual`,
+%}
+};
+
+
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void) {
+    DL_MCAN_RevisionId revid_`instName`;
+
+    DL_MCAN_enableModuleClock(`instName`_INST);
+
+    DL_MCAN_setClockConfig(`instName`_INST, (DL_MCAN_ClockConfig *) &g`instName`ClockConf);
+
+    /* Get MCANSS Revision ID. */
+    DL_MCAN_getRevisionId(`instName`_INST, &revid_`instName`);
+
+    /* Wait for Memory initialization to be completed. */
+    while(false == DL_MCAN_isMemInitDone(`instName`_INST));
+
+    /* Put MCAN in SW initialization mode. */
+
+    DL_MCAN_setOpMode(`instName`_INST, DL_MCAN_OPERATION_MODE_SW_INIT);
+
+    /* Wait till MCAN is not initialized. */
+    while (DL_MCAN_OPERATION_MODE_SW_INIT != DL_MCAN_getOpMode(`instName`_INST));
+
+    /* Initialize MCAN module. */
+    DL_MCAN_init(`instName`_INST, (DL_MCAN_InitParams *) &g`instName`InitParams);
+
+% if (inst.additionalCoreConfig){
+    /* Configure MCAN module. */
+    DL_MCAN_config(`instName`_INST, (DL_MCAN_ConfigParams*) &g`instName`ConfigParams);
+% }
+
+    /* Configure Bit timings. */
+    DL_MCAN_setBitTime(`instName`_INST, (DL_MCAN_BitTimingParams*) &g`instName`BitTimes);
+
+% if (inst.msgRamConfig){
+    /* Configure Message RAM Sections */
+    DL_MCAN_msgRAMConfig(`instName`_INST, (DL_MCAN_MsgRAMConfigParams*) &g`instName`MsgRAMConfigParams);
+% }
+
+%if ((inst.stdFiltElem != "000") && (inst.lss > 0) ){
+    /* Configure Standard ID filter element */
+    DL_MCAN_addStdMsgIDFilter(`instName`_INST, 0U, (DL_MCAN_StdMsgIDFilterElement *) &g`instName`StdFiltelem);
+%}
+
+%if ((inst.extFiltElem != "000") && (inst.lse > 0) ){
+    /* Configure Extended ID filter element*/
+    DL_MCAN_addExtMsgIDFilter(`instName`_INST, 0U, (DL_MCAN_ExtMsgIDFilterElement *) &g`instName`ExtFiltelem);
+%}
+
+    /* Set Extended ID Mask. */
+    DL_MCAN_setExtIDAndMask(`instName`_INST, `instName`_INST_MCAN_EXT_ID_AND_MASK );
+
+    /* Loopback mode */
+%   if(inst.loopbackMode == "external"){
+    DL_MCAN_lpbkModeEnable(`instName`_INST, DL_MCAN_LPBK_MODE_EXTERNAL, true);
+%   }else if(inst.loopbackMode == "internal"){
+    DL_MCAN_lpbkModeEnable(`instName`_INST, DL_MCAN_LPBK_MODE_INTERNAL, true);
+%   }
+
+    /* Take MCAN out of the SW initialization mode */
+    DL_MCAN_setOpMode(`instName`_INST, DL_MCAN_OPERATION_MODE_NORMAL);
+
+    while (DL_MCAN_OPERATION_MODE_NORMAL != DL_MCAN_getOpMode(`instName`_INST));
+
+%   if (inst.enableInterrupt){
+%   if (inst.interruptFlags.length >0){
+    /* Enable MCAN mopdule Interrupts */
+    DL_MCAN_enableIntr(`instName`_INST, `instName`_INST_MCAN_INTERRUPTS, 1U);
+%   }
+
+%   for (var int_index in inst.interruptLine){
+%       let x;
+%       let line = inst.interruptLine[int_index];
+%       if (line == "DL_MCAN_INTR_LINE_NUM_0")
+%       x = String(inst.interruptLine0Flag).split(",").join("|");
+%       else if (line == "DL_MCAN_INTR_LINE_NUM_1")
+%       x = String(inst.interruptLine1Flag).split(",").join("|");
+%       if (!x) { x = "0";}
+    DL_MCAN_selectIntrLine(`instName`_INST, `x`, `line`);
+    DL_MCAN_enableIntrLine(`instName`_INST, `line`, 1U);
+%   }
+
+%       if((inst.m0interrupts).length>0){
+%%{
+            let interruptCount = 0
+            var interruptsToEnableOR = "("
+            for (let interruptToEnable in inst.m0interrupts)
+            {
+                if (interruptCount == 0)
+                {
+                    interruptsToEnableOR += inst.m0interrupts[interruptCount];
+                }
+                else
+                {
+                    interruptsToEnableOR += "\n\t\t";
+                    interruptsToEnableOR += " | " + inst.m0interrupts[interruptCount];
+                }
+                interruptCount++;
+            }
+            interruptsToEnableOR += ")";
+%%}
+    /* Enable MSPM0 MCAN interrupt */
+    DL_MCAN_clearInterruptStatus(`instName`_INST,`interruptsToEnableOR`);
+    DL_MCAN_enableInterrupt(`instName`_INST,`interruptsToEnableOR`);
+%       }
+% }
+
+}
+%   } // for (let i in instances)
+% } // printFunction()

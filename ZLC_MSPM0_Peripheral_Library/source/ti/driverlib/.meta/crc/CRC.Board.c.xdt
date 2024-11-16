@@ -1,0 +1,103 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== CRC.Board.c.xdt ========
+ */
+
+    let CRC = args[0];
+    let content = args[1];
+
+    /* shorthand names for some common references in template below */
+    let inst = CRC.$static;
+    if (inst.length == 0) return;
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+    SYSCFG_DL_CRC_init();
+% }
+%
+% function printReset(){
+    DL_CRC_reset(CRC);
+% }
+% function printPower(){
+    DL_CRC_enablePower(CRC);
+% }
+%
+% function printGPIO(){
+%       /* all of these are defined in the header */
+%       // No need to initialize GPIOs for CRC functionality
+% }
+%
+% /* Main Function */
+% function printFunction(){
+SYSCONFIG_WEAK void SYSCFG_DL_CRC_init(void)
+{
+% let byteswapVar;
+% byteswapVar = (inst.byteswap) ? "ENABLED" : "DISABLED";
+    DL_CRC_init(CRC, DL_CRC_`inst.polynomial`, DL_CRC_BIT_`inst.bitReverse`,
+        DL_CRC_INPUT_ENDIANESS_`inst.endianness`, DL_CRC_OUTPUT_BYTESWAP_`byteswapVar`);
+
+% if(inst.polynomial === "32_POLYNOMIAL"){
+    DL_CRC_setSeed32(CRC, CRC_SEED);
+%}else{
+    DL_CRC_setSeed16(CRC, CRC_SEED);
+%}
+}
+%
+%
+% } // printFunction()

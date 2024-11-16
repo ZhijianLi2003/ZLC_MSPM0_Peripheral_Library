@@ -1,0 +1,319 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== GPIOMSPM0.Board.c.xdt ========
+ */
+
+    /* passed by /ti/drivers/templates/Board.c.xdt */
+    let GPIO = args[0];
+    let content = args[1];
+    /* instances represents the grouping modules */
+    let instances = GPIO.$instances;
+    /* pinstances represents each individual GPIO Pin */
+    let pinMod = system.modules["/ti/driverlib/gpio/GPIOPin"];
+    if(pinMod === undefined){
+        throw 'cannot find the module you are looking for';
+    }
+    let pinstances = pinMod.$instances;
+    if (instances.length == 0 || pinstances === undefined) return;
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+
+    /* special GPIO function to return group name of port if the port name can be used.
+     * The port name shortcut is valid if all pins of a group are on the same port,
+     * and all pins on the port belong to the same group.
+     *   * pinstances - all pins
+     *   * group - the group of at least one pin (if multiple groups, doesn't matter which)
+     *   * port - (name of port in question (GPIOA or GPIOB))
+     * returns: useable port name. Group specific if possible. Generic if not. */
+function portGroupDetermine(pinstances, group, port) {
+    if(group === undefined){
+        throw `invalid pin in list`;
+    }
+    // all pins on the port belong to the same port
+    let otherGroupsSamePort = _.filter(pinstances, (pin) =>
+        (pin.$ownedBy !== group && Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) === port));
+    // all pins in group are on this port
+    let sameGroupOtherPort = _.filter(pinstances, (pin) =>
+        (pin.$ownedBy === group && Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) !== port));
+    if(otherGroupsSamePort.length === 0 && sameGroupOtherPort.length === 0){
+        // conditions satisfied for using a group name, return group port name
+        return group.$name + "_PORT";
+    } else {
+        // generic name should be used
+        return port;
+    }
+}
+
+%%}
+% function printGPIO() {
+%   let initIOMux = "";
+%   // consolidate information from the different GPIOs that should come together
+%   let pinMod = system.modules["/ti/driverlib/gpio/GPIOPin"];
+%   if(pinMod === undefined){
+%       throw 'cannot find the module you are looking for';
+%   }
+%
+%   let pinGroups = { GPIOA: { Outs: [], Ins: [] }, GPIOB: { Outs: [], Ins: [] }, GPIOC: { Outs: [], Ins: [] } };
+%   // if (pinstances.length === 0 ) return;
+%
+%   for(let pin in pinstances) {
+%       let pinst = pinstances[pin];
+%       let group = pinst.$ownedBy.$name + "_";
+%       let ioMuxName = group + pinst.$name + "_IOMUX"
+%       let packagePin = pinst.pin.$solution.packagePinName;
+%       let port = Common.getGPIOPortMultiPad(packagePin,pinst,undefined);
+%       let pinID = Common.getGPIONumberMultiPad(packagePin,pinst,undefined);
+%       let initIOMux = "";
+%       // pin specific stuff
+%       if(pinst.direction == "OUTPUT") {
+%           if(pinst.invert === "ENABLE" || pinst.driveStrength === "HIGH" ||
+%              pinst.hiZ === "ENABLE" || pinst.internalResistor !== "NONE")
+%           {
+%               initIOMux = "DL_GPIO_initDigitalOutputFeatures("+ ioMuxName +
+%               ",\n\t\t DL_GPIO_INVERSION_" + pinst.invert +
+%               ", DL_GPIO_RESISTOR_" + pinst.internalResistor +
+%               ",\n\t\t DL_GPIO_DRIVE_STRENGTH_" + pinst.driveStrength +
+%               ", DL_GPIO_HIZ_" + pinst.hiZ + ");";
+%           } else {
+%               initIOMux = "DL_GPIO_initDigitalOutput("+ ioMuxName +");";
+%           }
+%       } else {
+%           // input
+%           if((pinst.wakeupLogic === "DISABLE" || !Common.hasWakeupLogic()) && pinst.internalResistor === "NONE" &&
+%              pinst.hysteresisControl === "DISABLE" && pinst.invert === "DISABLE"){
+%               initIOMux = "DL_GPIO_initDigitalInput("+ ioMuxName +");";
+%           } else {
+%           initIOMux = "DL_GPIO_initDigitalInputFeatures("+ ioMuxName +
+%               ",\n\t\t DL_GPIO_INVERSION_" + pinst.invert +
+%               ", DL_GPIO_RESISTOR_" + pinst.internalResistor +
+%               ",\n\t\t DL_GPIO_HYSTERESIS_" + pinst.hysteresisControl +
+%               ", DL_GPIO_WAKEUP_" + ((Common.hasWakeupLogic())?pinst.wakeupLogic:"DISABLE") + ");";
+%           }
+%       }
+    `initIOMux`
+%
+%       // create pin groups for lower/upper functions
+%       if (pinst.direction === "OUTPUT") {
+%           pinGroups[port].Outs.push(pinst);
+%       } else {
+%           pinGroups[port].Ins.push(pinst);
+%       }
+
+%   } // for let pin in pinstances
+%
+% for(let port in pinGroups){
+%   // port specific stuff
+%   /* determine if there is only one group per port, if so, use group name */
+%   if(pinGroups[port].Outs.length > 0) {
+%       let portName = portGroupDetermine(pinstances, pinGroups[port].Outs[0].$ownedBy , port);
+%       let outPins = "";
+%       let clearPins = "";  // clear pins used with initial value "CLEARED"
+%       let setPins = "";    // set pins used with initial value "SET"
+%       for(let pinst of pinGroups[port].Outs){
+%           /* Remove the leading zero from the pin number */
+%           let pin_num = parseInt(pinst.pin.$solution.peripheralPinName.match(/\d+$/)[0]);
+%           let group = pinst.$ownedBy.$name + "_";
+%           let pinName = group + pinst.$name + "_PIN";
+%           outPins += pinName + " |\n\t\t"
+%           if(pinst.initialValue === "CLEARED"){
+%               clearPins += pinName + " |\n\t\t";
+%           } else {
+%               setPins += pinName + " |\n\t\t";
+%           }
+%           if(pinst.subChanID !== 0) { // subscriber enabled
+%               let subIndex = (pin_num < 16) ? 0 : 1; // lower 16 -> 0, upper 16 -> 1
+%
+    DL_GPIO_configSubscriber(`portName`, DL_GPIO_SUBSCRIBER_INDEX_`subIndex`,
+        DL_GPIO_SUBSCRIBER_OUT_POLICY_`pinst.subOutputPolicy`,
+        DL_GPIO_SUBSCRIBER`subIndex`_PIN_`pin_num`);
+    DL_GPIO_setSubscriberChanID(`portName`, DL_GPIO_SUBSCRIBER_INDEX_`subIndex`, `port`_EVENT_SUBSCRIBER_`subIndex`_CHANNEL);
+    DL_GPIO_enableSubscriber(`portName`, DL_GPIO_SUBSCRIBER_INDEX_`subIndex`);
+%           }
+%       }
+%   if(clearPins.length > 0) {
+%   clearPins = clearPins.slice(0, -5); // trim end
+    DL_GPIO_clearPins(`portName`, `clearPins`);
+%   }
+%   if(setPins.length > 0) {
+%   setPins = setPins.slice(0, -5); // trim end
+    DL_GPIO_setPins(`portName`, `setPins`);
+%   }
+%
+%   outPins = outPins.slice(0, -5); // trim end
+    DL_GPIO_enableOutput(`portName`, `outPins`);
+%   } // if outs.length > 0
+%   // do inputs
+%   if(pinGroups[port].Ins.length > 0){
+%       let genericPortName = "GPIO"+port;
+%       let portName = portGroupDetermine(pinstances, pinGroups[port].Ins[0].$ownedBy , port);
+%       let lowerFilterArgs = "";
+%       let upperFilterArgs = "";
+%       let lowerPolarityArgs = "";
+%       let upperPolarityArgs = "";
+%       let lowerEventArgs = "";
+%       let lowerEventChan = 0;
+%       let upperEventArgs = "";
+%       let upperEventChan = 0;
+%       let interruptArgs = "";
+%       let fastWakeArgs = "";
+%       for(let pinst of pinGroups[port].Ins) {
+%           let group = pinst.$ownedBy.$name + "_";
+%           let pin_num = parseInt(pinst.pin.$solution.peripheralPinName.match(/\d+$/)[0]);
+%           let pinName = group + pinst.$name + "_PIN";
+%%{
+            /* Fast-Wake Configuration: if global fast wake is enabled, do not call here */
+            let board = system.modules["/ti/driverlib/Board"].$static;
+            if(board){
+                if(!board.globalFastWakeEn){
+                    if(pinst.fastWakeEn){
+                        fastWakeArgs += group + pinst.$name + "_PIN" + " |\n\t\t";;
+                    }
+                }
+            }
+%%}
+%           // upper/lower stuff
+%           if(pin_num < 16) {
+%               if(pinst.inputFilter !== "DISABLE") {
+%                   lowerFilterArgs += "DL_GPIO_PIN_" + pin_num + "_INPUT_FILTER_" +
+%                                       pinst.inputFilter + " |\n\t\t";
+%               }
+%               if(pinst.polarity !== "DISABLE"){
+%                   lowerPolarityArgs += "DL_GPIO_PIN_" + pin_num + "_EDGE_" +
+%                                         pinst.polarity + " |\n\t\t";
+%               }
+%               if(pinst.pubChanID !== 0) {
+%                   lowerEventArgs += pinName + " |\n\t\t";
+%                   lowerEventChan = pinst.pubChanID;
+%               }
+%           } else {
+%               if(pinst.inputFilter !== "DISABLE"){
+%                   upperFilterArgs += "DL_GPIO_PIN_" + pin_num + "_INPUT_FILTER_" +
+%                                       pinst.inputFilter + " |\n\t\t";
+%               }
+%               if(pinst.polarity !== "DISABLE"){
+%                   upperPolarityArgs += "DL_GPIO_PIN_" + pin_num + "_EDGE_" +
+%                                         pinst.polarity + " |\n\t\t";
+%               }
+%               if(pinst.pubChanID !== 0) {
+%                   upperEventArgs += pinName + " |\n\t\t";
+%                   upperEventChan = pinst.pubChanID;
+%               }
+%           }
+%
+%           if(pinst.interruptEn){
+%               interruptArgs += pinName + " |\n\t\t";
+%           }
+%       } // for let pinst of pinGroups[port].Ins
+%       if(fastWakeArgs !== "") {
+%           fastWakeArgs = fastWakeArgs.slice(0, -5); // trim end
+    DL_GPIO_enableFastWakePins(`portName`, `fastWakeArgs`);
+%       }
+%       if(lowerPolarityArgs !== "") {
+%           lowerPolarityArgs = lowerPolarityArgs.slice(0, -5); // trim end
+    DL_GPIO_setLowerPinsPolarity(`portName`, `lowerPolarityArgs`);
+%       }
+%       if(upperPolarityArgs !== "") {
+%           upperPolarityArgs = upperPolarityArgs.slice(0, -5); // trim end
+    DL_GPIO_setUpperPinsPolarity(`portName`, `upperPolarityArgs`);
+%       }
+%       if(lowerFilterArgs !== "") {
+%           lowerFilterArgs = lowerFilterArgs.slice(0, -5); // trim end
+    DL_GPIO_setLowerPinsInputFilter(`portName`, `lowerFilterArgs`);
+%       }
+%       if(upperFilterArgs !== "") {
+%           upperFilterArgs = upperFilterArgs.slice(0, -5); // trim end
+    DL_GPIO_setUpperPinsInputFilter(`portName`, `upperFilterArgs`);
+%       }
+%       if(interruptArgs !== "") {
+%           interruptArgs = interruptArgs.slice(0, -5); // trim end
+    DL_GPIO_clearInterruptStatus(`portName`, `interruptArgs`);
+    DL_GPIO_enableInterrupt(`portName`, `interruptArgs`);
+%       }
+%       if(lowerEventArgs !== ""){
+%           lowerEventArgs = lowerEventArgs.slice(0, -5);
+    DL_GPIO_setPublisherChanID(`portName`, DL_GPIO_PUBLISHER_INDEX_0, `port`_EVENT_PUBLISHER_0_CHANNEL);
+    DL_GPIO_enableEvents(`portName`, DL_GPIO_EVENT_ROUTE_1, `lowerEventArgs`);
+%       }
+%       if(upperEventArgs !== ""){
+%           upperEventArgs = upperEventArgs.slice(0, -5);
+    DL_GPIO_setPublisherChanID(`portName`, DL_GPIO_PUBLISHER_INDEX_1, `port`_EVENT_PUBLISHER_1_CHANNEL);
+    DL_GPIO_enableEvents(`portName`, DL_GPIO_EVENT_ROUTE_2, `upperEventArgs`);
+%       }
+%   } // if pinGroups[port].Ins.length
+% } // for port in pinGroups
+% } // printGPIO

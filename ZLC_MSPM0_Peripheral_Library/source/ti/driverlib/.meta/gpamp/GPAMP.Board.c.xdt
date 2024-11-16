@@ -1,0 +1,150 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== GPAMP.Board.c.xdt ========
+ */
+
+    let GPAMP = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = GPAMP.$instances;
+    if (instances.length == 0) return;
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%    // Reset not needed for GPAMP
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       /* another possibility depending on the driver */
+%    // Enable Power not needed for GPAMP
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       /* all of these are defined in the header */
+%     // No need to initialize GPIOs for Analog functionality
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+%   } // for (let i in instances)
+% }
+%
+% /* Main Function */
+% function printFunction(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let periph = inst.peripheral.$solution.peripheralName;
+%       let instName = inst.$name;
+%
+static const DL_GPAMP_Config g`instName`Config = {
+    .pselChannel    = DL_GPAMP_PSEL_`inst.cfgPSELChannel`,
+    .nselChannel    = DL_GPAMP_NSEL_`inst.cfgNSELChannel`,
+    .outputPinState = DL_GPAMP_OUTPUT_PIN_STATE_`inst.cfgOutputPin`,
+    .choppingMode   = DL_GPAMP_CHOPPING_MODE_`inst.cfgChoppingMode`,
+    .choppingFreq   = DL_GPAMP_CHOPPING_FREQ_`inst.cfgChoppingFreq`,
+};
+
+%
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void)
+{
+    DL_GPAMP_init((DL_GPAMP_Config *) &g`instName`Config);
+%   if (inst.advRRI != "PMOS_INPUT"){
+    DL_GPAMP_setRailToRailInputMode(DL_GPAMP_RRI_MODE_`inst.advRRI`);
+%}
+    DL_GPAMP_enable();
+}
+% } // for i < instances.length
+%
+%
+% } // printFunction()

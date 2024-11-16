@@ -1,0 +1,80 @@
+%%{
+/*
+ * Copyright (c) 2022, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== oscillator.Board.c.xdt ========
+ */
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let mod = system.modules["/ti/clockTree/oscillator.js"];
+    let content = args[0];
+
+    let sysoscInst = _.find(mod.$instances, ['$name', 'SYSOSC']);
+    let lfoscInst = _.find(mod.$instances, ['$name', 'LFOSC']);
+
+    if(_.isUndefined(sysoscInst) || _.isUndefined(lfoscInst)) {
+        throw 'Not all oscillator elements are defined appropriately';
+    }
+%%}
+%
+%
+% if(!sysoscInst.disableSYSOSC && sysoscInst.enableROSC && Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+% /* ROSC pins */
+% let roscPortStr = "#define GPIO_ROSC_PORT";
+`roscPortStr.padEnd(40," ")+"GPIOA".padStart(40, " ")`
+% let roscPinStr = "#define GPIO_ROSC_PIN";
+% let roscPinStr2 = "DL_GPIO_PIN_2";
+`roscPinStr.padEnd(40," ")+roscPinStr2.padStart(40," ")`
+% let roscIOmuxStr = "#define GPIO_ROSC_IOMUX";
+% let roscIOmuxStr2 = "(IOMUX_PINCM7"+")";
+`roscIOmuxStr.padEnd(40," ")+roscIOmuxStr2.padStart(40," ")`
+%   }
+% if(!sysoscInst.disableSYSOSC && sysoscInst.enableROSC && !Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+% /* ROSC pins */
+%       let roscPinName = "roscPin";
+%       let roscPackagePin = sysoscInst.peripheral[roscPinName].$solution.packagePinName;
+%       let roscPinCM = Common.getPinCM(roscPackagePin,sysoscInst,"ROSC");
+%       let roscGpioName = system.deviceData.devicePins[roscPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let roscPort = Common.getGPIOPortMultiPad(roscPackagePin,sysoscInst,"ROSC");
+%       let roscGpioPin = Common.getGPIONumberMultiPad(roscPackagePin,sysoscInst,"ROSC");
+% let roscPortStr = "#define GPIO_ROSC_PORT";
+`roscPortStr.padEnd(40," ")+roscPort.padStart(40, " ")`
+% let roscPinStr = "#define GPIO_ROSC_PIN";
+% let roscPinStr2 = "DL_GPIO_PIN_"+roscGpioPin;
+`roscPinStr.padEnd(40," ")+roscPinStr2.padStart(40," ")`
+% let roscIOmuxStr = "#define GPIO_ROSC_IOMUX";
+% let roscIOmuxStr2 = "(IOMUX_PINCM"+roscPinCM.toString()+")";
+`roscIOmuxStr.padEnd(40," ")+roscIOmuxStr2.padStart(40," ")`
+% }

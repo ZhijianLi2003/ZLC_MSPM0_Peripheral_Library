@@ -1,0 +1,153 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== I2C.Board.h.xdt ========
+ */
+
+    let I2C = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = I2C.$instances;
+    let defs = Common.genBoardHeader(instances, I2C);
+
+    /* Identify I2C Peripheral */
+    let isSMBUS = (I2C.$name == "/ti/driverlib/i2cSMBUS");
+
+    let flavorStrings = {
+        I2C0: "I2C",
+        I2C1: "I2C",
+    }
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+%
+% function printDefine() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let nameStr = "#define "+inst.$name+"_INST"
+
+/* Defines for `inst.$name` */
+`nameStr.padEnd(40," ")+flavor.padStart(40," ")`
+% let IRQHandlerStr = "#define "+inst.$name+"_INST_IRQHandler";
+% let IRQHandlerStr2 = (flavor+'_IRQHandler');
+`IRQHandlerStr.padEnd(40, " ")+IRQHandlerStr2.padStart(40, " ")`
+% let intIRQStr = "#define "+inst.$name+"_INST_INT_IRQN";
+% let intIRQStr2 = (flavor+'_INT_IRQn');
+`intIRQStr.padEnd(40, " ")+intIRQStr2.padStart(40, " ")`
+%if(inst.basicEnableController){
+% let busSpeedStr = "#define "+inst.$name+"_BUS_SPEED_HZ";
+% let busSpeedStr2 = (inst.basicControllerBusSpeedSelected).toString();
+`busSpeedStr.padEnd(40, " ")+busSpeedStr2.padStart(40, " ")`
+% //#define `inst.$name`_BUS_SPEED_HZ               `inst.basicControllerBusSpeedSelected`
+%}
+%if(inst.basicEnableTarget){
+%if(inst.basicTargetOwnAddressEnable){
+% let ownAddrStr = "#define "+inst.$name+"_TARGET_OWN_ADDR";
+% let ownAddrStr2 = "0x"+(inst.basicTargetAddress).toString(16);
+`ownAddrStr.padEnd(40, " ")+ownAddrStr2.padStart(40, " ")`
+% //#define `inst.$name`_TARGET_OWN_ADDR             `inst.basicTargetAddress`
+%}
+%if(inst.basicTargetSecAddressEnable){
+% let ownSecAddrStr = "#define "+inst.$name+"_TARGET_SEC_OWN_ADDR";
+% let ownSecAddrStr2 = "0x"+(inst.basicTargetSecAddress).toString(16);
+`ownSecAddrStr.padEnd(40, " ")+ownSecAddrStr2.padStart(40, " ")`
+% //#define `inst.$name`_TARGET_SEC_OWN_ADDR          `inst.basicTargetSecAddress`
+%}
+%}
+%
+%   /* This is one possible way to do GPIO defines. Good if you need to find out PINCM */
+%       let gpioStr = "GPIO_"+inst.$name;
+% /* figure out pin number and pinCMx */
+%       let sdaPinName = "sda"+"Pin";
+%       let sclPinName = "scl"+"Pin";
+%       let sdaPackagePin = inst.peripheral[sdaPinName].$solution.packagePinName;
+%       let sclPackagePin = inst.peripheral[sclPinName].$solution.packagePinName;
+%       let sdaPinCM = Common.getPinCM(sdaPackagePin,inst,"SDA");
+%       let sclPinCM = Common.getPinCM(sclPackagePin,inst,"SCL");
+%       let flav = flavorStrings[flavor];
+%       let sdaGpioName = system.deviceData.devicePins[sdaPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let sclGpioName = system.deviceData.devicePins[sclPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let sdaPort = Common.getGPIOPortMultiPad(sdaPackagePin,inst,"SDA");
+%       let sclPort = Common.getGPIOPortMultiPad(sclPackagePin,inst,"SCL");
+%       let sdaGpioPin = Common.getGPIONumberMultiPad(sdaPackagePin,inst,"SDA");
+%       let sclGpioPin = Common.getGPIONumberMultiPad(sclPackagePin,inst,"SCL");
+% let sdaPortStr = "#define "+gpioStr+"_SDA_PORT";
+`sdaPortStr.padEnd(40," ")+sdaPort.padStart(40, " ")`
+% let sdaPinStr = "#define "+gpioStr+"_SDA_PIN";
+% let sdaPinStr2 = "DL_GPIO_PIN_"+sdaGpioPin;
+`sdaPinStr.padEnd(40," ")+sdaPinStr2.padStart(40," ")`
+% let sdaIOmuxStr = "#define "+gpioStr+"_IOMUX_SDA";
+% let sdaIOmuxStr2 = "(IOMUX_PINCM"+sdaPinCM.toString()+")";
+`sdaIOmuxStr.padEnd(40," ")+sdaIOmuxStr2.padStart(40," ")`
+% let sdaFuncStr = "#define "+gpioStr+"_IOMUX_SDA_FUNC";
+% let sdaFuncStr2 = "IOMUX_PINCM"+sdaPinCM+"_PF_"+flavor+"_SDA";
+`sdaFuncStr.padEnd(40, " ")+sdaFuncStr2.padStart(40, " ")`
+% let sclPortStr = "#define "+gpioStr+"_SCL_PORT";
+`sclPortStr.padEnd(40," ")+sclPort.padStart(40, " ")`
+% let sclPinStr = "#define "+gpioStr+"_SCL_PIN";
+% let sclPinStr2 = "DL_GPIO_PIN_"+sclGpioPin;
+`sclPinStr.padEnd(40," ")+sclPinStr2.padStart(40," ")`
+% let sclIOmuxStr = "#define "+gpioStr+"_IOMUX_SCL";
+% let sclIOmuxStr2 = "(IOMUX_PINCM"+sclPinCM.toString()+")";
+`sclIOmuxStr.padEnd(40," ")+sclIOmuxStr2.padStart(40," ")`
+% let sclFuncStr = "#define "+gpioStr+"_IOMUX_SCL_FUNC";
+% let sclFuncStr2 = "IOMUX_PINCM"+sclPinCM+"_PF_"+flavor+"_SCL";
+`sclFuncStr.padEnd(40, " ")+sclFuncStr2.padStart(40, " ")`
+%   }
+%
+% } // function printDefine
+%
+% function printDeclare() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let name = inst.$name
+void SYSCFG_DL_`name`_init(void);
+%   }
+% }

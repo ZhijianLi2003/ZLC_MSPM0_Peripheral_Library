@@ -1,0 +1,171 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== ADC12.Board.h.xdt ========
+ */
+
+    /* args[] passed by /ti/driverlib/templates/Board.h.xdt */
+    let MODULE = args[0];
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = MODULE.$instances;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+%%}
+%
+%
+% function printDefine() {
+% for(let i = 0; i <instances.length; i++) {
+    % let inst =instances[i];
+    % let solution    = inst.peripheral.$solution;
+    % let peripheral  = system.deviceData.peripherals[solution.peripheralName];
+
+/* Defines for `inst.$name` */
+% let nameStr = "#define " + inst.$name + "_INST"
+`nameStr.padEnd(40, " ")+peripheral.name.padStart(40, " ")`
+%           // add handler and IRQn number
+%           let irqHandlerStr = "#define " + inst.$name + "_INST_IRQHandler"
+%           let irqHandlerStr2 = peripheral.name + "_IRQHandler";
+%           let irqnStr = "#define " + inst.$name + "_INST_INT_IRQN";
+%           let irqnStr2 = "(" + peripheral.name + "_INT_IRQn)";
+`irqHandlerStr.padEnd(40," ")+irqHandlerStr2.padStart(40," ")`
+`irqnStr.padEnd(40," ")+irqnStr2.padStart(40," ")`
+% if(inst.enableWinComp){
+% let lowThldDef = "#define " + inst.$name + "_WIN_COMP_LOW_THLD_VAL"
+% let highThldDef = "#define " + inst.$name + "_WIN_COMP_HIGH_THLD_VAL"
+`lowThldDef.padEnd(40, " ")+inst.configWinCompLowThld.toString().padStart(40, " ")`
+`highThldDef.padEnd(40, " ")+inst.configWinCompHighThld.toString().padStart(40, " ")`
+% }
+%%{
+    /* ADCMEM range varies per device family */
+    const adcMemRange = (Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()) ? 11:3;
+    let adcEnabledChannels = [];
+    for(let adcMemIdx = 0; adcMemIdx <= adcMemRange; adcMemIdx++){
+        if((inst.enabledADCMems).includes(adcMemIdx)){
+            /* Check enabled channels */
+            let tempIdx = (inst["adcMem" + adcMemIdx.toString() + "chansel"]).slice(20);
+            if(!((adcEnabledChannels).includes(tempIdx))){
+                adcEnabledChannels.push(tempIdx)
+            }
+%%}
+% let adcMemNameStr = "#define " + inst.$name+"_ADCMEM_"+inst["adcMem"+adcMemIdx+"_name"]
+`adcMemNameStr.padEnd(40, " ")+("DL_ADC12_MEM_IDX_" + adcMemIdx.toString()).padStart(40, " ")`
+% let adcMemREFStr = "#define " + inst.$name+"_ADCMEM_"+inst["adcMem"+adcMemIdx+"_name"]+"_REF"
+% let adcMemREFVoltageStr = "#define " + inst.$name+"_ADCMEM_"+inst["adcMem"+adcMemIdx+"_name"]+"_REF_VOLTAGE_V"
+% if (inst["adcMem"+adcMemIdx+"vref"] === "VDDA") {
+`adcMemREFStr.padEnd(40, " ")+(inst["adcMem"+adcMemIdx+"vrefDependency"]).padStart(40, " ")`
+% let vddaInstance = system.modules["/ti/driverlib/Board"]
+% let vddaVoltage = 3.3
+% if (vddaInstance && (vddaInstance.$static.configureVDDA == true)){
+%   vddaVoltage = (vddaInstance.$static.voltageVDDA)
+% }
+`adcMemREFVoltageStr.padEnd(40, " ")+(vddaVoltage).toString().padStart(40, " ")`
+% } else {
+`adcMemREFStr.padEnd(40, " ")+(inst["adcMem"+adcMemIdx+"vrefDependency"]).padStart(40, " ")`
+`adcMemREFVoltageStr.padEnd(40, " ")+(inst["adcMem"+adcMemIdx+"calcVoltage"].toString().replace(/ .*V/, "")).padStart(40, " ")`
+% }
+%       }
+%   }
+%       /* Create defines for event publisher channels */
+%       if ((inst.pubChanID != 0)) {
+%           let eventPubChannelStr = "#define " + inst.$name + "_INST_PUB_CH";
+%           let eventPubChannelStr2 = "(" + inst.pubChanID + ")";
+`eventPubChannelStr.padEnd(40, " ") + eventPubChannelStr2.padStart(40, " ")`
+%       }
+%       /* Create defines for event subscriber channels */
+%       if ((inst.subChanID != 0)) {
+%           let eventSubChannelStr = "#define " + inst.$name + "_INST_SUB_CH";
+%           let eventSubChannelStr2 = "(" + inst.subChanID + ")";
+`eventSubChannelStr.padEnd(40, " ") + eventSubChannelStr2.padStart(40, " ")`
+%       }
+%%{
+    for(let cc of adcEnabledChannels){
+        /* Verify channels are module-specific */
+        if((Common.isDeviceM0G() && parseInt(cc) < 9) || ((Common.isDeviceM0L() || Common.isDeviceM0C()) && parseInt(cc) < 10)){
+            let gpioStr = "GPIO_"+inst.$name+"_C"+cc;
+            /* figure out pin number and pinCMx */
+            // let pinName = "ccp"+cc+"Pin";
+            let pinName = "adcPin"+cc
+            let packagePin = inst.peripheral[pinName].$solution.packagePinName;
+            let pinCM = Common.getPinCM(packagePin,inst,cc.toString());
+            let iomux = pinCM - 1;
+            // let flav = flavorStrings[flavor];
+            let gpioName = system.deviceData.devicePins[packagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+            let port = Common.getGPIOPortMultiPad(packagePin,inst,cc.toString());
+            let gpioPin = Common.getGPIONumberMultiPad(packagePin,inst,cc.toString());
+/* GPIO defines for channel `cc` */
+%%}
+%           let portStr = "#define "+gpioStr+"_PORT";
+`portStr.padEnd(40," ")+port.padStart(40, " ")`
+% //#define `gpioStr`_PORT                              `port`
+%           let pinStr = "#define "+gpioStr+"_PIN";
+%           let pinStr2 = "DL_GPIO_PIN_"+gpioPin;
+`pinStr.padEnd(40," ")+pinStr2.padStart(40," ")`
+% //#define `gpioStr`_PIN                               DL_GPIO_PIN_`gpioPin`
+% if(inst[pinName+"Config"].enableConfig){
+%           let pinIOmuxStr = "#define " + "GPIO_"+inst.$name + "_IOMUX" + "_C"+cc;
+%           let pinIOmuxStr2 = "(IOMUX_PINCM" + pinCM.toString() + ")";
+`pinIOmuxStr.padEnd(50," ") + pinIOmuxStr2.padStart(30," ")`
+% //#define GPIO_`inst.$name`_IOMUX_C`cc`
+%           let pinFuncStr = "#define " + "GPIO_"+inst.$name + "_IOMUX" + "_C"+cc + "_FUNC";
+%           let pinFuncStr2 = "(IOMUX_PINCM" + pinCM + "_PF_UNCONNECTED)";
+`pinFuncStr.padEnd(50, " ") + pinFuncStr2.padStart(30, " ")`
+% //#define GPIO_`inst.$name`_IOMUX_C`cc`_FUNC
+% }
+%       }
+%   }
+% // ================================================================================================
+% }
+% } // function printDefine
+%
+% function printDeclare() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+void SYSCFG_DL_`inst.$name`_init(void);
+%   }
+% }

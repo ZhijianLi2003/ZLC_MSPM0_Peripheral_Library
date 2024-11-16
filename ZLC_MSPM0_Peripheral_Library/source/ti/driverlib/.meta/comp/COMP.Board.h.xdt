@@ -1,0 +1,262 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== COMP.Board.h.xdt ========
+ */
+
+    /* args[] passed by /ti/driverlib/templates/Board.h.xdt */
+    let COMP = args[0];
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = COMP.$instances;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+%
+%
+% function printDefine() {
+% for(let i = 0; i < instances.length; i++) {
+%   let inst = instances[i];
+%   let solution    = inst.peripheral.$solution;
+%   let peripheral  = system.deviceData.peripherals[solution.peripheralName];
+%   let nameStr = "#define "+ inst.$name +"_INST";
+
+/* Defines for `inst.$name` */
+`nameStr.padEnd(40," ")+peripheral.name.padStart(40," ")`
+%       let intirqNameStr = nameStr+"_INT_IRQN"
+%       let flavorINTIRQ = inst.peripheral.$solution.peripheralName+"_INT_IRQn";
+`intirqNameStr.padEnd(40," ")+flavorINTIRQ.padStart(40," ")`
+%
+%   /* Only generate DAC codes when the DAC is on */
+%   if (["DL_COMP_REF_SOURCE_VDDA_DAC", "DL_COMP_REF_SOURCE_VREF_DAC"].includes(inst.vSource)) {
+%       /*
+%        * Generate both DAC codes when the comparator output controls the
+%        * selection between DACCODE0 and DACCODE1. If DACSW controls the
+%        * selection, generate the DAC code based on the input selection
+%        */
+%       if ((inst.controlSelect == "DL_COMP_DAC_CONTROL_COMP_OUT") || (inst.inputSelect == "DL_COMP_DAC_INPUT_DACCODE0")) {
+%           let dacCode0Str = "#define " + inst.$name + "_DACCODE0";
+%           let dacCode0Str2 = "(" + inst.setDACCode0 + ")";
+
+/* Defines for `inst.$name` DACCODE0 */
+`dacCode0Str.padEnd(40, " ") + dacCode0Str2.padStart(40, " ")`
+%       }
+%       if ((inst.controlSelect == "DL_COMP_DAC_CONTROL_COMP_OUT") || (inst.inputSelect == "DL_COMP_DAC_INPUT_DACCODE1")) {
+%           let dacCode1Str = "#define " + inst.$name + "_DACCODE1";
+%           let dacCode1Str2 = "(" + inst.setDACCode1 + ")";
+
+/* Defines for `inst.$name` DACCODE1 */
+`dacCode1Str.padEnd(40, " ") + dacCode1Str2.padStart(40, " ")`
+%       }
+%   }
+
+%       /* Create defines for event publisher channels */
+%       if ((inst.pubChanID != 0)) {
+%           let eventPubChannelStr = "#define " + inst.$name + "_INST_PUB_CH";
+%           let eventPubChannelStr2 = "(" + inst.pubChanID + ")";
+`eventPubChannelStr.padEnd(40, " ") + eventPubChannelStr2.padStart(40, " ")`
+%       }
+%       /* Create defines for event 0 subscriber channels */
+%       if (inst.enableSampledMode && inst.sub0ChanID != 0) {
+%           let eventSubChannelStr = "#define " + inst.$name + "_INST_SUB0_CH";
+%           let eventSubChannelStr2 = "(" + inst.sub0ChanID + ")";
+`eventSubChannelStr.padEnd(40, " ") + eventSubChannelStr2.padStart(40, " ")`
+%       }
+%       /* Create defines for event 1 subscriber channels */
+%       if (inst.enableSampledMode && inst.sub1ChanID != 0) {
+%           let eventSubChannelStr = "#define " + inst.$name + "_INST_SUB1_CH";
+%           let eventSubChannelStr2 = "(" + inst.sub1ChanID + ")";
+`eventSubChannelStr.padEnd(40, " ") + eventSubChannelStr2.padStart(40, " ")`
+%       }
+% }
+
+% for (let i = 0; i < instances.length; i++) {
+%   let inst = instances[i];
+%   let flavor = inst.peripheral.$solution.peripheralName;
+%   let gpioStr = "GPIO_" + inst.$name;
+/* GPIO configuration for `inst.$name` */
+%
+%   if (inst.channelEnable.includes("POS")) {
+%       let definePos = true;
+%       let inPosPinName;
+%       let inPosNumStr;
+%       let pinInterfaceName;
+%       if (inst.posChannel == "DL_COMP_IPSEL_CHANNEL_0") {
+%           inPosPinName = "compPinPos0";
+%           inPosNumStr = "_IN0P";
+%           pinInterfaceName = "IN0+"
+%       } else if (inst.posChannel == "DL_COMP_IPSEL_CHANNEL_1") {
+%           inPosPinName = "compPinPos1";
+%           inPosNumStr = "_IN1P";
+%           pinInterfaceName = "IN1+"
+%       } else if (inst.posChannel == "DL_COMP_IPSEL_CHANNEL_2") {
+%           inPosPinName = "compPinPos2";
+%           inPosNumStr = "_IN2P";
+%           pinInterfaceName = "IN2+"
+%       } else if (inst.posChannel == "DL_COMP_IPSEL_CHANNEL_3") {
+%           inPosPinName = "compPinPos3";
+%           inPosNumStr = "_IN3P";
+%           pinInterfaceName = "IN3+"
+%       } else {
+%           /* Skip below generation if comp input channel isn't selected */
+%           definePos = false;
+%       }
+%
+%       if(definePos) {
+%       let inPosPackagePin = inst.peripheral[inPosPinName].$solution.packagePinName;
+%       let inPosPinCM = Common.getPinCM(inPosPackagePin,inst,pinInterfaceName);
+%       let inPosGpioName = system.deviceData.devicePins[inPosPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let inPosPort = "(" + Common.getGPIOPortMultiPad(inPosPackagePin,inst,pinInterfaceName) + ")";
+%       let inPosGpioPin = Common.getGPIONumberMultiPad(inPosPackagePin,inst,pinInterfaceName);
+%       let inPosPortStr = "#define " + gpioStr + inPosNumStr + "_PORT";
+`inPosPortStr.padEnd(50," ") + inPosPort.padStart(30, " ")`
+% //#define GPIO_x_INxP_PORT
+%
+%       let inPosPinStr = "#define " + gpioStr + inPosNumStr + "_PIN";
+%       let inPosPinStr2 = "(DL_GPIO_PIN_" + inPosGpioPin + ")";
+`inPosPinStr.padEnd(50," ")+inPosPinStr2.padStart(30," ")`
+% //#define GPIO_x_INxP_PIN
+%
+%       let inPosIOmuxStr = "#define " + gpioStr + "_IOMUX" + inPosNumStr;
+%       let inPosIOmuxStr2 = "(IOMUX_PINCM" + inPosPinCM.toString() + ")";
+`inPosIOmuxStr.padEnd(50," ") + inPosIOmuxStr2.padStart(30," ")`
+% //#define GPIO_x_IOMUX_INxP
+%
+%       let inPosFuncStr = "#define " + gpioStr + "_IOMUX" + inPosNumStr + "_FUNC";
+%       let inPosFuncStr2 = "(IOMUX_PINCM" + inPosPinCM + "_PF_UNCONNECTED)";
+`inPosFuncStr.padEnd(50, " ") + inPosFuncStr2.padStart(30, " ")`
+% } //ifDefinePos
+% //#define GPIO_x_IOMUX_INxP_FUNC
+
+%   }
+%
+%   if (inst.channelEnable.includes("NEG")) {
+%       let defineNeg = true;
+%       let inNegPinName;
+%       let inNegNumStr;
+%       let pinInterfaceName;
+%       if (inst.negChannel == "DL_COMP_IMSEL_CHANNEL_0") {
+%           inNegPinName = "compPinNeg0";
+%           inNegNumStr = "_IN0N";
+%           pinInterfaceName = "IN0-"
+%       } else if (inst.negChannel == "DL_COMP_IMSEL_CHANNEL_1") {
+%           inNegPinName = "compPinNeg1";
+%           inNegNumStr = "_IN1N";
+%           pinInterfaceName = "IN1-"
+%       } else if (inst.negChannel == "DL_COMP_IMSEL_CHANNEL_2") {
+%           inNegPinName = "compPinNeg2";
+%           inNegNumStr = "_IN2N";
+%           pinInterfaceName = "IN2-"
+%       } else {
+%           /* Skip below generation if comp input channel isn't selected */
+%           defineNeg = false;
+%       }
+%
+%       if(defineNeg) {
+%       let inNegPackagePin = inst.peripheral[inNegPinName].$solution.packagePinName;
+%       let inNegPinCM = Common.getPinCM(inNegPackagePin,inst,pinInterfaceName);
+%       let inNegGpioName = system.deviceData.devicePins[inNegPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let inNegPort = "(" + Common.getGPIOPortMultiPad(inNegPackagePin,inst,pinInterfaceName) + ")";
+%       let inNegGpioPin = Common.getGPIONumberMultiPad(inNegPackagePin,inst,pinInterfaceName);
+%       let inNegPortStr = "#define " + gpioStr + inNegNumStr + "_PORT";
+`inNegPortStr.padEnd(50," ") + inNegPort.padStart(30, " ")`
+% //#define GPIO_x_INxN_PORT
+%
+%       let inNegPinStr = "#define " + gpioStr + inNegNumStr + "_PIN";
+%       let inNegPinStr2 = "(DL_GPIO_PIN_" + inNegGpioPin + ")";
+`inNegPinStr.padEnd(50," ")+inNegPinStr2.padStart(30," ")`
+% //#define GPIO_x_INxN_PIN
+%
+%       let inNegIOmuxStr = "#define " + gpioStr + "_IOMUX" + inNegNumStr;
+%       let inNegIOmuxStr2 = "(IOMUX_PINCM" + inNegPinCM.toString() + ")";
+`inNegIOmuxStr.padEnd(50," ") + inNegIOmuxStr2.padStart(30," ")`
+% //#define GPIO_x_IOMUX_INxN
+%
+%       let inNegFuncStr = "#define " + gpioStr + "_IOMUX" + inNegNumStr + "_FUNC";
+%       let inNegFuncStr2 = "(IOMUX_PINCM" + inNegPinCM + "_PF_UNCONNECTED)";
+`inNegFuncStr.padEnd(50, " ") + inNegFuncStr2.padStart(30, " ")`
+%  } //ifDefineNeg
+% //#define GPIO_x_IOMUX_INxN_FUNC
+%   }
+
+%   let outPackagePin;
+%  let outPinName = "compPinOut";
+%   let outPinCM;
+%   let outIOmux;
+%   let outGpioName;
+%   let outGpioPin;
+%   let outPort;
+%       let gpioStr2 = "GPIO_"+inst.$name;
+%   if(inst.outputEnable) {
+%       outPackagePin = inst.peripheral[outPinName].$solution.packagePinName;
+%       outPinCM = Common.getPinCM(outPackagePin,inst,"OUT");
+%       outGpioName = system.deviceData.devicePins[outPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       outGpioPin = Common.getGPIONumberMultiPad(outPackagePin,inst,"OUT");
+%       outPort = Common.getGPIOPortMultiPad(outPackagePin,inst,"OUT");
+%   let outPortStr = "#define "+gpioStr2+"_OUT_PORT";
+`outPortStr.padEnd(40," ")+outPort.padStart(40, " ")`
+%   let outPinStr = "#define "+gpioStr2+"_OUT_PIN";
+%   let outPinStr2 = "DL_GPIO_PIN_"+outGpioPin;
+`outPinStr.padEnd(40," ")+outPinStr2.padStart(40," ")`
+%   let outIOmuxStr = "#define "+gpioStr2+"_IOMUX_OUT";
+%   let outIOmuxStr2 = "(IOMUX_PINCM"+outPinCM.toString()+")";
+`outIOmuxStr.padEnd(40," ")+outIOmuxStr2.padStart(40," ")`
+%   let outFuncStr = "#define "+gpioStr2+"_IOMUX_OUT_FUNC";
+%   let outFuncStr2 = "IOMUX_PINCM"+outPinCM+"_PF_"+flavor+"_OUT";
+`outFuncStr.padEnd(40, " ")+outFuncStr2.padStart(40, " ")`
+%   }//if(inst.enableOutput)
+% }
+% } // function printDefine
+%
+% function printDeclare() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+void SYSCFG_DL_`inst.$name`_init(void);
+%   }
+% }

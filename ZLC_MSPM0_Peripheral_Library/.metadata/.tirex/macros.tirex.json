@@ -1,0 +1,94 @@
+[
+  {
+    "arraymacro": "MSPM0_all_devices",
+    "value": [
+      "$(MSPM0L11xx_L13xx_devices)",
+      "$(MSPM0G1x0x_G3x0x_devices)",
+      "$(MSPM0C110x_devices)",
+      "$(MSPM0L122x_L222x_devices)"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0G1x0x_G3x0x_devices",
+    "value": [
+      "MSPM0G1105",
+      "MSPM0G1106",
+      "MSPM0G1107",
+      "MSPM0G1505",
+      "MSPM0G1506",
+      "MSPM0G1507",
+      "MSPM0G3105",
+      "MSPM0G3106",
+      "MSPM0G3107",
+      "MSPM0G3505",
+      "MSPM0G3506",
+      "MSPM0G3507"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0L11xx_L13xx_devices",
+    "value": [
+      "MSPM0L1303",
+      "MSPM0L1304",
+      "MSPM0L1305",
+      "MSPM0L1306",
+      "MSPM0L1105",
+      "MSPM0L1106",
+      "MSPM0L1343",
+      "MSPM0L1344",
+      "MSPM0L1345",
+      "MSPM0L1346"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0C110x_devices",
+    "value": [
+      "MSPM0C1103",
+      "MSPM0C1104",
+      "MSPS003F3",
+      "MSPS003F4"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0L122x_L222x_devices",
+    "value": [
+      "MSPM0L1227",
+      "MSPM0L1228",
+      "MSPM0L2227",
+      "MSPM0L2228"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0_all_devtools",
+    "value": [
+      "$(MSPM0L11xx_L13xx_devtools)",
+      "$(MSPM0G1x0x_G3x0x_devtools)",
+      "$(MSPM0C110x_devtools)",
+      "$(MSPM0L122x_L222x_devtools)"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0G1x0x_G3x0x_devtools",
+    "value": [
+      "LP-MSPM0G3507"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0L11xx_L13xx_devtools",
+    "value": [
+      "LP-MSPM0L1306"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0C110x_devtools",
+    "value": [
+      "LP-MSPM0C1104"
+    ]
+  },
+  {
+    "arraymacro": "MSPM0L122x_L222x_devtools",
+    "value": [
+      "LP-MSPM0L2228"
+    ]
+  }
+]

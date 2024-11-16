@@ -1,0 +1,222 @@
+%%{
+/*
+ * Copyright (c) 2023, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== TAMPERIO.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let TAMPERIO = args[0];
+    let content = args[1];
+
+    /* get Common /ti/driverlib utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let stat = TAMPERIO.$static;
+    if (stat.length == 0) return;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+%%}
+%
+% function printCall() {
+%   if (!stat.loadApplicationKey) {
+    SYSCFG_DL_TAMPERIO_init();
+%   }
+% }
+%
+%
+% function printReset() {
+% }
+%
+% function printPower() {
+% }
+%
+% function printFunction() {
+SYSCONFIG_WEAK void SYSCFG_DL_TAMPERIO_init(void)
+{
+% let instName = "TAMPERIO";
+%for (let i = 0; i < 3; i++) {
+%if(stat["enabletio" + i.toString()]) {
+%let commentString = "\t/* Tamper I/O " + i.toString() + " Configuration Begin */"
+`commentString`
+% let mode = "\tDL_TamperIO_setMode(" + instName + ", DL_TAMPERIO_" +i.toString() + ", ";
+% mode += "\n\t\tDL_TAMPERIO_MODE_TAMPER);";
+`mode`
+%if(stat["tio" + i.toString() + "direction"] == "INPUT") {
+% let direction = "\tDL_TamperIO_enableInput(" + instName + ", DL_TAMPERIO_" + i.toString() + ");";
+`direction`
+%let polarityDetection = "";
+%if(stat["tio" + i.toString() + "polarityEnable"] != "DISABLED") {
+% polarityDetection = "\tDL_TamperIO_setEdgeDetectionPolarity(" + instName + ", DL_TAMPERIO_" +i.toString() + ", ";
+% polarityDetection += "\n\t\tDL_TAMPERIO_EDGE_DETECTION_POLARITY_" + stat["tio" + i.toString() + "polarityEnable"] + ");";
+`polarityDetection`
+%}
+%let glitchFilter = "";
+%if(stat["tio" + i.toString() + "filterEnable"] != "NONE") {
+% glitchFilter = "\tDL_TamperIO_setGlitchFilterWidth(" + instName + ", DL_TAMPERIO_" +i.toString() + ", ";
+% glitchFilter += "\n\t\tDL_TAMPERIO_GLITCH_FILTER_WIDTH_" + stat["tio" + i.toString() + "filterEnable"]  + ");";
+`glitchFilter`
+%}
+%}
+%if(stat["tio" + i.toString() + "direction"] == "OUTPUT") {
+% let direction = "\tDL_TamperIO_enableOutput(" + instName + ", DL_TAMPERIO_" + i.toString() + ");";
+`direction`
+%if(stat["tio" + i.toString() + "outputInversion"] == "ENABLE") {
+% let invert = "\tDL_TamperIO_enableOutputInversion(" + instName + ", DL_TAMPERIO_" + i.toString() + ");";
+`invert`
+%}
+%let toutControl = "";
+% toutControl = "\tDL_TamperIO_setOutputSource(" + instName + ", DL_TAMPERIO_" + i.toString() + ", ";
+% toutControl += "\n\t\t\ DL_TAMPERIO_OUTPUT_SOURCE_" + stat["tio" + i.toString() + "toutControl"] + ");";
+`toutControl`
+%if(stat["tio" + i.toString() + "initialValue"] == "SET" && stat["tio" + i.toString() + "toutControl"] == "TOUT") {
+% let initValue = "\tDL_TamperIO_setOutputValue(" + instName + ", DL_TAMPERIO_" + i.toString() + ", DL_TAMPERIO_VALUE_1);";
+`initValue`
+%}
+%if(stat["tio" + i.toString() + "initialValue"] == "CLEARED" && stat["tio" + i.toString() + "toutControl"] == "TOUT") {
+% let initValue = "\tDL_TamperIO_setOutputValue(" + instName + ", DL_TAMPERIO_" + i.toString() + ", DL_TAMPERIO_VALUE_0);";
+`initValue`
+%}
+%}
+%let resistor = "";
+%if(stat["tio" + i.toString() + "internalResistor"] == "PULL_UP") {
+% resistor = "\tDL_TamperIO_enableInternalPullUp(" + instName + ", DL_TAMPERIO_" + i.toString() + ");";
+`resistor`
+%}
+%if(stat["tio" + i.toString() + "internalResistor"] == "PULL_DOWN") {
+% resistor = "\tDL_TamperIO_enableInternalPullDown(" + instName + ", DL_TAMPERIO_" + i.toString() + ");";
+`resistor`
+%}
+%}
+%}
+
+% if(stat["heartBeatMode"] != "DISABLED") {
+%let commentString = "\t/* Configure heart beat generator */"
+`commentString`
+% let heartBeatMode = "";
+% heartBeatMode = "\tDL_TamperIO_setHeartBeatMode(" + instName + ", DL_TAMPERIO_HEARTBEAT_MODE_" + stat["heartBeatMode"]  + ");";
+`heartBeatMode`
+% let heartBeatPWM = "";
+% heartBeatPWM = "\tDL_TamperIO_setHeartBeatPulseWidth(" + instName + ", DL_TAMPERIO_HEARTBEAT_PULSE_WIDTH_" + stat["heartBeatPWM"] + ");";
+`heartBeatPWM`
+% let heartBeatInterval = "";
+% heartBeatInterval = "\tDL_TamperIO_setHeartBeatInterval(" + instName + ", DL_TAMPERIO_HEARTBEAT_INTERVAL_" + stat["heartBeatInterval"] + ");";
+`heartBeatInterval`
+%}
+%if(stat["startHeartBeat"]) {
+%let commentString = "\t/* RTC_A clock must be enabled for heart beat generation */"
+`commentString`
+% let enableRTCAClock = "\tDL_RTC_A_enableClockControl(RTC_A);"
+`enableRTCAClock`
+%}
+%%{
+    var eventsToEnableOR = "(";
+    for (let enabledEvent of stat.enabledEvents)
+    {
+        if (enabledEvent == stat.enabledEvents[stat.enabledEvents.length - 1])
+        {
+            if(enabledEvent == "TAMPERIO_0" && !stat["enabletio0"]) continue;
+            if(enabledEvent == "TAMPERIO_1" && !stat["enabletio1"]) continue;
+            if(enabledEvent == "TAMPERIO_2" && !stat["enabletio2"]) continue;
+            eventsToEnableOR += ("DL_TAMPERIO_EVENT_" + enabledEvent + ")");
+        }
+        else
+        {
+            if(enabledEvent == "TAMPERIO_0" && !stat["enabletio0"]) continue;
+            if(enabledEvent == "TAMPERIO_1" && !stat["enabletio1"]) continue;
+            if(enabledEvent == "TAMPERIO_2" && !stat["enabletio2"]) continue;
+            eventsToEnableOR += ("DL_TAMPERIO_EVENT_" + enabledEvent + " |");
+            eventsToEnableOR += "\n\t\t";
+        }
+    }
+%%}
+%if(stat.pubChanID != 0) {
+%let pubChannel = "\n\tDL_TamperIO_setPublisherChanID(" + instName + ", TAMPERIO_PUB_CH);";
+`pubChannel`
+%}
+%if(stat.enabledEvents.length > 0 && eventsToEnableOR.length > 1) {
+% let eventsString = "\tDL_TamperIO_enableEvent(" + instName + ", " + eventsToEnableOR + ");";
+`eventsString`
+%}
+%%{
+    var interruptsToEnableOR = "(";
+    for (let enabledInterrupt of stat.enabledInterrupts)
+    {
+        if (enabledInterrupt == stat.enabledInterrupts[stat.enabledInterrupts.length - 1])
+        {
+            if(enabledInterrupt == "TAMPERIO_0" && !stat["enabletio0"]) continue;
+            if(enabledInterrupt == "TAMPERIO_1" && !stat["enabletio1"]) continue;
+            if(enabledInterrupt == "TAMPERIO_2" && !stat["enabletio2"]) continue;
+            interruptsToEnableOR += ("DL_TAMPERIO_INTERRUPT_" + enabledInterrupt + ")");
+        }
+        else
+        {
+            if(enabledInterrupt == "TAMPERIO_0" && !stat["enabletio0"]) continue;
+            if(enabledInterrupt == "TAMPERIO_1" && !stat["enabletio1"]) continue;
+            if(enabledInterrupt == "TAMPERIO_2" && !stat["enabletio2"]) continue;
+            interruptsToEnableOR += ("DL_TAMPERIO_INTERRUPT_" + enabledInterrupt + " |");
+            interruptsToEnableOR += "\n\t\t";
+        }
+    }
+%%}
+%if(stat.enabledInterrupts.length > 0 && interruptsToEnableOR.length > 1) {
+% let interruptsString = "\tDL_TamperIO_enableInterrupt(" + instName + ", " + interruptsToEnableOR + ");";
+`interruptsString`
+%if(stat.interruptPriority !== "DEFAULT"){
+%let irqnStr = "TAMPERIO" + "_INST_INT_IRQN";
+% let prio = "\n\tNVIC_SetPriority(" + irqnStr + ", " +stat.interruptPriority + ");";
+`prio`
+%}
+%}
+}
+%}

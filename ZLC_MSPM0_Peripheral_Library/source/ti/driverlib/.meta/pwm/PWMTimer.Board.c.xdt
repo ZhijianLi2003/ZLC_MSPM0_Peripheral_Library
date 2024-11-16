@@ -1,0 +1,591 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== PWMTimerMSP432.Board.c.xdt ========
+ */
+
+    let PWM = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = PWM.$instances;
+    if (instances.length == 0) return;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        case "RetentionDeclare":
+            printRetentionDeclare();
+            break;
+        case "RetentionSave":
+            printRetentionSave();
+            break;
+        case "RetentionRestore":
+            printRetentionRestore();
+            break;
+        case "RetentionRdy":
+            printRetentionRdy();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% /* Retention Configuration Code */
+% function printRetentionDeclare(){
+`Common.getRetentionDeclareC(instances,"Timer")`
+% }
+% function printRetentionRdy(){
+`Common.getRetentionRdyC(instances,"Timer")`
+% }
+% function printRetentionSave(){
+`Common.getRetentionSaveC(instances,"Timer")`
+% }
+% function printRetentionRestore(){
+`Common.getRetentionRestoreC(instances,"Timer")`
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let flavorCat = "Timer"+(flavor.replace(/[0-9]/g, '')).slice(3);
+    DL_`flavorCat`_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let flavorCat = "Timer"+(flavor.replace(/[0-9]/g, '')).slice(3);
+    DL_`flavorCat`_enablePower(`inst.$name`_INST);
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       for(let cc of inst.ccIndex){
+%           /* Condition Check: avoid internal channels */
+%           if(!Common.isInternalTimerChannel(cc)){
+%               let gpioStr = "GPIO_"+inst.$name+"_C"+cc;
+    DL_GPIO_initPeripheralOutputFunction(`gpioStr`_IOMUX,`gpioStr`_IOMUX_FUNC);
+    DL_GPIO_enableOutput(`gpioStr`_PORT, `gpioStr`_PIN);
+%               if(Common.hasTimerA()){
+%                   if((inst.ccIndexCmpl).includes(cc)){
+    DL_GPIO_initPeripheralOutputFunction(`gpioStr`_CMPL_IOMUX,`gpioStr`_CMPL_IOMUX_FUNC);
+    DL_GPIO_enableOutput(`gpioStr`_CMPL_PORT, `gpioStr`_CMPL_PIN);
+%                   }
+%               }
+%           }
+%       }
+%       if(flavor.match("TIMA.")){
+%               if ((inst.faultHandlerEn && inst.faultSource.includes("0"))){
+%                   let gpioStr = "GPIO_"+inst.$name;
+    DL_GPIO_initPeripheralInputFunction(`gpioStr`_IOMUX_FAULT_0,`gpioStr`_IOMUX_FAULT_0_FUNC);
+%               } // if typeof
+%               if ((inst.faultHandlerEn && inst.faultSource.includes("1"))){
+%                   let gpioStr = "GPIO_"+inst.$name;
+    DL_GPIO_initPeripheralInputFunction(`gpioStr`_IOMUX_FAULT_1,`gpioStr`_IOMUX_FAULT_1_FUNC);
+%               } // if typeof
+%               if ((inst.faultHandlerEn && inst.faultSource.includes("2"))){
+%                   let gpioStr = "GPIO_"+inst.$name;
+    DL_GPIO_initPeripheralInputFunction(`gpioStr`_IOMUX_FAULT_2,`gpioStr`_IOMUX_FAULT_2_FUNC);
+%               } // if typeof
+%        } // if flavor.match("TIMA.")
+% let initIOMux = Common.getGPIOConfigBoardC(inst);
+% if(initIOMux.length > 0){
+    `initIOMux`
+%}
+%   }// if instances
+%}
+%
+% /* Main Function */
+% function printFunction(){
+%   let crossTriggerMainEn = false;
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let flavorCat = "Timer"+(flavor.replace(/[0-9]/g, '')).slice(3);
+%       /* keep track if Cross Trigger is enabled as main for later code generation */
+%       if(inst.crossTriggerEn && (inst.crossTriggerAuthority == "Main")){
+%           crossTriggerMainEn = true;
+%       }
+%
+/*
+ * Timer clock configuration to be sourced by `inst.timerClkSrc` / `inst.clockDivider` (`inst.timerClockSourceCalculated` Hz)
+ * timerClkFreq = (timerClkSrc / (timerClkDivRatio * (timerClkPrescale + 1)))
+ *   `inst.timerClk_Freq` Hz = `inst.timerClockSourceCalculated` Hz / (`inst.clockDivider` * (`inst.clockPrescale-1` + 1))
+ */
+static const DL_`flavorCat`_ClockConfig g`inst.$name`ClockConfig = {
+    .clockSel = DL_TIMER_CLOCK_`inst.clockSource`,
+    .divideRatio = DL_TIMER_CLOCK_DIVIDE_`inst.clockDivider`,
+% if(flavorCat !== "TimerH") {
+    .prescale = `inst.clockPrescale-1`U
+% }
+};
+
+static const DL_`flavorCat`_PWMConfig g`inst.$name`Config = {
+%    let timerCommence = inst.timerStartTimer?"START":"STOP";
+    .pwmMode = DL_TIMER_PWM_MODE_`inst.pwmMode`,
+    .period = `inst.timerCount`,
+%if(flavorCat === "TimerA") {
+    .isTimerWithFourCC = `inst.fourChannelCapable`,
+% } /* if (flavorCat === "TimerA") */
+    .startTimer = DL_TIMER_`timerCommence`,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_`inst.$name`_init(void) {
+
+    DL_`flavorCat`_setClockConfig(
+        `inst.$name`_INST, (DL_`flavorCat`_ClockConfig *) &g`inst.$name`ClockConfig);
+
+    DL_`flavorCat`_initPWMMode(
+        `inst.$name`_INST, (DL_`flavorCat`_PWMConfig *) &g`inst.$name`Config);
+
+%   for (let cc of inst.ccIndex) {
+%       let ccInstance = inst["PWM_CHANNEL_"+cc];
+%
+%    let chosenOutSrc;
+%    let chosenInitVal = "DL_TIMER_CC_OCTL_INIT_VAL_"+ccInstance.initVal;
+%    let chosenOutInv = "DL_TIMER_CC_OCTL_INV_OUT_" + (ccInstance.invert?"ENABLED":"DISABLED");
+%if(inst.deadBandEn && (inst.ccIndexCmpl).includes(cc)){
+%    chosenOutSrc  = "DL_TIMER_CC_OCTL_SRC_DEAD_BAND";
+%}else{
+%    chosenOutSrc  = "DL_TIMER_CC_OCTL_SRC_FUNCVAL";
+%}
+%    let channel = "DL_"+flavorCat.toUpperCase()+"_CAPTURE_COMPARE_"+cc+"_INDEX";
+%    let chanCtlFct = "DL_"+flavorCat+"_setCaptureCompareOutCtl("+inst.$name+"_INST, "+chosenInitVal+",\n\t\t"+
+%        chosenOutInv + ", " + chosenOutSrc + ",\n\t\t" + channel + ");\n";
+    `chanCtlFct`
+%
+%   let shadowUpdateMode = "DL_TIMER_CC_UPDATE_METHOD_" + ccInstance.shadowUpdateMode;
+%%{  
+    /* 
+     * Note: setCaptureCompareValue must be called after setCaptCompUpdateMethod
+     * to prevent blanking the capture compare value 
+     */
+%%}
+    DL_`flavorCat`_setCaptCompUpdateMethod(`inst.$name`_INST, `shadowUpdateMode`, `channel`);
+    DL_`flavorCat`_setCaptureCompareValue(`inst.$name`_INST, `ccInstance.ccValue`, DL_TIMER_CC_`cc`_INDEX);
+
+%    } // for (cc of inst.ccIndex)
+%
+%   if(inst.deadBandEn){
+%       let mode = "DL_TIMER_DEAD_BAND_MODE_" + (inst.dbInsertionMode).match(/\d+/)[0];
+    DL_`flavorCat`_setDeadBand(`inst.$name`_INST, `inst.dbFallDelayTimerCount`, `inst.dbRiseDelayTimerCount`, `mode`);
+%}
+%    /* Repeat Counter */
+%   if(inst.enableRepeatCounter){
+%       let rpcArgs = inst.repeatCounter;
+%       let rpcFct = "DL_"+flavorCat+"_setRepeatCounter("+inst.$name+"_INST, " +inst.$name + "_REPEAT_COUNT_"+rpcArgs+");\n";
+    `rpcFct`
+%   }
+%
+    DL_`flavorCat`_enableClock(`inst.$name`_INST);
+%
+%   /* Event Generation for Publisher Event Route 1 */
+%
+%   if ((inst.event1PublisherChannel != 0) &&
+%       (inst.event1ControllerInterruptEn.length > 0)) {
+%%{
+    /* Event bit mask to be used in DL_TimerX_enableEvent() */
+    var eventsToEnableOR = "(";
+
+    for (let eventToEnable of inst.event1ControllerInterruptEn)
+    {
+        /* The last event should end with a closing parenthesis */
+        if (eventToEnable == inst.event1ControllerInterruptEn[inst.event1ControllerInterruptEn.length - 1])
+        {
+            eventsToEnableOR += ("DL_"+ flavorCat.toUpperCase() + "_EVENT_" + eventToEnable + ")");
+        }
+        else
+        {
+            eventsToEnableOR += ("DL_"+ flavorCat.toUpperCase() + "_EVENT_" + eventToEnable + " |");
+            eventsToEnableOR += "\n\t\t";
+        }
+    }
+%%}
+    DL_`flavorCat`_enableEvent(`inst.$name`_INST, DL_`flavorCat.toUpperCase()`_EVENT_ROUTE_1, `eventsToEnableOR`);
+
+    DL_`flavorCat`_setPublisherChanID(`inst.$name`_INST, DL_`flavorCat.toUpperCase()`_PUBLISHER_INDEX_0, `inst.$name`_INST_PUB_0_CH);
+%   }
+
+%   /* Event Generation for Publisher Event Route 2 */
+%
+%   if ((inst.event2PublisherChannel != 0) &&
+%       (inst.event2ControllerInterruptEn.length > 0)) {
+%%{
+    /* Event bit mask to be used in DL_TimerX_enableEvent() */
+    var eventsToEnableOR = "(";
+
+    for (let eventToEnable of inst.event2ControllerInterruptEn)
+    {
+        if (eventToEnable == inst.event2ControllerInterruptEn[inst.event2ControllerInterruptEn.length - 1])
+        {
+            eventsToEnableOR += ("DL_"+ flavorCat.toUpperCase() + "_EVENT_" + eventToEnable + ")");
+        }
+        else
+        {
+            eventsToEnableOR += ("DL_"+ flavorCat.toUpperCase() + "_EVENT_" + eventToEnable + " |");
+            eventsToEnableOR += "\n\t\t";
+        }
+    }
+%%}
+    DL_`flavorCat`_enableEvent(`inst.$name`_INST, DL_`flavorCat.toUpperCase()`_EVENT_ROUTE_2, `eventsToEnableOR`);
+
+    DL_`flavorCat`_setPublisherChanID(`inst.$name`_INST, DL_`flavorCat.toUpperCase()`_PUBLISHER_INDEX_1, `inst.$name`_INST_PUB_1_CH);
+%   }
+
+%   /* Event Generation for Subscriber Port */
+%
+%   if ((inst.subscriberPort != "Disabled") && (inst.subscriberChannel != 0)) {
+%   let subscriberPort = inst.subscriberPort.split("FSUB")[1];
+    DL_`flavorCat`_setExternalTriggerEvent(`inst.$name`_INST,
+        DL_TIMER_EXT_TRIG_SEL_TRIG_SUB_`subscriberPort`);
+
+    DL_`flavorCat`_enableExternalTrigger(`inst.$name`_INST);
+
+%   for (let cc of inst.ccIndex) {
+    DL_`flavorCat`_setCaptureCompareInput(`inst.$name`_INST,
+        DL_TIMER_CC_INPUT_INV_NOINVERT, DL_TIMER_CC_IN_SEL_TRIG,
+        DL_TIMER_CC_`cc`_INDEX);
+
+%   let triggerCondition = (inst.counterZero == true) ? "ZCOND_TRIG_RISE" : "LCOND_TRIG_RISE";
+    DL_`flavorCat`_setCaptureCompareCtl(`inst.$name`_INST, DL_TIMER_CC_MODE_COMPARE,
+        DL_TIMER_CC_`triggerCondition`, DL_TIMER_CC_`cc`_INDEX);
+%   }
+
+    DL_`flavorCat`_setSubscriberChanID(`inst.$name`_INST,
+        DL_TIMER_SUBSCRIBER_INDEX_`subscriberPort`, `inst.$name`_INST_SUB_`subscriberPort`_CH);
+%   }
+%
+%%{
+    /* Interrupt generation */
+    let interArgs = "";
+    let interFct = "";
+    for (let inter of inst.interrupts) {
+        if(inter.match("FAULT_EVENT")){
+            interArgs += "DL_TIMERA_INTERRUPT_FAULT_EVENT |\n\t\t";
+        }else{
+            interArgs += "DL_TIMER_INTERRUPT_"+inter+" |\n\t\t";
+        }
+    }
+    if(inst.interrupts.length > 0){
+        interArgs = interArgs.slice(0,-5); // remove last OR and whitespace
+        interFct = "DL_"+flavorCat+"_enableInterrupt("+inst.$name+"_INST , "+interArgs+");\n";
+    } else {
+        // interFCT remains empty
+    }
+%%}
+    `interFct`
+%   if(interFct.length > 0 && inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = inst.$name + "_INST_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%%{
+    /* Generation of output direction */
+    let dirArgs = "";
+
+    for (let cc of inst.ccIndex) { // 1
+        dirArgs += "DL_TIMER_CC"+cc+"_OUTPUT | ";
+    } // 1
+    dirArgs = dirArgs.slice(0,-2); /* remove last OR */
+    let dirFct = "DL_"+flavorCat+"_setCCPDirection("+inst.$name+"_INST , "+dirArgs+");";
+%%}
+    `dirFct`
+%
+% /* Shadow load */
+% if(inst.enableShadowLoad){
+    DL_`flavorCat`_enableShadowFeatures(`inst.$name`_INST);
+%} //if(inst.enableShadowLoad)
+
+% /* Phase load */
+% if(inst.enablePhaseLoad){
+    DL_TimerA_setPhaseLoadValue(`inst.$name`_INST, `inst.phaseLoadValue`);
+    DL_TimerA_enablePhaseLoad(`inst.$name`_INST);
+%}
+
+% /* Cross-Triggering */
+%
+%   if(inst.crossTriggerEn){
+%       let interArgs = "";
+%       if(inst.crossTriggerAuthority == "Main"){
+%%{
+            let subsPort = "DL_TIMER_CROSS_TRIG_SRC_FSUB0";
+            let enTrigCondSelect = "DISABLED";
+            if(inst.mainCrossTriggerSource != "SW"){
+                subsPort = "DL_TIMER_CROSS_TRIG_SRC_"+inst.mainCrossTriggerSource;
+                enTrigCondSelect = "ENABLED";
+            }
+            let enInTrigCond = "DL_TIMER_CROSS_TRIGGER_INPUT_"+enTrigCondSelect;
+%%}
+%           let enCrossTrig = "DL_TIMER_CROSS_TRIGGER_MODE_ENABLED";
+%           let crossTrigFct = "DL_"+flavorCat+"_configCrossTrigger("+inst.$name+"_INST, "+subsPort+",\n\t"+
+%               enInTrigCond + ", " + enCrossTrig + "\n\t\t"+interArgs+");";
+
+%           if(inst.mainCrossTriggerSource == "SW"){
+     /* DL_TIMER_CROSS_TRIG_SRC is a Don't Care field when Cross Trigger Source is set to Software */
+%           }
+    `crossTrigFct`
+%       } // if crossTriggerAuthority == "Main"
+
+%   /* Both Main and Secondary have the following */
+%   for (let cc of inst.ccIndex) { // 2
+    DL_`flavorCat`_setCaptureCompareInput(`inst.$name`_INST, DL_TIMER_CC_INPUT_INV_NOINVERT, DL_TIMER_CC_IN_SEL_TRIG, DL_TIMER_CC_`cc`_INDEX);
+
+% } // for (let cc of inst.ccIndex) { // 2
+    /*
+     * Determines the external triggering event to trigger the module (self-triggered in main configuration)
+     * and triggered by specific timer in secondary configuration
+     */
+%%{
+    let secCrossTrigSource = "";
+    if(inst.crossTriggerAuthority == "Secondary"){
+        if(inst.secondaryCrossTriggerSource.includes("Sub"))
+            secCrossTrigSource = "SUB_"+inst.secondaryCrossTriggerSource.split("SubscriberPort")[1];
+        else
+            secCrossTrigSource = inst.secondaryCrossTriggerSource.split("InputTrigger_")[1];
+    }
+    else{
+        switch(flavor){
+            case "TIMA0":
+                secCrossTrigSource = "0";
+                break;
+            case "TIMA1":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG7":
+                secCrossTrigSource = "2";
+                break;
+            case "TIMG8":
+                secCrossTrigSource = "3";
+                break;
+            case "TIMG12":
+                secCrossTrigSource = "4";
+                break;
+            case "TIMG0":
+                secCrossTrigSource = "0";
+                break;
+            case "TIMG1":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG6":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG2":
+                secCrossTrigSource = "2";
+                break;
+            case "TIMG4":
+                secCrossTrigSource = "3";
+                break;
+            default:
+                /* do nothing */
+                break;
+        }
+    }
+%%}
+    DL_`flavorCat`_setExternalTriggerEvent(`inst.$name`_INST,DL_TIMER_EXT_TRIG_SEL_TRIG_`secCrossTrigSource`);
+    DL_`flavorCat`_enableExternalTrigger(`inst.$name`_INST);
+    uint32_t temp;
+%   for (let cc of inst.ccIndex) { // 3
+%
+    temp = DL_`flavorCat`_getCaptureCompareCtl(`inst.$name`_INST, DL_TIMER_CC_`cc`_INDEX);
+%
+    DL_`flavorCat`_setCaptureCompareCtl(`inst.$name`_INST, DL_TIMER_CC_MODE_COMPARE, temp | (uint32_t) DL_TIMER_CC_LCOND_TRIG_RISE, DL_TIMER_CC_`cc`_INDEX);
+
+%    } // for (cc of inst.ccIndex) { // 3
+%
+%   } // if(inst.crossTriggerEn)
+% if (inst.faultHandlerEn){
+%%{
+    let sourceCount = 0;
+    var sourcesToEnableOR = "(";
+    for (let sourceToEnable of inst.faultSource)
+    {
+        let printSource = "DL_TIMERA_FAULT_SOURCE_";
+        switch(sourceToEnable){
+            /* source is Fault Pin 0 */
+            case "0":
+                printSource+= "EXTERNAL_0_" + inst.faultPin0Sense;
+            break;
+            /* source is Fault Pin 1 */
+            case "1":
+                printSource+= "EXTERNAL_1_" + inst.faultPin1Sense;
+            break;
+            /* source is Fault Pin 2 */
+            case "2":
+                printSource+= "EXTERNAL_2_" + inst.faultPin2Sense;
+            break;
+            /* source is COMP0 */
+            case "3":
+                printSource+= "COMP0_" + inst.COMP0Sense;
+
+            break;
+            /* source is COMP1 */
+            case "4":
+                printSource+= "COMP1_" + inst.COMP1Sense;
+            break;
+            /* source is COMP2 */
+            case "5":
+                printSource+= "COMP2_" + inst.COMP2Sense;
+            break;
+        }
+        if (sourceCount == 0)
+        {
+            sourcesToEnableOR += printSource;
+        }
+        else
+        {
+            sourcesToEnableOR += "\n\t\t";
+            sourcesToEnableOR += " | " + printSource;
+        }
+        sourceCount++;
+    }
+    sourcesToEnableOR += ")";
+%%}
+% if(sourceCount >0){
+    DL_`flavorCat`_setFaultSourceConfig(`inst.$name`_INST, `sourcesToEnableOR`);
+% }
+%%{
+    let printConfig = "DL_TIMERA_FAULT_CONFIG_"+inst.faultTriggerIn+"\n\t\t"+
+    " | "+"DL_TIMERA_FAULT_CONFIG_"+inst.faultConditionDuration+"\n\t\t"+
+    " | "+"DL_TIMERA_FAULT_CONFIG_"+inst.faultInput+"\n\t\t"+
+    " | "+"DL_TIMERA_FAULT_CONFIG_"+inst.faultInputEn;
+%%}
+    DL_`flavorCat`_setFaultConfig(`inst.$name`_INST, `printConfig`);
+% if(inst.faultInputFilterEn){
+    DL_`flavorCat`_setFaultInputFilterConfig(`inst.$name`_INST,
+        DL_TIMERA_FAULT_FILTER_FILTERED,
+        DL_TIMERA_FAULT_FILTER_CPV_`inst.faultFilterType`,
+        DL_TIMERA_FAULT_FILTER_FP_PER_`inst.faultFilterSamplePeriod`);
+% }
+% else {
+    // DL_TIMERA_FAULT_FILTER_CPV_CONSEC_PER and DL_TIMERA_FAULT_FILTER_FP_PER_3 in this function are don't cares
+    DL_`flavorCat`_setFaultInputFilterConfig(`inst.$name`_INST,
+        DL_TIMERA_FAULT_FILTER_BYPASS,
+        DL_TIMERA_FAULT_FILTER_CPV_`inst.faultFilterType`,
+        DL_TIMERA_FAULT_FILTER_FP_PER_`inst.faultFilterSamplePeriod`);
+% }
+% for(let selectChannel of inst.ccIndex){
+    DL_`flavorCat`_configFaultOutputAction(`inst.$name`_INST,
+        DL_TIMERA_FAULT_ENTRY_CCP_`inst["faultChannel"+selectChannel+"BehaviorEntry"]`,
+        DL_TIMERA_FAULT_EXIT_CCP_`inst["faultChannel"+selectChannel+"BehaviorExit"]`,
+        DL_TIMER_CC_`selectChannel`_INDEX);
+% }
+    DL_`flavorCat`_configFaultCounter(`inst.$name`_INST,
+        DL_TIMERA_`inst.faultTimerCountEntry`, DL_TIMERA_`inst.faultTimerCountExit`);
+% if(inst.faultInputDetect){
+    DL_`flavorCat`_enableFaultInput(`inst.$name`_INST);
+% }
+% else{
+    DL_`flavorCat`_disableFaultInput(`inst.$name`_INST);
+% }
+% if(inst.faultSrcClkDetect){
+    DL_`flavorCat`_enableClockFaultDetection(`inst.$name`_INST);
+% }
+% else{
+    DL_`flavorCat`_disableClockFaultDetection(`inst.$name`_INST);
+% }
+% } // if (inst.faultHandlerEn)
+% /* Second Capture Compare Configuration */
+%%{
+    let ccIndexOptions = [
+        { name: 0, displayName: "PWM Channel 0" },
+        { name: 1, displayName: "PWM Channel 1" },
+    ];
+
+    if(Common.hasTimerA()){
+        ccIndexOptions.push(
+            { name: 2, displayName: "PWM Channel 2" },
+            { name: 3, displayName: "PWM Channel 3" },
+        );
+    }
+%%}
+% if(inst.secondCompEn){
+%   for(let pwmChannel of ccIndexOptions){
+%       if(inst["secondCompDirectionCH"+pwmChannel.name.toString()].includes("UP")){
+    DL_`flavorCat`_setSecondCompSrcUp(`inst.$name`_INST, DL_TIMER_SEC_COMP_UP_EVT_SEL_CC`inst["secondCompUpSourceCH"+pwmChannel.name.toString()]`, DL_TIMER_CC_`pwmChannel.name.toString()`_INDEX);
+    DL_`flavorCat`_setSecondCompActionUp(`inst.$name`_INST, DL_TIMER_SEC_COMP_UP_ACT_SEL_`inst["secondCompUpActionCH"+pwmChannel.name.toString()]`, DL_TIMER_CC_`pwmChannel.name.toString()`_INDEX);
+%       }
+%       if(inst["secondCompDirectionCH"+pwmChannel.name.toString()].includes("DOWN")){
+    DL_`flavorCat`_setSecondCompSrcDn(`inst.$name`_INST, DL_TIMER_SEC_COMP_DOWN_EVT_SEL_CC`inst["secondCompDownSourceCH"+pwmChannel.name.toString()]`, DL_TIMER_CC_`pwmChannel.name.toString()`_INDEX);
+    DL_`flavorCat`_setSecondCompActionDn(`inst.$name`_INST, DL_TIMER_SEC_COMP_DOWN_ACT_SEL_`inst["secondCompDownActionCH"+pwmChannel.name.toString()]`, DL_TIMER_CC_`pwmChannel.name.toString()`_INDEX);
+%       }
+%   }
+% } // if(inst.secondCompEn)
+}
+%} // for i < instances.length
+%
+
+% if(crossTriggerMainEn){
+SYSCONFIG_WEAK void SYSCFG_DL_PWM_Cross_Trigger_init(void) {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let flavorCat = "Timer"+(flavor.replace(/[0-9]/g, '')).slice(3);
+%if(inst.crossTriggerEn && inst.timerStartTimer && (inst.crossTriggerAuthority == "Main")){
+    DL_`flavorCat`_generateCrossTrigger(`inst.$name`_INST);
+%}
+%   }
+}
+% }
+%
+% } // printFunction()

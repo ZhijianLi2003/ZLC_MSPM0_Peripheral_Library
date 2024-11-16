@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<package schemaVersion="1.4" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="PACK.xsd">
+    <vendor>TexasInstruments</vendor>
+    <name>MSPM0L11XX_L13XX_DFP</name>
+    <description>Device Family Pack for Texas Instruments MSPM0L11XX_L13XX Series</description>
+    <url>http://software-dl.ti.com/msp430/esd/MSPM0-CMSIS/MSPM0L11XX_L13XX/latest/exports/</url>
+    <supportContact>https://e2e.ti.com/support/microcontrollers/</supportContact>
+    <license>01_Pack\license.txt</license>
+
+    <releases>
+        <release version="1.2.1" date="2023-10-12">
+        * Fix installation error with previous release
+        </release>
+        <release version="1.2.0" date="2023-10-04">
+        * New Software Pack replacing the deprecated TexasInstruments.MSPM0L_DFP
+        </release>
+        <release version="1.1.0" date="2023-05-15">
+        * Disable cache in flash loader
+        * Use address 0x2020_0000 for M0G Flash loader
+        * Limit programming range using OPN information
+        * Update DriverLib and header files
+        </release>
+        <release version="1.0.0" date="2023-03-14">
+        Initial release of MSPM0L11XX_L13XX series device familiy pack.
+        New device support:
+            * MSPM0L110X
+            * MSPM0L130X
+            * MSPM0L134X
+        </release>
+    </releases>
+
+    <keywords>
+        <!-- keywords for indexing -->
+        <keyword>Texas Instruments</keyword>
+        <keyword>MSPM0</keyword>
+        <keyword>MSPM0L</keyword>
+        <keyword>MSPM0L1</keyword>
+        <keyword>MSPM0L11</keyword>
+        <keyword>MSPM0L110</keyword>
+        <keyword>MSPM0L1106</keyword>
+        <keyword>MSPM0L1105</keyword>
+        <keyword>MSPM0L13</keyword>
+        <keyword>MSPM0L130</keyword>
+        <keyword>MSPM0L1306</keyword>
+        <keyword>MSPM0L1305</keyword>
+        <keyword>MSPM0L1304</keyword>
+        <keyword>MSPM0L1303</keyword>
+        <keyword>MSPM0L134</keyword>
+        <keyword>MSPM0L1346</keyword>
+        <keyword>MSPM0L1345</keyword>
+        <keyword>MSPM0L1344</keyword>
+        <keyword>MSPM0L1343</keyword>
+        <keyword>Device Support</keyword>
+        <keyword>Device Family Package Texas Instruments</keyword>
+      </keywords>
+
+    <!-- devices section (mandatory for Device Family Packs) -->
+    <devices>
+        <family Dfamily="MSPM0L11XX_L13XX Series" Dvendor="Texas Instruments:16">
+            <processor Dcore="Cortex-M0+" DcoreVersion="r0p1" Dfpu="NO_FPU" Dclock="32000000" Dmpu="NO_MPU" Dendian="Little-endian"/>
+            <debugconfig default="swd" clock="5000000" swj="1"/>
+            <book name="https://developer.arm.com/documentation/dui0662/latest/" title="Cortex-M0+ Generic User Guide"/>
+            <description>
+The MSPM0L134X and MSPM0L130X microcontrollers (MCUs) are part of MSP's
+highly-integrated, ultra-low-power 32-bit MCU family based on the enhanced
+Arm® Cortex®-M0+ core platform operating at up to 32-MHz frequency.
+
+These cost-optimized MCUs offer high-performance analog peripheral integration,
+support extended temperature ranges from -40°C to 125°C, and operate with
+supply voltages ranging from 1.62V to 3.6V.
+
+The MSPM0L134X and MSPM0L130X devices provide up to 64KB embedded Flash program
+memory with up to 4KB SRAM. They incorporate a high speed on-chip oscillator
+with an accuracy of ±1%, eliminating the need for an external crystal.
+Additional features include a 3-channel DMA, 16 and 32-bit CRC accelerator,
+and a variety of high-performance analog peripherals such as one 12-bit 1MSPS
+ADC with configurable internal voltage reference, one high-speed comparator
+with built-in reference DAC, two zero-drift zero-crossover op-amps with
+programmable gain, one general-purpose amplifier, and an on-chip temperature
+sensor. These devices also offer intelligent digital peripherals such as
+four 16-bit general purpose timers, one windowed watchdog timer, and a
+variety of communication peripherals including two UARTs, one SPI, and two I2C.
+These communication peripherals offer protocol support for LIN, IrDA, DALI,
+Manchester, Smart Card, SMBus, and PMBus.
+            </description>
+            <debug>
+                <!-- Patched ROM Table for a Cortex-M0+ -->
+                <datapatch  type="AP" __dp="0" __ap="0" address="0xF8" value="0xF0000003" info="AP BASE Register, ROM Table at 0xF0000002"/>
+            </debug>
+            <!-- debug sequences -->
+            <sequences>
+                <sequence name="DebugPortStart">
+                    <block>
+                        __var nReset = 0x80;
+                        __var canReadPins = 0;
+                        // De-assert nRESET line to activate the hardware reset
+                        canReadPins = (DAP_SWJ_Pins(0x00, nReset, 0) != 0xFFFFFFFF);
+                    </block>
+
+                    <!-- Keep reset active for 50 ms -->
+                    <control while="1" timeout="50000"/>
+
+                    <control if="canReadPins">
+
+                        <!-- Assert nRESET line and wait max. 1s for recovery -->
+                        <control while="(DAP_SWJ_Pins(nReset, nReset, 0) &amp; nReset) == 0" timeout="1000000"/>
+
+                    </control>
+
+                    <control if="!canReadPins">
+
+                        <block>
+                        // Assert nRESET line
+                        DAP_SWJ_Pins(nReset, nReset, 0);
+                        </block>
+
+                        <!-- Wait 100ms for recovery if nRESET not readable -->
+                        <control while="1" timeout="100000"/>
+
+                    </control>
+
+                    <block>
+                        __var SW_DP_ABORT       = 0x0;
+                        __var DP_CTRL_STAT      = 0x4;
+                        __var DP_SELECT         = 0x8;
+                        __var powered_down      = 0;
+
+                        //Beyond here do not modify
+                        // Switch to DP Register Bank 0
+                        //WriteDP(DP_SELECT, 0x00000000);
+
+                        // Read DP CTRL/STAT Register and check if CSYSPWRUPACK and CDBGPWRUPACK bits are set
+                        powered_down = ((ReadDP(DP_CTRL_STAT) &amp; 0xA0000000) != 0xA0000000);
+                    </block>
+                    <control if="powered_down">
+                        <block>
+                            // Request Debug/System Power-Up
+                            Message(0, "Debug/System power-up request sent");
+                            WriteDP(DP_CTRL_STAT, 0x50000000);
+                        </block>
+
+                        <!-- Wait for Power-Up Request to be acknowledged -->
+                        <control while="(ReadDP(DP_CTRL_STAT) &amp; 0xA0000000) != 0xA0000000" timeout="1000000"/>
+
+                        <!-- JTAG Specific Part of sequence -->
+                        <control if="(__protocol &amp; 0xFFFF) == 1">
+
+                            <block>
+                                // Init AP Transfer Mode, Transaction Counter, and Lane Mask (Normal Transfer Mode, Include all Byte Lanes)
+                                // Additionally clear STICKYORUN, STICKYCMP, and STICKYERR bits by writing '1'
+                                WriteDP(DP_CTRL_STAT, 0x50000F32);
+                            </block>
+
+                        </control>
+
+                        <!-- SWD Specific Part of sequence -->
+                        <control if="(__protocol &amp; 0xFFFF) == 2">
+                            <block>
+                                Message(0, "executing SWD power up");
+                                // Init AP Transfer Mode, Transaction Counter, and Lane Mask (Normal Transfer Mode, Include all Byte Lanes)
+                                WriteDP(DP_CTRL_STAT, 0x50000F00);
+
+                                // Clear WDATAERR, STICKYORUN, STICKYCMP, and STICKYERR bits of CTRL/STAT Register by write to ABORT register
+                                WriteDP(SW_DP_ABORT, 0x0000001E);
+                            </block>
+                        </control>
+                    </control>
+                    <block>
+                        __var DPREC0_VAL        = 0;
+                        __var DEBUG_PORT_VAL    = 0;
+                        __var ACCESS_POINT_VAL  = 0;
+                        __ap = 4;
+
+                        ACCESS_POINT_VAL = ReadAP(0x00);//Reading current state of DPREC0
+                        Message(0, "Current state of DPREC0 is: %x",ACCESS_POINT_VAL);
+                    </block>
+                    <control if = "(ACCESS_POINT_VAL &amp; 0x00E00000) == 0">
+                        <block>
+                            WriteAP(0x00, 0x190008);
+                            __ap = 0; //reset AP selection
+                        </block>
+                    </control>
+                    <control if = "(ACCESS_POINT_VAL &amp; 0x00E00000) != 0">
+                        <block>
+                            Message(0, "STICKY BITS ENABLED");
+
+                            WriteAP(0xF0, 0x00000001);
+
+                            WriteAP(0x00, 0xF90008);
+
+                            ACCESS_POINT_VAL = ReadAP(0x00);
+                            Message(0, "Current state of DPREC0 is: %x",ACCESS_POINT_VAL);
+                            __ap = 0; //reset AP selection
+                        </block>
+                    </control>
+                </sequence>
+                <sequence name="DebugDeviceUnlock">
+                    <block>
+                        __var deviceID = 0;
+                        __var version = 0;
+                        __var partNum = 0;
+                        __var manuf = 0;
+                        __var isMSPM0L11XX_L13XX = 0;
+                        __var isProduction = 0;
+                        __var continueId = 0;
+                        deviceID =   Read32(0x41C40004);
+                        version = deviceID >> 28;
+                        partNum = (deviceID &amp; 0x0FFFF000) >> 12;
+                        manuf = (deviceID &amp; 0x00000FFE) >> 1;
+                        isMSPM0L11XX_L13XX = (partNum == 0xBB82) &amp;&amp; (manuf == 0x17);
+                        isProduction = (version &gt; 0);
+                    </block>
+                    <!-- Check if device ID is correct -->
+                    <control if="!isMSPM0L11XX_L13XX">
+                        <block>
+                            continueId = Query(1, "Incorrect ID. This support package is for MSPM0L11XX_L13XX devices. Continue?", 4);
+                        </block>
+                    </control>
+                    <control if="continueId == 4">
+                        <block>
+                            Message(2, "Invalid ID");
+                        </block>
+                    </control>
+                    <!-- Check if the device is early sample material -->
+                    <control if="!isProduction">
+                        <block>
+                            Query(0, "This support package doesn't support MSPM0 early samples. We recommend moving to production-quality MSPM0L11XX_L13XX silicon by ordering samples at www.ti.com/mspm0.", 0);
+                            Message(2, "Invalid device revision");
+                        </block>
+                    </control>
+                </sequence>
+                <sequence name="DebugCoreStart">
+                <block>
+                    // System Control Space (SCS) offset as defined in Armv6-M/Armv7-M.
+                    Message(0, "Here now");
+                    __var SCS_Addr   = 0xE000E000;
+                    __var DHCSR_Addr = SCS_Addr + 0xDF0;
+                    // Enable Core Debug via DHCSR
+                    Write32(DHCSR_Addr, 0xA05F0001);
+                </block>
+
+                </sequence>
+            </sequences>
+            <!-- features common for the whole family -->
+            <feature type="NVIC" n="32" name="Nested Vectored Interrupt Controller (NVIC)"/>
+            <feature type="DMA" n="3" name="Direct Memory Access (DMA)"/>
+            <feature type="MemoryOther" name="Up to 64KB Flash memory"/>
+            <feature type="MemoryOther" name="Up to 4KB SRAM"/>
+            <feature type="ClockOther" name="Internal 4-32MHz oscillator with +-1% accuracy (SYSOSC)"/>
+            <feature type="ClockOther" name="Internal 32kHz oscillator (LFOSC)"/>
+            <feature type="PowerMode" n="12" name="RUN0, RUN1, RUN2, SLEEP0, SLEEP1, SLEEP2, STOP0, STOP1, STOP2, STANDBY0, STANDBY1, SHUTDOWN"/>
+            <feature type="VCC" n="1.62" m="3.6"/>
+            <feature type="Temp" n="-40" m="125" name="Extended Operating Temperature Range"/>
+<!-- ************************  Subfamily MSPM0L130X  **************************** -->
+            <subFamily DsubFamily="MSPM0L130X">
+                <feature type="AnalogOther" n="2" name="Zero-drift, zero-crossover chipper op-amp (OPA)"/>
+                <feature type="AnalogOther" n="1" name="General-purpose amplifier (GPAMP)"/>
+                <feature type="AnalogOther" n="1" name="High-speed comparator (COMP) with 8-bit reference DACs"/>
+                <feature type="AnalogOther" n="1" name="Configurable 1.4V or 2.5V internal shared voltage reference (VREF)"/>
+                <feature type="TimerOther" n="4" name="16-bit general purpose timer supporting low power operation in STANDBY mode"/>
+                <feature type="WDT" n="1" name="Window-watchdog timer"/>
+                <feature type="I2C" n="2" name="I2C interface supporting up to FM+ (1Mbps), SMBus/PMBus, and wakeup from STOP mode"/>
+                <feature type="SPI" n="1" m="32000000" name="SPI interface"/>
+                <feature type="UART" n="2" name="UART inteface, one supporting LIN, IrDA, DALI, Smart Card, Manchester, and three supporting low-power operation in STANDBY mode"/>
+                <feature type="ADC" n="10" m="12" name="1MSPS analog-to-digital converters with up to 10-ch (ADC)"/>
+                <feature type="IOs" n="28" name="General purpose I/Os, including some 5-V tolerant"/>
+                <!-- *************************  Device MSPM0L1306  ***************************** -->
+                <device Dname="MSPM0L1306">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00010000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1306__"/>
+                    <debug      svd="03_SVD/MSPM0L130X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_64KB.FLM" start="0x00000000" size="0x00010000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1305  ***************************** -->
+                <device Dname="MSPM0L1305">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00008000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1305__"/>
+                    <debug      svd="03_SVD/MSPM0L130X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_32KB.FLM" start="0x00000000" size="0x00008000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1304  ***************************** -->
+                <device Dname="MSPM0L1304">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00004000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00000800" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1304__"/>
+                    <debug      svd="03_SVD/MSPM0L130X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_16KB.FLM" start="0x00000000" size="0x00004000" RAMstart="0x20000000" RAMsize="0x00000800" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00000800" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1303  ***************************** -->
+                <device Dname="MSPM0L1303">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00002000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00000800" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1303__"/>
+                    <debug      svd="03_SVD/MSPM0L130X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_8KB.FLM" start="0x00000000" size="0x00002000" RAMstart="0x20000000" RAMsize="0x00000800" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00000800" default="0"/>
+                </device>
+            </subFamily>
+<!-- ************************  Subfamily MSPM0L134X  **************************** -->
+            <subFamily DsubFamily="MSPM0L134X">
+                <feature type="AnalogOther" n="2" name="Zero-drift, zero-crossover chipper op-amp (OPA)"/>
+                <feature type="AnalogOther" n="1" name="General-purpose amplifier (GPAMP)"/>
+                <feature type="AnalogOther" n="1" name="High-speed comparator (COMP) with 8-bit reference DACs"/>
+                <feature type="AnalogOther" n="1" name="Configurable 1.4V or 2.5V internal shared voltage reference (VREF)"/>
+                <feature type="TimerOther" n="4" name="16-bit general purpose timer supporting low power operation in STANDBY mode"/>
+                <feature type="WDT" n="1" name="Window-watchdog timer"/>
+                <feature type="I2C" n="2" name="I2C interface supporting up to FM+ (1Mbps), SMBus/PMBus, and wakeup from STOP mode"/>
+                <feature type="SPI" n="1" m="32000000" name="SPI interface"/>
+                <feature type="UART" n="2" name="UART inteface, one supporting LIN, IrDA, DALI, Smart Card, Manchester, and three supporting low-power operation in STANDBY mode"/>
+                <feature type="ADC" n="10" m="12" name="1MSPS analog-to-digital converters with up to 10-ch (ADC)"/>
+                <feature type="IOs" n="28" name="General purpose I/Os, including some 5-V tolerant"/>
+                <!-- *************************  Device MSPM0L1346  ***************************** -->
+                <device Dname="MSPM0L1346">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00010000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1346__"/>
+                    <debug      svd="03_SVD/MSPM0L134X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_64KB.FLM" start="0x00000000" size="0x00010000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1345  ***************************** -->
+                <device Dname="MSPM0L1345">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00008000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1345__"/>
+                    <debug      svd="03_SVD/MSPM0L134X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_32KB.FLM" start="0x00000000" size="0x00008000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1344  ***************************** -->
+                <device Dname="MSPM0L1344">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00004000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00000800" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1344__"/>
+                    <debug      svd="03_SVD/MSPM0L134X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_16KB.FLM" start="0x00000000" size="0x00004000" RAMstart="0x20000000" RAMsize="0x00000800" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00000800" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1343  ***************************** -->
+                <device Dname="MSPM0L1343">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00002000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00000800" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1343__"/>
+                    <debug      svd="03_SVD/MSPM0L134X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_8KB.FLM" start="0x00000000" size="0x00002000" RAMstart="0x20000000" RAMsize="0x00000800" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00000800" default="0"/>
+                </device>
+            </subFamily>
+<!-- ************************  Subfamily MSPM0L110X  **************************** -->
+            <subFamily DsubFamily="MSPM0L110X">
+                <feature type="AnalogOther" n="1" name="General-purpose amplifier (GPAMP)"/>
+                <feature type="AnalogOther" n="1" name="Configurable 1.4V or 2.5V internal shared voltage reference (VREF)"/>
+                <feature type="TimerOther" n="4" name="16-bit general purpose timer supporting low power operation in STANDBY mode"/>
+                <feature type="WDT" n="1" name="Window-watchdog timer"/>
+                <feature type="I2C" n="1" name="I2C interface supporting up to FM+ (1Mbps), SMBus/PMBus, and wakeup from STOP mode"/>
+                <feature type="SPI" n="1" m="32000000" name="SPI interface"/>
+                <feature type="UART" n="2" name="UART inteface, one supporting LIN, IrDA, DALI, Smart Card, Manchester, and three supporting low-power operation in STANDBY mode"/>
+                <feature type="ADC" n="10" m="12" name="1MSPS analog-to-digital converters with up to 10-ch (ADC)"/>
+                <feature type="IOs" n="28" name="General purpose I/Os, including some 5-V tolerant"/>
+                <!-- *************************  Device MSPM0L1106  ***************************** -->
+                <device Dname="MSPM0L1106">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00010000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1106__"/>
+                    <debug      svd="03_SVD/MSPM0L110X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_64KB.FLM" start="0x00000000" size="0x00010000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1105  ***************************** -->
+                <device Dname="MSPM0L1105">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00008000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20000000" size="0x00001000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1105__"/>
+                    <debug      svd="03_SVD/MSPM0L110X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_MAIN_32KB.FLM" start="0x00000000" size="0x00008000" RAMstart="0x20000000" RAMsize="0x00001000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L11XX_L13XX_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20000000" RAMsize="0x00001000" default="0"/>
+                </device>
+            </subFamily>
+        </family>
+    </devices>
+
+    <boards>
+        <board vendor="TexasInstruments" name="LP-MSPM0L1306" salesContact="http://www.ti.com/general/docs/contact.tsp">
+            <description>MSPM0L1306 LaunchPad</description>
+            <mountedDevice    deviceIndex="0" Dvendor="Texas Instruments:16" Dname="MSPM0L1306"/>
+            <compatibleDevice deviceIndex="0" Dvendor="Texas Instruments:16" Dfamily="MSPM0L11XX_L13XX Series" DsubFamily="MSPM0L130X"/>
+            <debugInterface adapter="XDS110-ET" connector="XDS110-ET Onboard Emulator"/>
+            <debugInterface adapter="SWD" connector="10-pin Cortex Debug Connector (0.05 inch connector)"/>
+            <feature type="USB" n="1" name="USB Device,  Micro-B receptacle"/>
+            <feature type="Button" n="3" name="reset and two user push-buttons"/>
+            <feature type="LED" n="4" name="LEDs for user interaction, including 1 RGB LED"/>
+            <feature type="ConnOther" n="2" name="40 pin BoosterPack Connector and support for 20 pin BoosterPacks"/>
+            <feature type="TempSens" n="1" name="Temperature sensor circuit"/>
+            <feature type="LightSens" n="1" name="Light sensor circuit"/>
+            <feature type="Other" name="EnergyTrace technology available for ultra-low-power debugging"/>
+        </board>
+    </boards>
+
+</package>

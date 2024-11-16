@@ -1,0 +1,381 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SPI.Board.c.xdt ========
+ */
+
+    let SPI = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = SPI.$instances;
+    if (instances.length == 0) return;
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        case "RetentionDeclare":
+            printRetentionDeclare();
+            break;
+        case "RetentionSave":
+            printRetentionSave();
+            break;
+        case "RetentionRestore":
+            printRetentionRestore();
+            break;
+        case "RetentionRdy":
+            printRetentionRdy();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% /* Retention Configuration Code */
+% function printRetentionDeclare(){
+`Common.getRetentionDeclareC(instances,"SPI")`
+% }
+% function printRetentionRdy(){
+`Common.getRetentionRdyC(instances,"SPI")`
+% }
+% function printRetentionSave(){
+`Common.getRetentionSaveC(instances,"SPI")`
+% }
+% function printRetentionRestore(){
+`Common.getRetentionRestoreC(instances,"SPI")`
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+    DL_SPI_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       /* another possibility depending on the driver */
+    DL_SPI_enablePower(`inst.$name`_INST);
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%   let usePICO = true;
+%   let usePOCI = true;
+%   if(inst.direction.match(/^PICO$/) !== null) {
+%       usePOCI = false;
+%   }
+%   if(inst.direction.match(/^POCI$/) !== null) {
+%       usePICO = false;
+%   }
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_"+inst.$name;
+%if(inst.mode == "CONTROLLER"){
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["sclkPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_SCLK, `gpioStr`_IOMUX_SCLK_FUNC);
+%           }
+%       } catch (x){/* ignore any exception */}
+% if (usePICO) {
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["mosiPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_PICO, `gpioStr`_IOMUX_PICO_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+% if (usePOCI) {
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["misoPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `gpioStr`_IOMUX_POCI, `gpioStr`_IOMUX_POCI_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+%if(inst.frameFormat != "MOTO3"){
+%for (let csNum of inst.chipSelect) {
+%if(csNum == "3" && inst.enableCDMode == true) {
+%continue
+%}
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["cs"+csNum+"PinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_CS`csNum`, `gpioStr`_IOMUX_CS`csNum`_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+% }//if(inst.frameFormat != "MOTO3"
+%if(inst.enableCDMode == true && inst.frameFormat == "MOTO4" && inst.mode == "CONTROLLER") {
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["cs3PinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_CD, `gpioStr`_IOMUX_CD_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+% }
+% }//inst.mode == "CONTROLLER"
+%if(inst.mode == "PERIPHERAL"){
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["sclkPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `gpioStr`_IOMUX_SCLK, `gpioStr`_IOMUX_SCLK_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+% if (usePICO) {
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["mosiPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `gpioStr`_IOMUX_PICO, `gpioStr`_IOMUX_PICO_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+% if (usePOCI) {
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["misoPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `gpioStr`_IOMUX_POCI, `gpioStr`_IOMUX_POCI_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+%if(inst.frameFormat != "MOTO3"){
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["cs"+inst.peripheralChipSelect+"PinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `gpioStr`_IOMUX_CS, `gpioStr`_IOMUX_CS_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+%}//if(inst.mode == "PERIPHERAL")
+% let initIOMux = Common.getGPIOConfigBoardC(inst);
+% /* Check if generating empty code */
+% if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%}
+% } //for (let i in instances)
+% } //printGPIO
+%
+% /* Main Function */
+% function printFunction(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let instName = inst.$name;
+%
+static const DL_SPI_Config g`instName`_config = {
+    .mode        = DL_SPI_MODE_`inst.mode`,
+%if (inst.frameFormat == "TI_SYNC") {
+    .frameFormat = DL_SPI_FRAME_FORMAT_TI_SYNC,
+%} else {
+    .frameFormat = DL_SPI_FRAME_FORMAT_`inst.frameFormat`_POL`inst.polarity`_PHA`inst.phase`,
+%}
+    .parity      = DL_SPI_PARITY_`inst.parity`,
+    .dataSize    = DL_SPI_DATA_SIZE_`inst.dataSize`,
+    .bitOrder    = DL_SPI_BIT_ORDER_`inst.bitOrder`_FIRST,
+%    if (inst.frameFormat != "MOTO3") {
+%       let csArgs = "";
+%       let csFct = "";
+%
+%       if (inst.mode == "CONTROLLER") {
+%           /*
+%            * In Controller mode, multiple CS can be selected, but only 1
+%            * (defaultChipSelect) can be enabled at a time.
+%            */
+%           if(inst.chipSelect.length > 1) {
+%               csArgs = "DL_SPI_CHIP_SELECT_" + inst.defaultChipSelect;
+%           } else {
+%               csArgs = "DL_SPI_CHIP_SELECT_" + inst.chipSelect;
+%           }
+%       } else {
+%           /* In Peripheral mode, only 1 CS can be selected and enabled at a time */
+%           csArgs = "DL_SPI_CHIP_SELECT_" + inst.peripheralChipSelect;
+%       }
+%
+%       csFct = ".chipSelectPin = " + csArgs + ",";
+    `csFct`
+%    } //if (inst.frameFormat != "MOTO3")
+};
+
+static const DL_SPI_ClockConfig g`instName`_clockConfig = {
+    .clockSel    = DL_SPI_CLOCK_`inst.spiClkSrc`,
+    .divideRatio = DL_SPI_CLOCK_DIVIDE_RATIO_`inst.spiClkDiv`
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void) {
+    DL_SPI_setClockConfig(`instName`_INST, (DL_SPI_ClockConfig *) &g`instName`_clockConfig);
+
+    DL_SPI_init(`instName`_INST, (DL_SPI_Config *) &g`instName`_config);
+
+%if (inst.mode == "CONTROLLER"){
+    /* Configure Controller mode */
+    /*
+     * Set the bit rate clock divider to generate the serial output clock
+     *     outputBitRate = (spiInputClock) / ((1 + SCR) * 2)
+     *     `inst.calculatedBitRateNum` = (`inst.basicClockSourceCalculated`)/((1 + `inst.scr`) * 2)
+     */
+    DL_SPI_setBitRateSerialClockDivider(`instName`_INST, `inst.scr`);
+%if (inst.enableCDMode == true && inst.frameFormat == "MOTO4" && inst.mode == "CONTROLLER"){
+    /* Enable and configure CD Mode */
+    DL_SPI_enableControllerCommandDataMode(`instName`_INST);
+%if (inst.cdModeDefaultValue != "CUSTOM"){
+    DL_SPI_setControllerCommandDataModeConfig(`instName`_INST, DL_SPI_CD_MODE_`inst.cdModeDefaultValue`);
+% } else {
+    DL_SPI_setControllerCommandDataModeConfig(`instName`_INST, `inst.cdModeValue`);
+%}
+%} //if (inst.enableCDMode == true)
+%if (inst.enableInternalLoopback == true){
+    DL_SPI_enableLoopbackMode(`instName`_INST);
+%}
+%if (inst.delayedSampling > 0){
+    /* Calculated time for delayed sampling: `inst.delayedSamplingCalc` */
+    DL_SPI_setDelayedSampling(`instName`_INST, `inst.delayedSampling`);
+%}
+%}//if (inst.mode == "CONTROLLER")
+%if (inst.mode == "PERIPHERAL"){
+    /* Configure Peripheral mode */
+%if (inst.clearRXCounterOnCSIdle == true){
+    DL_SPI_enablePeripheralAlignDataOnChipSelect(`instName`_INST);
+%}
+%if (inst.rxTimeoutValue > 0){
+    /* Calculated time for RX timeout: `inst.rxTimeoutValueCalc` */
+    DL_SPI_setPeripheralReceiveTimeout(`instName`_INST, `inst.rxTimeoutValue`);
+%}
+%}
+% if (inst.parityDirection == "RX") {
+    DL_SPI_disableTransmitParity(`instName`_INST);
+%}
+% if (inst.parityDirection == "TX") {
+    DL_SPI_disableReceiveParity(`instName`_INST);
+%}
+%if (inst.enablePacking) {
+    /* Enable packing feature */
+    DL_SPI_enablePacking(`instName`_INST);
+%}
+%if (inst.enabledDMAEvent2Triggers != "None" && inst.enableDMAEvent2) {
+
+    /* Enable SPI TX interrupt as a trigger for DMA */
+    DL_SPI_enableDMATransmitEvent(`instName`_INST);
+%}
+%if (inst.enabledDMAEvent1Triggers != "None" && inst.enableDMAEvent1) {
+
+    /* Enable SPI RX interrupt as a trigger for DMA */
+    DL_SPI_enableDMAReceiveEvent(`instName`_INST, `inst.enabledDMAEvent1Triggers`);
+%}
+    /* Set RX and TX FIFO threshold levels */
+    DL_SPI_setFIFOThreshold(`instName`_INST, `inst.rxFifoThreshold`, `inst.txFifoThreshold`);
+%
+%   if (inst.enabledInterrupts.length > 0) {
+%%{
+    /* Create interrupt bit mask to be used in DL_SPI_enableInterrupt() */
+    let intsToEnableOR = "(";
+    for (let intToEnable of inst.enabledInterrupts)
+    {
+        if (intToEnable == inst.enabledInterrupts[inst.enabledInterrupts.length - 1])
+        {
+            intsToEnableOR += ("DL_SPI_INTERRUPT_" + intToEnable + ")");
+        }
+        else
+        {
+            intsToEnableOR += ("DL_SPI_INTERRUPT_" + intToEnable + " |");
+            intsToEnableOR += "\n\t\t";
+        }
+    }
+%%}
+    DL_SPI_enableInterrupt(`instName`_INST, `intsToEnableOR`);
+%        if(inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = inst.$name + "_INST_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%   }
+
+    /* Enable module */
+    DL_SPI_enable(`instName`_INST);
+}
+% } // for i < instances.length
+%
+%
+% } // printFunction()

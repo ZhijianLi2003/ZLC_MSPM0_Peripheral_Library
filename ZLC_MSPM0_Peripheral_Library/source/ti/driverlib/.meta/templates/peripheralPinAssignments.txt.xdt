@@ -1,0 +1,311 @@
+%%{
+/*
+ * Copyright (c) 2023, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+%%}
+%%{
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* localize the object names with the device ID */
+    let devId = system.deviceData.deviceId;
+    let part = system.deviceData.part;
+    let boardName = Common.boardName();
+
+    /* sort all modules in the current config by initPriority */
+    let modules = [];
+    let max = 0;
+    for (let moduleName in system.modules) {
+        var mod = system.modules[moduleName];
+        if (max <= mod.initPriority) {
+            max = mod.initPriority + 1;
+        }
+    }
+
+    let board = system.modules["/ti/driverlib/Board"].$static;
+    let keys = Common.getModuleKeys();
+
+%%}
+% if(board.genPeriphPinFile){
+%%{
+    let readUsed = {};
+
+    let allPins = system.deviceData.devicePins;
+    /* Special Case of GPIO module pins, get used pins */
+    if(keys.includes("/ti/driverlib/GPIO")){
+        /* Initialize array of current instance pins*/
+        let readGPIO = [];
+        /* Iterate through current instance pins */
+        if(system.modules["/ti/driverlib/gpio/GPIOPin"].$instances){
+            for(let currentInstance of system.modules["/ti/driverlib/gpio/GPIOPin"].$instances){
+                // Extract pin with resource name for per-instance pin list */
+                let pinWithResource = "";
+                let pinInternalResistor = "";
+                if(currentInstance.internalResistor !== "NONE"){
+                    pinInternalResistor = " with internal " + currentInstance.internalResistor.toLowerCase().replace("_","-");
+                }
+                pinWithResource += currentInstance.direction.charAt(0) + currentInstance.direction.slice(1).toLowerCase()+pinInternalResistor+": "
+                pinWithResource += currentInstance.pin.$solution.devicePinName;
+                let pinIOType = system.deviceData.gpio.pinInfo[currentInstance.pin.$solution.packagePinName].devicePin.attributes.io_type;
+                let pinIOTypeExtended = "";
+                switch (pinIOType) {
+                    case "SD":
+                        pinIOTypeExtended = "Standard";
+                        break;
+                    case "SDW":
+                        pinIOTypeExtended = "Standard with Wake";
+                        break;
+                    case "HS":
+                        pinIOTypeExtended = "High-Speed";
+                        break;
+                    case "HD":
+                        pinIOTypeExtended = "High-Drive";
+                        break;
+                    case "OD":
+                        pinIOTypeExtended = "Open-Drain";
+                        break;
+                    case "SDL":
+                        pinIOTypeExtended = "Standard";
+                        break;
+                    default:
+                        break;
+                }
+                let pinWithIOType = pinIOTypeExtended + " " + pinWithResource;
+                readGPIO.push(pinWithIOType);
+            }
+            /* Organize GPIO pins per group */
+            let readPortA = (readGPIO.filter(e => e.includes("PA")));
+            let readPortB = (readGPIO.filter(e => e.includes("PB")));
+            if(readPortA.length>0){
+                readUsed["GPIOA"] = readPortA;
+            }
+            if(readPortB.length>0){
+                readUsed["GPIOB"] = readPortB;
+            }
+        }
+    }
+    /* Special Case of TimerFault module, get used pins */
+    if(Common.hasTimerA()){
+        try{
+            if(system.modules["/ti/driverlib/TIMERFault"].$instances){
+                for(let currentInstance of system.modules["/ti/driverlib/TIMERFault"].$instances){
+                    /* Extract Current Instance resource name */
+                    let readCurrentName = "";
+                    try{
+                        readCurrentName = "TIMER FAULT "+system.modules["/ti/driverlib/TIMERFault"].$instances.indexOf(currentInstance);
+                    }catch (e) {
+                        // do nothing
+                    }
+                    /* Initialize array of current instance pins*/
+                    readUsed[readCurrentName] = [];
+                    /* Iterate through current instance pins */
+                    if(system.modules["/ti/driverlib/TIMERFault"].pinmuxRequirements){
+                        if(system.modules["/ti/driverlib/TIMERFault"].pinmuxRequirements(currentInstance)){
+                            for(let currentResource of system.modules["/ti/driverlib/TIMERFault"].pinmuxRequirements(currentInstance)){
+                                // Extract pin with resource name for per-instance pin list */
+                                if(readCurrentName.length>0){
+                                    let pinWithResource = "";
+                                    pinWithResource += currentResource.displayName + ": "
+                                    pinWithResource += currentInstance[currentResource.name].$solution.devicePinName;
+                                    readUsed[readCurrentName].push(pinWithResource);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }catch (e) {
+            // do nothing
+        }
+    }
+
+    for(let currentModule of keys){
+        if(currentModule.$name == "/ti/driverlib/GPIO"){
+            // do nothing, taken care of in outside case
+        }
+        /* Special Case: Tamper IO pin filtering - only for MSPM0L122X_L222X family */
+        else if(currentModule == "/ti/driverlib/TAMPERIO"){
+            try{
+                /* Extract Current Instance resource name */
+                let readCurrentName = "TAMPER IO";
+                /* Initialize array of current instance pins*/
+                readUsed[readCurrentName] = [];
+                /* Iterate through current instance pins */
+                if(system.modules[currentModule].moduleStatic.pinmuxRequirements){
+                    if(system.modules[currentModule].moduleStatic.pinmuxRequirements(system.modules[currentModule].$static)){
+                        for(let currentResource of system.modules[currentModule].moduleStatic.pinmuxRequirements(system.modules[currentModule].$static)){
+                            /* Condition: skip the peripheral resource for text generation */
+                            if(currentResource.name !== "peripheral"){
+                                let pinWithResource = "";
+                                pinWithResource += currentResource.displayName + ": "
+                                pinWithResource += system.modules[currentModule].$static[currentResource.name].$solution.devicePinName;
+                                readUsed[readCurrentName].push(pinWithResource);
+                            }
+                        }
+                    }
+                }
+            }catch (e) {
+                // do nothing
+            }
+        }
+        /* Get used pins from static modules */
+        else if(system.modules[currentModule].moduleStatic){
+            /* Extract Current Instance resource name */
+            let readCurrentName = "";
+            try{
+                readCurrentName = system.modules[currentModule].displayName;
+            }catch (e) {
+                // do nothing
+            }
+            /* Initialize array of current instance pins*/
+            readUsed[readCurrentName] = [];
+            /* Iterate through current instance pins */
+            if(system.modules[currentModule].moduleStatic.pinmuxRequirements){
+                if(system.modules[currentModule].moduleStatic.pinmuxRequirements(system.modules[currentModule].$static)[0]){
+                    for(let currentResource of system.modules[currentModule].moduleStatic.pinmuxRequirements(system.modules[currentModule].$static)[0].resources){
+                        // Extract pin with resource name for per-instance pin list */
+                        if(readCurrentName.length>0){
+                            let pinWithResource = "";
+                            pinWithResource += currentResource.displayName + ": "
+                            pinWithResource += system.modules[currentModule].$static.peripheral[currentResource.name].$solution.devicePinName;
+                            readUsed[readCurrentName].push(pinWithResource);
+                        }
+
+                    }
+                }
+            }
+        }
+        /* Get used pins from non-static modules */
+        else if(system.modules[currentModule].$instances){
+            for(let currentInstance of system.modules[currentModule].$instances){
+                /* Extract Current Instance resource name */
+                let readCurrentName = "";
+                try{
+                    readCurrentName = currentInstance.peripheral.$solution.peripheralName;
+                }catch (e) {
+                    // do nothing
+                }
+                /* Initialize array of current instance pins*/
+                readUsed[readCurrentName] = [];
+                /* Iterate through current instance pins */
+                if(system.modules[currentModule].pinmuxRequirements){
+                    if(system.modules[currentModule].pinmuxRequirements(currentInstance)[0]){
+                        for(let currentResource of system.modules[currentModule].pinmuxRequirements(currentInstance)[0].resources){
+                            // Extract pin with resource name for per-instance pin list */
+                            if(readCurrentName.length>0){
+                                let pinWithResource = "";
+                                pinWithResource += currentResource.displayName + ": "
+                                pinWithResource += currentInstance.peripheral[currentResource.name].$solution.devicePinName;
+                                readUsed[readCurrentName].push(pinWithResource);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /* Special Case of Board module, get used pins */
+    if(system.modules["/ti/driverlib/Board"].moduleStatic){
+
+        /* Initialize array of current instance pins*/
+        readUsed["BOARD"] = [];
+        /* Iterate through current instance pins */
+        for(let currentResource of system.modules["/ti/driverlib/Board"].moduleStatic.pinmuxRequirements(system.modules["/ti/driverlib/Board"].$static)[0].resources){
+            // Extract pin with resource name for per-instance pin list */
+            let pinWithResource = "";
+            pinWithResource += currentResource.displayName + ": "
+            pinWithResource += system.modules["/ti/driverlib/Board"].$static.peripheral[currentResource.name].$solution.devicePinName;
+            readUsed["BOARD"].push(pinWithResource);
+        }
+    }
+    /* Special Case of Clock Tree Pins */
+    if(system.modules["/ti/driverlib/SYSCTL"]){
+        if(system.modules["/ti/driverlib/SYSCTL"].moduleStatic){
+            /* Initialize array of current instance pins*/
+            if(!readUsed["SYSCTL"]){ readUsed["SYSCTL"] = []};
+            // Clock Tree enabled
+            if(system.modules["/ti/driverlib/SYSCTL"].$static.clockTreeEn){
+
+                /* Get used pins from Clock Tree pinFunction */
+                if(system.modules["/ti/clockTree/pinFunction.js"].$instances){
+                    for(let currentInstance of system.modules["/ti/clockTree/pinFunction.js"].$instances){
+                        if(system.modules["/ti/clockTree/pinFunction.js"].pinmuxRequirements){
+                            if(system.modules["/ti/clockTree/pinFunction.js"].pinmuxRequirements(currentInstance)[0]){
+                                for(let currentResource of system.modules["/ti/clockTree/pinFunction.js"].pinmuxRequirements(currentInstance)[0].resources){
+                                    // Extract pin with resource name for per-instance pin list */
+                                    let pinWithResource = "";
+                                    pinWithResource += currentResource.displayName + ": "
+                                    pinWithResource += currentInstance.peripheral[currentResource.name].$solution.devicePinName;
+                                    readUsed["SYSCTL"].push(pinWithResource);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /* Get used pins from Clock Tree oscillator */
+                if(system.modules["/ti/clockTree/oscillator.js"].$instances){
+                    for(let currentInstance of system.modules["/ti/clockTree/oscillator.js"].$instances){
+                        if(system.modules["/ti/clockTree/oscillator.js"].pinmuxRequirements){
+                            if(system.modules["/ti/clockTree/oscillator.js"].pinmuxRequirements(currentInstance)[0]){
+                                for(let currentResource of system.modules["/ti/clockTree/oscillator.js"].pinmuxRequirements(currentInstance)[0].resources){
+                                    // Extract pin with resource name for per-instance pin list */
+                                    let pinWithResource = "";
+                                    pinWithResource += currentResource.displayName + ": "
+                                    pinWithResource += currentInstance.peripheral[currentResource.name].$solution.devicePinName;
+                                    readUsed["SYSCTL"].push(pinWithResource);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let readUsedPrint = "";
+    for(var key in readUsed){
+        var nameToAdd = ("\n- "+key.toString());
+        if(readUsed[key].length > 0){
+            nameToAdd += ":";
+        }
+        if (/[A-Za-z]+/.test(nameToAdd)){
+            readUsedPrint += nameToAdd;
+            if(readUsed[key].length > 0)
+            for(var pin of readUsed[key]){
+                readUsedPrint += ("\n\t+ "+pin+"");
+            }
+        }
+    }
+%%}
+`readUsedPrint`
+% } // end if(board.genPeriphPinFile)

@@ -1,0 +1,549 @@
+/*
+ * Copyright (c) 2023, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+%%{
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* localize the object names with the device ID */
+    let devId = system.deviceData.deviceId;
+    let part = system.deviceData.part;
+    let boardName = Common.boardName();
+
+    /* sort all modules in the current config by initPriority */
+    let modules = [];
+    let max = 0;
+    for (let moduleName in system.modules) {
+        var mod = system.modules[moduleName];
+        if (max <= mod.initPriority) {
+            max = mod.initPriority + 1;
+        }
+    }
+
+    let board = system.modules["/ti/driverlib/Board"].$static;
+    let keys = Common.getModuleKeys();
+
+
+%%}
+
+/*
+ *  ============ ti_msp_dl_config.c =============
+ *  Configured MSPM0 DriverLib module definitions
+ *
+ *  DO NOT EDIT - This file is generated for the `boardName`
+ *  by the SysConfig tool.
+ */
+
+#include "ti_msp_dl_config.h"
+
+%%{
+/* Retention: check if available for peripheral  */
+let retentionCount = 0;
+if(Common.isDeviceM0G()){
+    for (let i = 0; i < keys.length; i++) {
+        let mod = system.modules[keys[i]];
+        /* Retention template */
+        if (mod.templates && mod.templates.boardc && mod.templates.Retention) {
+            retentionCount++;
+        }
+    }
+}
+%%}
+% /* Retention: declare backupConfig */
+% if(retentionCount>0){
+% let retDecStr = "";
+% /* loop over all modules in the current configuration */
+%   for (let i = 0; i < keys.length; i++) {
+%       let mod = system.modules[keys[i]];
+%       /* Retention template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Retention) {
+%           /* load its template and expand it with args */
+%           let gen = system.getTemplate(mod.templates.boardc);
+%           let genString = gen(mod,"RetentionDeclare");
+%           /* Check if generating empty code */
+%           if (/\S/.test(genString)) {
+%               retDecStr += genString;
+%           }
+%       }
+%       else {/* do nothing */ }  }
+% if(!(/^\s*$/.test(retDecStr))){
+`retDecStr`
+% }
+%}
+/*
+ *  ======== SYSCFG_DL_init ========
+ *  Perform any initialization needed before using any board APIs
+ */
+SYSCONFIG_WEAK void SYSCFG_DL_init(void)
+{
+    SYSCFG_DL_initPower();
+    SYSCFG_DL_GPIO_init();
+    /* Module-Specific Initializations*/
+% if(!board.debugOn){
+    SYSCFG_DL_DEBUG_init();
+%}
+% /* generate init calls in priority order */
+% /* loop over all modules in the current configuration */
+% for (let i = 0; i < keys.length; i++) {
+%       let mod = system.modules[keys[i]];
+%           if (mod.templates && mod.templates.boardc && mod.templates.Call) {
+%           /* load its template and expand it with args */
+%           let gen = system.getTemplate(mod.templates.boardc);
+%     /* ==== `mod.$name` initialization ==== */
+`_.trimEnd(gen(mod,"Call"))`
+%       }
+% }
+%if(keys.includes("/ti/driverlib/TIMER")){
+%%{
+    let trigger_key = "/ti/driverlib/TIMER";
+    let trigger_mod = system.modules[trigger_key];
+    let trigger_gen = system.getTemplate(trigger_mod.templates.boardc)
+    if( (trigger_gen(trigger_mod,"Function")).includes("SYSCONFIG_WEAK void SYSCFG_DL_TIMER_Cross_Trigger_init(void)") ){
+%%}
+    SYSCFG_DL_TIMER_Cross_Trigger_init();
+%   }
+%}
+%if(keys.includes("/ti/driverlib/PWM")){
+%%{
+    let trigger_key = "/ti/driverlib/PWM";
+    let trigger_mod = system.modules[trigger_key];
+    let trigger_gen = system.getTemplate(trigger_mod.templates.boardc)
+    if( (trigger_gen(trigger_mod,"Function")).includes("SYSCONFIG_WEAK void SYSCFG_DL_PWM_Cross_Trigger_init(void)") ){
+%%}
+    SYSCFG_DL_PWM_Cross_Trigger_init();
+%   }
+%}
+%if(keys.includes("/ti/driverlib/QEI")){
+%%{
+    let trigger_key = "/ti/driverlib/QEI";
+    let trigger_mod = system.modules[trigger_key];
+    let trigger_gen = system.getTemplate(trigger_mod.templates.boardc)
+    if( (trigger_gen(trigger_mod,"Function")).includes("SYSCONFIG_WEAK void SYSCFG_DL_QEI_Cross_Trigger_init(void)") ){
+%%}
+    SYSCFG_DL_QEI_Cross_Trigger_init();
+%   }
+%}
+%if(keys.includes("/ti/driverlib/SYSCTL")){
+%%{
+    let trigger_key = "/ti/driverlib/SYSCTL";
+    let trigger_mod = system.modules[trigger_key];
+    let trigger_gen = system.getTemplate(trigger_mod.templates.boardc)
+    if( (trigger_gen(trigger_mod,"Function")).includes("SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_CLK_init(void)") ){
+%%}
+    SYSCFG_DL_SYSCTL_CLK_init();
+%   }
+%}
+% /* Retention: ensure backup structure has no valid state */
+% if(retentionCount>0){
+% let retDecStr = "";
+% /* loop over all modules in the current configuration */
+%   for (let i = 0; i < keys.length; i++) {
+%       let mod = system.modules[keys[i]];
+%       /* Retention template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Retention) {
+%           /* load its template and expand it with args */
+%           let gen = system.getTemplate(mod.templates.boardc);
+%           retDecStr += gen(mod,"RetentionRdy");
+%       }
+%       else {/* do nothing */ }  }
+% if(!(/^\s*$/.test(retDecStr))){
+    /* Ensure backup structures have no valid state */
+`retDecStr`
+% }
+%}
+}
+% if(retentionCount>0){
+% /* Retention: Save Configuration */
+% let retSaveStr = "";
+% /* loop over all modules in the current configuration */
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* Retention template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Retention) {
+%           /* load its template and expand it with args */
+%           let gen = system.getTemplate(mod.templates.boardc);
+%           let genString = gen(mod,"RetentionSave");
+%           /* Check if generating empty code */
+%           if (/\S/.test(genString)) {
+%               retSaveStr += genString;
+%           }
+%       }
+% }
+% /* Avoid adding function call if retention not enabled */
+% if(!(/^\s*$/.test(retSaveStr))){
+/*
+ * User should take care to save and restore register configuration in application.
+ * See Retention Configuration section for more details.
+ */
+SYSCONFIG_WEAK bool SYSCFG_DL_saveConfiguration(void)
+{
+    bool retStatus = true;
+
+`retSaveStr`
+    return retStatus;
+}
+% }
+
+
+% /* Retention: Restore Configuration */
+% let retResStr = "";
+% /* loop over all modules in the current configuration */
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* Retention template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Retention) {
+%           /* load its template and expand it with args */
+%           let gen = system.getTemplate(mod.templates.boardc);
+%           let genString = gen(mod,"RetentionRestore");
+%           /* Check if generating empty code */
+%           if (/\S/.test(genString)) {
+%               retResStr += genString;
+%           }
+%       }
+% }
+% /* Avoid adding function call if retention not enabled */
+% if(!(/^\s*$/.test(retResStr))){
+SYSCONFIG_WEAK bool SYSCFG_DL_restoreConfiguration(void)
+{
+    bool retStatus = true;
+
+`retResStr`
+    return retStatus;
+}
+% }
+% }
+
+% /* Init Power */
+SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
+{
+%   if(Common.hasGPIOPortA()) {
+    DL_GPIO_reset(GPIOA);
+%   }
+%   if(Common.hasGPIOPortB()) {
+    DL_GPIO_reset(GPIOB);
+%   }
+%   if(Common.hasGPIOPortC()) {
+    DL_GPIO_reset(GPIOC);
+%   }
+% /* loop over all modules in the current configuration */
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* Reset template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Reset) {
+%       /* load its template and expand it with args */
+%       let gen = system.getTemplate(mod.templates.boardc);
+`_.trimEnd(gen(mod,"Reset"))`
+% } }
+
+%   if(Common.hasGPIOPortA()) {
+    DL_GPIO_enablePower(GPIOA);
+%   }
+%   if(Common.hasGPIOPortB()) {
+    DL_GPIO_enablePower(GPIOB);
+%   }
+%   if(Common.hasGPIOPortC()) {
+    DL_GPIO_enablePower(GPIOC);
+%   }
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* Power template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Power) {
+%       /* load its template and expand it with args */
+%       let gen = system.getTemplate(mod.templates.boardc);
+`_.trimEnd(gen(mod,"Power"))`
+% } }
+    delay_cycles(POWER_STARTUP_DELAY);
+}
+
+% /* Init GPIO */
+SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
+{
+%%{
+    /* Global Fast Wake Configuration */
+    if(board.globalFastWakeEn){
+%%}
+    DL_GPIO_enableGlobalFastWake(GPIOA);
+%       if (Common.hasGPIOPortB()){
+    DL_GPIO_enableGlobalFastWake(GPIOB);
+%       }
+%       if (Common.hasGPIOPortC()){
+    DL_GPIO_enableGlobalFastWake(GPIOC);
+%       }
+%   } // if(board.globalFastWake)
+    % /* Unused Pin Configuration */
+    % if(board.configureUnused){
+%%{
+        let unusedPinNames = [];
+        let unusedPinIDs = [];
+        let unusedIOMUX = [];
+        let usedPins = Common.getUsedPins(keys);
+        let usedPinNames = usedPins.usedPinNames;
+        let usedPinIDs = usedPins.usedPinIDs;
+        let allPins = system.deviceData.devicePins;
+
+        /* Extract all device pin names */
+        let allPinsArray = Object.values(allPins);
+        let excludedPins = ["NRST","VDD", "VSS","VCORE", "VBAT"];
+        allPinsArray = allPinsArray.filter(function( obj ) {
+            return (!excludedPins.some(v => (obj.designSignalName).includes(v)))
+        });
+        let nonMuxablePins = ["OPA"];
+        allPinsArray = allPinsArray.filter(function( obj ) {
+            return (!nonMuxablePins.some(v => (obj.designSignalName).includes(v) && !(obj.designSignalName).includes("/" + v)))
+        });
+        let allPinNamesArray = (allPinsArray).map(a => a.designSignalName);
+        let allPinIDArray = (allPinsArray).map(a => a.name);
+
+        /* Filter unused pins */
+        unusedPinNames = allPinNamesArray.filter(x => !usedPinNames.includes(x));
+        unusedPinIDs = allPinIDArray.filter(x => !usedPinIDs.includes(x));
+        unusedPinNames = unusedPinNames.filter((item,index) => unusedPinNames.indexOf(item) === index);
+        unusedPinIDs = unusedPinIDs.filter((item,index) => unusedPinIDs.indexOf(item) === index);
+        for(let selectUnused of unusedPinIDs){
+            /* Add IOMUX_PINCM to create an array of IOMUX_PINCM defines */
+            /* Note: in the case of multiple pinCMs on same pad, access the first one */
+            if((system.deviceData.devicePins[selectUnused].attributes.iomux_pincm).split(",")[0] !== "None"){
+                unusedIOMUX.push("IOMUX_PINCM" + (system.deviceData.devicePins[selectUnused].attributes.iomux_pincm).split(",")[0]);
+            }
+
+        }
+%%}
+    const uint8_t unusedPinIndexes[] =
+    {
+        % /* 4 array elements per line, 2 levels (8 spaces worth) of nesting */
+        `Common.createFormattedArray(unusedIOMUX, 4, 2)`
+    };
+
+    for(int i = 0; i < sizeof(unusedPinIndexes)/sizeof(unusedPinIndexes[0]); i++)
+    {
+    % if(board.unusedDirection == "OUTPUT"){
+        DL_GPIO_initDigitalOutput(unusedPinIndexes[i]);
+    % }
+    % else if(board.unusedDirection == "INPUT"){
+        % if(board.unusedInternalResistor == "NONE"){
+        DL_GPIO_initDigitalInput(unusedPinIndexes[i]);
+        %}
+        % else{
+        DL_GPIO_initDigitalInputFeatures(unusedPinIndexes[i],
+            DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_`board.unusedInternalResistor`,
+            DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+        % }
+    % }
+    }
+    % /* If output, clear pins */
+    % if(board.unusedDirection == "OUTPUT"){
+
+%%{
+        let unusedPortA = (unusedPinNames.filter(e => e.includes("PA")));
+        let unusedPortB = (unusedPinNames.filter(e => e.includes("PB")));
+        let unusedPortC = (unusedPinNames.filter(e => e.includes("PC")));
+
+        let pinCount = 0;
+        var unusedPortAPins = "(";
+        for (let pinToConfigure in unusedPortA)
+        {
+            let selectPin = unusedPortA[pinCount];
+            /* Filter out special case of combined functionality pins */
+            let specialPinCaseIdx = selectPin.indexOf("/", 0);
+            if(specialPinCaseIdx>=0){
+                selectPin = selectPin.substring(0, specialPinCaseIdx);
+            }
+
+            /*
+             * Each line should contain 4 DL_GPIO_PIN_x elements. Lines should
+             * be preceded by 8 spaces. This does not include the very first
+             * line since the spacing/newline is already taken care of
+             */
+            if ((pinCount != 0) && (pinCount % 4 == 0))
+            {
+                unusedPortAPins += "\n        ";
+            }
+
+            if (pinCount == (unusedPortA.length - 1))
+            {
+                /* The last GPIO pin should simply be added at the end */
+                unusedPortAPins += "DL_GPIO_PIN_"+selectPin.replace("PA", "");
+            }
+            else if ((pinCount + 1) % 4 == 0)
+            {
+                /*
+                 * The last GPIO pin in a line should just end with a bitwise
+                 * OR to prevent trailing whitespace
+                 */
+                unusedPortAPins += "DL_GPIO_PIN_"+selectPin.replace("PA", "") + " |";
+            }
+            else
+            {
+                unusedPortAPins += "DL_GPIO_PIN_"+selectPin.replace("PA", "") + " | ";
+            }
+
+            pinCount++;
+        }
+        unusedPortAPins += ")";
+
+        pinCount = 0;
+        var unusedPortBPins = "(";
+        for (let pinToConfigure in unusedPortB)
+        {
+            let selectPin = unusedPortB[pinCount];
+            /* Filter out special case of combined functionality pins */
+            let specialPinCaseIdx = selectPin.indexOf("/", 0);
+            if(specialPinCaseIdx>=0){
+                selectPin = selectPin.substring(0, specialPinCaseIdx);
+            }
+
+            if ((pinCount != 0) && (pinCount % 4 == 0))
+            {
+                unusedPortBPins += "\n        ";
+            }
+
+            if (pinCount == (unusedPortB.length - 1))
+            {
+                unusedPortBPins += "DL_GPIO_PIN_"+selectPin.replace("PB", "");
+            }
+            else if ((pinCount + 1) % 4 == 0)
+            {
+                unusedPortBPins += "DL_GPIO_PIN_"+selectPin.replace("PB", "") + " |";
+            }
+            else
+            {
+                unusedPortBPins += "DL_GPIO_PIN_"+selectPin.replace("PB", "") + " | ";
+            }
+
+            pinCount++;
+        }
+        unusedPortBPins += ")";
+
+        pinCount = 0;
+        var unusedPortCPins = "(";
+        for (let pinToConfigure in unusedPortC)
+        {
+            let selectPin = unusedPortC[pinCount];
+            /* Filter out special case of combined functionality pins */
+            let specialPinCaseIdx = selectPin.indexOf("/", 0);
+            if(specialPinCaseIdx>=0){
+                selectPin = selectPin.substring(0, specialPinCaseIdx);
+            }
+
+            if ((pinCount != 0) && (pinCount % 4 == 0))
+            {
+                unusedPortCPins += "\n        ";
+            }
+
+            if (pinCount == (unusedPortC.length - 1))
+            {
+                unusedPortCPins += "DL_GPIO_PIN_"+selectPin.replace("PC", "");
+            }
+            else if ((pinCount + 1) % 4 == 0)
+            {
+                unusedPortCPins += "DL_GPIO_PIN_"+selectPin.replace("PC", "") + " |";
+            }
+            else
+            {
+                unusedPortCPins += "DL_GPIO_PIN_"+selectPin.replace("PC", "") + " | ";
+            }
+
+            pinCount++;
+        }
+        unusedPortCPins += ")";
+%%}
+    % /* Determine if DL_GPIO_setPins or DL_GPIO_clearPins is used */
+    % let outputDrive = (board.unusedOutputDrive == "HIGH") ? "set" : "clear";
+    %if(unusedPortA.length>0){
+    DL_GPIO_`outputDrive`Pins(GPIOA,
+        `unusedPortAPins`);
+    DL_GPIO_enableOutput(GPIOA,
+        `unusedPortAPins`);
+    %}
+    %if(unusedPortB.length>0){
+    DL_GPIO_`outputDrive`Pins(GPIOB,
+        `unusedPortBPins`);
+    DL_GPIO_enableOutput(GPIOB,
+        `unusedPortBPins`);
+    %}
+    %if(unusedPortC.length>0){
+    DL_GPIO_`outputDrive`Pins(GPIOC,
+        `unusedPortCPins`);
+    DL_GPIO_enableOutput(GPIOC,
+        `unusedPortCPins`);
+    %}
+    % } // if board.unusedDirection == "OUTPUT"
+    % } // if(board.configureUnused)
+
+% /* loop over all modules in the current configuration */
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* GPIO template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.GPIO) {
+%       /* load its template and expand it with args */
+%       let gen = system.getTemplate(mod.templates.boardc);
+%       let genString = gen(mod,"GPIO");
+%       /* Check if generating empty code */
+%       if (/\S/.test(genString)) {
+`genString`
+%       }
+% }
+% else {/* do nothing */ }  }
+% /* Special Case TIMERFault */
+% if(system.modules["/ti/driverlib/TIMERFault"]){
+%    let faultMod = system.modules["/ti/driverlib/TIMERFault"];
+%        /* GPIO template */
+%       if (faultMod.templates && faultMod.templates.boardc && faultMod.templates.GPIO) {
+%       /* load its template and expand it with args */
+%       let gen = system.getTemplate(faultMod.templates.boardc);
+%       let genString = gen(faultMod,"GPIO");
+%       /* Check if generating empty code */
+%       if (/\S/.test(genString)) {
+`genString`
+%       }
+% }
+% }
+}
+
+
+% /* debug configuration */
+% if(!board.debugOn){
+SYSCONFIG_WEAK void SYSCFG_DL_DEBUG_init(void)
+{
+    /* Set the DISABLE bit in the SWDCFG register in SYSCTL along with KEY */
+    SYSCTL->SOCLOCK.SWDCFG = (SYSCTL_SWDCFG_KEY_VALUE | SYSCTL_SWDCFG_DISABLE_TRUE);
+}
+% /* loop over all modules in the current configuration */
+%}
+% for (let i = 0; i < keys.length; i++) {
+%   let mod = system.modules[keys[i]];
+%        /* Module-specific template */
+%       if (mod.templates && mod.templates.boardc && mod.templates.Function) {
+%       /* load its template and expand it with args */
+%       let gen = system.getTemplate(mod.templates.boardc);
+`gen(mod,"Function")`
+%       }
+% }

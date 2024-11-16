@@ -1,0 +1,115 @@
+
+let PowerPolicyFreqSrcDict = {
+    RUN0: {
+        CPUCLK: "net_cpuclk",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "net_mfclk",
+        MFPCLK: "net_mfpclk",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "net_sysosc",
+    },
+    RUN1: {
+        CPUCLK: "net_cpuclk",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "net_sysosc",
+    },
+    RUN2: {
+        CPUCLK: "net_cpuclk",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "OFF",
+    },
+    SLEEP0: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "net_mfclk",
+        MFPCLK: "net_mfpclk",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "net_sysosc",
+    },
+    SLEEP1: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "net_sysosc",
+    },
+    SLEEP2: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "net_mclk",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_ulpclk",
+        SYSOSC: "OFF",
+    },
+    STOP0: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "OFF",
+        MFCLK: "net_mfclk",
+        MFPCLK: "net_mfpclk", // TODO: this has to be sourced from sysosc else 0
+        ULPCLK: "net_sysosc4m",
+        SYSOSC: "net_sysosc",
+    },
+    STOP1: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "OFF",
+        MFCLK: "net_mfclk",
+        MFPCLK: "net_mfpclk",
+        ULPCLK: "net_sysosc4m",
+        SYSOSC: "net_sysosc4m", // gear-shift
+    },
+    STOP2: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "OFF",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_lfclk",
+        SYSOSC: "OFF",
+    },
+    STANDBY0: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "OFF",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_lfclk",
+        SYSOSC: "OFF",
+    },
+    STANDBY1: {
+        CPUCLK: "OFF",
+        LFCLK: "net_lfclk",
+        MCLK: "OFF",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "net_lfclk", // special case where only given to TIMG0 and TIMG1
+        SYSOSC: "OFF",
+    },
+    SHUTDOWN: {
+        CPUCLK: "OFF",
+        LFCLK: "OFF",
+        MCLK: "OFF",
+        MFCLK: "OFF",
+        MFPCLK: "OFF",
+        ULPCLK: "OFF",
+        SYSOSC: "OFF",
+    },
+}
+
+exports = {
+    frequencyDict: PowerPolicyFreqSrcDict
+}

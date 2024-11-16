@@ -1,0 +1,330 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== DMA.Board.c.xdt ========
+ */
+
+    let DMA = args[0];
+    let content = args[1];
+
+    /* shorthand names for some common references in template below */
+    let inst = DMA.$static;
+    if (inst.length == 0) return;
+
+    /* instances represents the dma channels */
+    let dmaChanMod = system.modules["/ti/driverlib/DMAChannel"];
+    let instances = [];
+    if(!(dmaChanMod === undefined)){
+        instances = dmaChanMod.$instances;
+    }
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+
+switch(content){
+    case "Call":
+        printCall();
+        break;
+    case "Reset":
+        printReset();
+        break;
+    case "Power":
+        printPower();
+        break;
+    case "GPIO":
+        printGPIO();
+        break;
+    case "Function":
+        printFunction();
+        break;
+    default:
+        /* do nothing */
+        return;
+        break;
+}
+%%}
+
+%
+% function printCall(){
+    SYSCFG_DL_DMA_init();
+% }
+%
+% function printReset(){
+%   // Reset not needed for DMA
+% }
+% function printPower(){
+%   // Enable Power not needed for DMA
+% }
+%
+% function printGPIO(){
+%   // No need to initialize GPIOs for Analog functionality
+% }
+%
+% /* Main Function */
+% function printFunction(){
+%   let ownedCollection = {};
+%%{
+    let ownedCollectionTotal = {};
+    for (let i in instances) {
+        let inst = instances[i];
+        let ownedBy = inst.$ownedBy;
+        if(ownedBy !== undefined && inst.$ownedBy.$name !== "/ti/driverlib/DMA") {
+            let parentPeripheral;
+            if(inst.$ownedBy.peripheral !== undefined){
+                parentPeripheral = inst.$ownedBy.peripheral.$solution.peripheralName;
+            }
+            else{
+                parentPeripheral = inst.$ownedBy.$name;
+            }
+                if(ownedCollectionTotal[parentPeripheral] !== undefined){
+                ownedCollectionTotal[parentPeripheral] = ownedCollectionTotal[parentPeripheral]+1;
+            }
+            else{
+                ownedCollectionTotal[parentPeripheral] = 0;
+            }
+        }
+    }
+%%}
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let instName = inst.$name;
+%
+% /* To get the specific parameters for the config struct: */
+%       let extendedMode;
+%       let destIncrement;
+%       let srcIncrement;
+%       let srcWidth = inst.srcLength;
+%       let destWidth = inst.dstLength;
+%       switch(inst.addressMode){
+%           case "f2f":
+%               /* no change from defaults */
+%               extendedMode = "NORMAL";
+%               destIncrement = "UNCHANGED";
+%               srcIncrement = "UNCHANGED";
+%               break;
+%            case "f2b":
+%               extendedMode = "NORMAL";
+%               destIncrement = inst.dstIncDec;
+%               srcIncrement = "UNCHANGED";
+%               break;
+%            case "b2f":
+%               extendedMode = "NORMAL";
+%               destIncrement = "UNCHANGED";
+%               srcIncrement = inst.srcIncDec;
+%               break;
+%            case "b2b":
+%               extendedMode = "NORMAL";
+%               srcIncrement = inst.srcIncDec;
+%               destIncrement = inst.dstIncDec;
+%               break;
+%            case "fill":
+%               extendedMode = "FULL_CH_FILL";
+%               if(inst.fillIncrement !== "UNCHANGED"){
+%                   srcWidth = inst.fillIncAmount; // special case
+%               }
+%               srcIncrement = inst.fillIncrement;
+%               destIncrement = inst.dstIncDec;
+%               break;
+%            case "table":
+%                extendedMode = "FULL_CH_TABLE";
+%                srcIncrement = "INCREMENT";
+%                destIncrement = "INCREMENT"; // defined for completion but ignored in the mode
+%                break;
+%            default:
+%                throw "unrecognized address mode in template";
+%       }
+%
+%       /* To Get Trigger Source Define */
+%       let triggerString;
+%       if(inst.$ownedBy !== undefined && inst.$ownedBy.$name !== "/ti/driverlib/DMA") {
+%%{
+        let parentPeripheral;
+        if(inst.$ownedBy.peripheral !== undefined){
+            parentPeripheral = inst.$ownedBy.peripheral.$solution.peripheralName;
+            triggerString = (inst.$ownedBy.$name).replace("/ti/driverlib/","") + "_INST_DMA_TRIGGER";
+        }
+        /* case for static modules */
+        else{
+            parentPeripheral = inst.$ownedBy.$name;
+            triggerString = (inst.$ownedBy.$name).replace("/ti/driverlib/","") + "_DMA_TRIGGER";
+        }
+        if(ownedCollection[parentPeripheral] !== undefined){
+            ownedCollection[parentPeripheral] = ownedCollection[parentPeripheral]+1;
+        }
+        else{
+            ownedCollection[parentPeripheral] = 0;
+        }
+
+%%}
+%%{
+    try{
+        if(ownedCollectionTotal[parentPeripheral] !== undefined){
+            if(ownedCollectionTotal[parentPeripheral] >0){
+                triggerString += ("_"+ownedCollection[parentPeripheral]);
+            }
+        }
+    }catch{
+         if(ownedCollectionTotal["CRC"] >0){
+                triggerString += ("_"+ownedCollection["CRC"]);
+        }
+    }
+%%}
+%%{
+        } else {
+            if(inst.triggerType == "EXTERNAL"){
+               triggerString = (inst.$name).replace("/ti/driverlib/","")+"_TRIGGER_SEL_"+inst.triggerSelect;
+            }
+            else if(inst.triggerType == "INTERNAL"){
+                triggerString = "DMA_CH_"+inst.triggerSelectInternal+"_TRIG";
+            }
+        }
+%%}
+static const DL_DMA_Config g`instName`Config = {
+    .transferMode   = DL_DMA_`inst.transferMode`_TRANSFER_MODE,
+    .extendedMode   = DL_DMA_`extendedMode`_MODE,
+    .destIncrement  = DL_DMA_ADDR_`destIncrement`,
+    .srcIncrement   = DL_DMA_ADDR_`srcIncrement`,
+    .destWidth      = DL_DMA_WIDTH_`destWidth`,
+    .srcWidth       = DL_DMA_WIDTH_`srcWidth`,
+    .trigger        = `triggerString`,
+    .triggerType    = DL_DMA_TRIGGER_TYPE_`inst.triggerType`,
+};
+
+%
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void)
+{
+%   /* TODO: IF DMA becomes a resource, then we will use that channel ID instead */
+%   /* Enable channel `inst.channelID` interrupts, initialize channel */
+% if(inst.enableInterrupt) {
+    DL_DMA_clearInterruptStatus(DMA, DL_DMA_INTERRUPT_CHANNEL`inst.channelID`);
+    DL_DMA_enableInterrupt(DMA, DL_DMA_INTERRUPT_CHANNEL`inst.channelID`);
+% } // if inst.enableInterrupt
+% if(inst.enableEarlyInterrupt) {
+    DL_DMA_clearInterruptStatus(DMA, DL_DMA_FULL_CH_INTERRUPT_EARLY_CHANNEL`inst.channelID`);
+    DL_DMA_Full_Ch_setEarlyInterruptThreshold(DMA, `instName`_CHAN_ID, DL_DMA_EARLY_INTERRUPT_THRESHOLD_`inst.earlyIntThresh`);
+    DL_DMA_enableInterrupt(DMA, DL_DMA_FULL_CH_INTERRUPT_EARLY_CHANNEL`inst.channelID`);
+% } // if inst.enableEarlyInterrupt
+% if(inst.srcIncrement !== "UNCHANGED"){
+    DL_DMA_setSrcIncrement(DMA, `instName`_CHAN_ID, DL_DMA_ADDR_`inst.srcIncrement`);
+% } //if inst.srcIncrement !== "UNCHANGED"
+% if(inst.destIncrement !== "UNCHANGED"){
+    DL_DMA_setDestIncrement(DMA, `instName`_CHAN_ID, DL_DMA_ADDR_`inst.destIncrement`);
+% } //if inst.destIncrement !== "UNCHANGED"
+% if(inst.configureTransferSize){
+    DL_DMA_setTransferSize(DMA, `instName`_CHAN_ID, `inst.transferSize`);
+% } //if inst.configureTransferSize
+    DL_DMA_initChannel(DMA, `instName`_CHAN_ID , (DL_DMA_Config *) &g`instName`Config);
+}
+% } // for i < instances.length
+SYSCONFIG_WEAK void SYSCFG_DL_DMA_init(void){
+% if(inst.enableBurst){
+    DL_DMA_setBurstSize(DMA, DL_DMA_BURST_SIZE_`inst.burstSize`);
+% }
+% if(inst.enableRoundRobin){
+    DL_DMA_enableRoundRobinPriority(DMA);
+% }
+% /* Event Publisher Code */
+% if(inst.pubChanID != 0){
+    DL_DMA_setPublisherChanID(DMA, DL_DMA_PUBLISHER_INDEX_0, `inst.pubChanID`);
+% }
+%%{
+    let enabledEventsList = [];
+    for (let i in instances) {
+        let instChannel = instances[i];
+
+        if(instChannel.enabledEvents.includes("EVENT_CHANNEL")){
+            enabledEventsList.push("DL_DMA_EVENT_CHANNEL"+(instChannel.channelID).toString());
+        }
+        if(instChannel.enabledEvents.includes("FULL_CH_EVENT_EARLY_CHANNEL")){
+            enabledEventsList.push("DL_DMA_FULL_CH_EVENT_EARLY_CHANNEL"+(instChannel.channelID).toString());
+        }
+    } // for (let i in instances)
+    if(inst.enabledEvents.includes("EVENT_ADDR_ERROR")){
+        enabledEventsList.push("DL_DMA_EVENT_ADDR_ERROR");
+    }
+    if(inst.enabledEvents.includes("EVENT_DATA_ERROR")){
+        enabledEventsList.push("DL_DMA_EVENT_DATA_ERROR");
+    }
+    let eventCount = 0
+    var eventsToEnableOR = "("
+    for (let eventToEnable in enabledEventsList)
+    {
+        if (eventCount == 0)
+        {
+            eventsToEnableOR += enabledEventsList[eventCount];
+        }
+        else
+        {
+            eventsToEnableOR += "\n\t\t";
+            eventsToEnableOR += " | " + enabledEventsList[eventCount];
+        }
+        eventCount++;
+    }
+    eventsToEnableOR += ")";
+%%}
+% if(eventCount>0){
+    DL_DMA_enableEvent(DMA, `eventsToEnableOR`);
+% }
+% /* Event Subscriber Code */
+% if((inst.subscriberIndex.includes("0")) && (inst.sub0ChanID != 0)){
+    DL_DMA_setSubscriberChanID(DMA, DL_DMA_SUBSCRIBER_INDEX_0, `inst.sub0ChanID`);
+% }
+% if((inst.subscriberIndex.includes("1")) && (inst.sub1ChanID != 0)){
+    DL_DMA_setSubscriberChanID(DMA, DL_DMA_SUBSCRIBER_INDEX_1, `inst.sub1ChanID`);
+% }
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let instName = inst.$name;
+    SYSCFG_DL_`instName`_init();
+% }
+}
+%
+%
+% } // printFunction()

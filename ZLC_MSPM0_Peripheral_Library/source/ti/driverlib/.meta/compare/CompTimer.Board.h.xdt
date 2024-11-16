@@ -1,0 +1,166 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== CompTimer.Board.h.xdt ========
+ */
+
+    let COMPARE = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = COMPARE.$instances;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+
+% function printDefine() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       /* this was when the name came from the flavor
+%       let classY = flavor.match(/(?<=TIM)[AHG]/)[0];
+%       let classPosition = "";
+%       let classExpression = "TIM"+classY;
+%       let classMates = _.filter(instances, (tim) => {
+%           return tim.peripheral.$solution.peripheralName.match(classExpression);
+%       })
+%       if(classMates.length > 1){
+%           // more than one instance of TIMG
+%           classPosition = "_" + _.findIndex(classMates, inst).toString();
+%       }
+%       let instStr = "TIMER" + classY + "_INST" + classPosition;
+%       */
+%
+%       let nameStr = "#define " + inst.$name + "_INST";
+%       let nameStr2 = "(" + flavor +")";
+/* Defines for `inst.$name` */
+`nameStr.padEnd(40," ")+nameStr2.padStart(40," ")`
+%           // add handler and IRQn number
+%           let irqHandlerStr = "#define " + inst.$name + "_INST_IRQHandler"
+%           let irqHandlerStr2 = flavor + "_IRQHandler";
+%           let irqnStr = "#define " + inst.$name + "_INST_INT_IRQN";
+%           let irqnStr2 = "(" + flavor + "_INT_IRQn)";
+`irqHandlerStr.padEnd(40," ")+irqHandlerStr2.padStart(40," ")`
+`irqnStr.padEnd(40," ")+irqnStr2.padStart(40," ")`
+%if (inst.triggerSelect != "Trigger"){
+%       let cc = inst.ccIndex
+%       /* Condition Check: avoid internal channels */
+%       if(!Common.isInternalTimerChannel(cc)){
+%           let gpioStr = "GPIO_"+inst.$name+"_C"+cc;
+% /* figure out pin number and pinCMx */
+%           let pinName = "ccp"+cc+"Pin";
+%           let packagePin = inst.peripheral[pinName].$solution.packagePinName;
+%           let pinCM = Common.getPinCM(packagePin,inst,"CCP"+cc);
+%           let gpioName = system.deviceData.devicePins[packagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%           let port = Common.getGPIOPortMultiPad(packagePin,inst,"CCP"+cc);
+%           let gpioPin = Common.getGPIONumberMultiPad(packagePin,inst,"CCP"+cc);
+/* GPIO defines for channel `cc` */
+% let portStr = "#define "+gpioStr+"_PORT";
+`portStr.padEnd(40," ")+port.padStart(40, " ")`
+% //#define `gpioStr`_PORT                              `port`
+% let pinStr = "#define "+gpioStr+"_PIN";
+% let pinStr2 = "DL_GPIO_PIN_"+gpioPin;
+`pinStr.padEnd(40," ")+pinStr2.padStart(40," ")`
+% //#define `gpioStr`_PIN                               DL_GPIO_PIN_`gpioPin`
+% let iomuxStr = "#define "+gpioStr+"_IOMUX";
+% let iomuxStr2 = "(IOMUX_PINCM"+pinCM+")";
+`iomuxStr.padEnd(40," ")+iomuxStr2.padStart(40," ")`
+% //#define `gpioStr`_IOMUX                             `iomux`
+% let funcStr = "#define "+gpioStr+"_IOMUX_FUNC";
+% let funcStr2 = "IOMUX_PINCM"+pinCM+"_PF_"+flavor+"_CCP"+cc;
+`funcStr.padEnd(40, " ")+funcStr2.padStart(40, " ")`
+% //#define `gpioStr`_IOMUX_FUNC                        IOMUX_PINCM`pinCM`_PF_`flav`_CCP`cc`
+%   }
+%}
+%
+%       /* Create defines for event publisher channels */
+%       if ((inst.event1PublisherChannel != 0) &&
+%           (inst.event1ControllerInterruptEn.length > 0)) {
+%               let eventPub0ChannelStr = "#define " + inst.$name + "_INST_PUB_0_CH";
+%               let eventPub0ChannelStr2 = "(" + inst.event1PublisherChannel + ")";
+`eventPub0ChannelStr.padEnd(40, " ") + eventPub0ChannelStr2.padStart(40, " ")`
+%       }
+%
+%       if ((inst.event2PublisherChannel != 0) &&
+%           (inst.event2ControllerInterruptEn.length > 0)) {
+%               let eventPub1ChannelStr = "#define " + inst.$name + "_INST_PUB_1_CH";
+%               let eventPub1ChannelStr2 = "(" + inst.event2PublisherChannel + ")";
+`eventPub1ChannelStr.padEnd(40, " ") + eventPub1ChannelStr2.padStart(40, " ")`
+%       }
+%
+%       /* Create defines for event subscriber channels */
+%       if ((inst.subscriberPort != "Disabled") && (inst.subscriberChannel != 0)) {
+%           let subscriberPort = inst.subscriberPort.split("FSUB")[1];
+%           let eventSubChannelStr = "#define " + inst.$name + "_INST_SUB_" + subscriberPort + "_CH";
+%           let eventSubChannelStr2 = "(" + inst.subscriberChannel + ")";
+`eventSubChannelStr.padEnd(40, " ") + eventSubChannelStr2.padStart(40, " ")`
+%       }
+%
+
+% if (inst.enableRepeatCounter)
+% {
+%    let rpcString = "#define " + inst.$name + "_REPEAT_COUNT_"+inst.repeatCounter;
+%    let rpcNumString = "(" + (inst.repeatCounter - 1) + ")";
+`rpcString.padEnd(40, " ") + rpcNumString.padStart(40, " ")`
+% } // if (inst.enableRepeatCounter)
+%   } // let i in instances
+% } // printDefine
+%
+% function printDeclare() {
+%   let crossTriggerMainEn = false;
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       /* keep track if Cross Trigger is enabled as main for later code generation */
+%       if(inst.crossTriggerEn && (inst.crossTriggerAuthority == "Main")){
+%           crossTriggerMainEn = true;
+%       }
+void SYSCFG_DL_`inst.$name`_init(void);
+%   }
+%   if(crossTriggerMainEn){
+void SYSCFG_DL_TIMER_Cross_Trigger_init(void);
+%   }
+% }

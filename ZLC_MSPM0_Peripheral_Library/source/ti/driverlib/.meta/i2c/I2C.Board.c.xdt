@@ -1,0 +1,342 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== I2C.Board.c.xdt ========
+ */
+
+    let I2C = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = I2C.$instances;
+    if (instances.length == 0) return;
+
+    /* Identify I2C Peripheral */
+    let isSMBUS = (I2C.$name == "/ti/driverlib/i2cSMBUS");
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+    DL_I2C_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       /* another possibility depending on the driver */
+    DL_I2C_enablePower(`inst.$name`_INST);
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_"+inst.$name;
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["sdaPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunctionFeatures(`gpioStr`_IOMUX_SDA,
+        `gpioStr`_IOMUX_SDA_FUNC, DL_GPIO_INVERSION_DISABLE,
+        DL_GPIO_RESISTOR_NONE, DL_GPIO_HYSTERESIS_DISABLE,
+        DL_GPIO_WAKEUP_DISABLE);
+%           }
+%       } catch (x){/* ignore any exception */}
+%       try {
+%           if(!inst["sclPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunctionFeatures(`gpioStr`_IOMUX_SCL,
+        `gpioStr`_IOMUX_SCL_FUNC, DL_GPIO_INVERSION_DISABLE,
+        DL_GPIO_RESISTOR_NONE, DL_GPIO_HYSTERESIS_DISABLE,
+        DL_GPIO_WAKEUP_DISABLE);
+%           }
+%       } catch (x){/* ignore any exception */}
+    DL_GPIO_enableHiZ(`gpioStr`_IOMUX_SDA);
+    DL_GPIO_enableHiZ(`gpioStr`_IOMUX_SCL);
+%   } // for (let i in instances)
+% }
+%
+% /* Main Function */
+% function printFunction(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let periph = inst.peripheral.$solution.peripheralName;
+%       let instName = inst.$name;
+%       let instNameModule = inst.$name+"_INST";
+%
+static const DL_I2C_ClockConfig g`instName`ClockConfig = {
+    .clockSel = DL_I2C_CLOCK_`inst.basicClockSource`,
+    .divideRatio = DL_I2C_CLOCK_DIVIDE_`inst.basicClockSourceDivider`,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void) {
+
+    DL_I2C_setClockConfig(`instNameModule`,
+        (DL_I2C_ClockConfig *) &g`instName`ClockConfig);
+% if (inst.advAnalogGlitchFilter == "DISABLED") {
+    DL_I2C_disableAnalogGlitchFilter(`instNameModule`);
+%}
+%else {
+    DL_I2C_setAnalogGlitchFilterPulseWidth(`instNameModule`,
+        DL_I2C_ANALOG_GLITCH_FILTER_WIDTH_`inst.advAnalogGlitchFilter`NS);
+    DL_I2C_enableAnalogGlitchFilter(`instNameModule`);
+%}
+% if (inst.advDigitalGlitchFilter != "DISABLED") {
+    DL_I2C_setDigitalGlitchFilterPulseWidth(`instNameModule`,
+        DL_I2C_DIGITAL_GLITCH_FILTER_WIDTH_`inst.advDigitalGlitchFilter`);
+%}
+
+% if (inst.basicEnableController){
+    /* Configure Controller Mode */
+    DL_I2C_resetControllerTransfer(`instNameModule`);
+    /* Set frequency to `inst.basicControllerBusSpeedSelected` Hz*/
+    DL_I2C_setTimerPeriod(`instNameModule`, `inst.basicControllerBusSpeedTPR`);
+%   if (inst.basicEnableController10BitAddress) {
+    DL_I2C_setControllerAddressingMode(`instNameModule`, DL_I2C_CONTROLLER_ADDRESSING_MODE_10_BIT);
+%}
+    DL_I2C_setControllerTXFIFOThreshold(`instNameModule`, DL_I2C_TX_FIFO_LEVEL_`inst.advControllerTXFIFOTRIG`);
+    DL_I2C_setControllerRXFIFOThreshold(`instNameModule`, DL_I2C_RX_FIFO_LEVEL_`inst.advControllerRXFIFOTRIG`);
+%   if (inst.advControllerLoopback){
+    DL_I2C_enableLoopbackMode(`instNameModule`);
+%   }
+%   if (inst.advControllerMultiController){
+    DL_I2C_enableMultiControllerMode(`instNameModule`);
+%   }
+%   if (inst.advControllerClkStretch){
+    DL_I2C_enableControllerClockStretching(`instNameModule`);
+%   }
+%   else {
+    DL_I2C_disableControllerClockStretching(`instNameModule`);
+%   }
+
+% } //if (inst.basicEnableController)
+% if (inst.basicEnableTarget){
+%   if (inst.basicTargetOwnAddressEnable) {
+    /* Configure Target Mode */
+    DL_I2C_setTargetOwnAddress(`instNameModule`, `inst.$name`_TARGET_OWN_ADDR);
+% }
+% else {
+    DL_I2C_disableTargetOwnAddress(`instNameModule`);
+%}
+%   if (inst.basicTargetSecAddressEnable) {
+    DL_I2C_setTargetOwnAddressAlternate(`instNameModule`, `inst.$name`_TARGET_SEC_OWN_ADDR);
+    DL_I2C_enableTargetOwnAddressAlternate(`instNameModule`);
+%}
+%   if (inst.basicEnableTarget10BitAddress) {
+    DL_I2C_setTargetAddressingMode(`instNameModule`, DL_I2C_TARGET_ADDRESSING_MODE_10_BIT);
+%}
+%   if (inst.basicTargetGeneralCall) {
+    DL_I2C_enableGeneralCall(`instNameModule`);
+%}
+    DL_I2C_setTargetTXFIFOThreshold(`instNameModule`, DL_I2C_TX_FIFO_LEVEL_`inst.advTargetTXFIFOTRIG`);
+    DL_I2C_setTargetRXFIFOThreshold(`instNameModule`, DL_I2C_RX_FIFO_LEVEL_`inst.advTargetRXFIFOTRIG`);
+%   if (inst.advTargetAckOverride){
+    DL_I2C_enableTargetACKOverride(`instNameModule`);
+%   }
+%   if (inst.advTargetTXEmptyEn){
+    DL_I2C_enableTargetTXEmptyOnTXRequest(`instNameModule`);
+%   }
+
+%   if (inst.advTargetClkStretch){
+    DL_I2C_enableTargetClockStretching(`instNameModule`);
+%   } else {
+    DL_I2C_disableTargetClockStretching(`instNameModule`);
+%}
+%   if(!Common.I2CTargetWakeupWorkaroundFixed()) {
+
+    /* Workaround for errata I2C_ERR_04 */
+    DL_I2C_disableTargetWakeup(`instNameModule`);
+%} // if(!Common.I2CTargetWakeupWorkaroundFixed())
+%} // if (inst.basicEnableTarget)
+%    /* Interrupt generation */
+%    let interArgs = "";
+%    let interFct = ""
+%    for (let inter of inst.intController) {
+%        interArgs += Array(27).fill(' ').join('')+"DL_I2C_INTERRUPT_CONTROLLER_"+inter+" |\n";
+%    }
+%    for (let inter of inst.intTarget) {
+%        if (inter == "INTERRUPT_OVERFLOW ") {
+%        interArgs += Array(27).fill(' ').join('')+"DL_I2C_TARGET_INTERRUPT_OVERFLOW"+" |\n";
+%        } else {
+%        interArgs += Array(27).fill(' ').join('')+"DL_I2C_INTERRUPT_TARGET_"+inter+" |\n";
+%        }
+%    }
+%    for (let inter of inst.intGeneric) {
+%        interArgs += Array(27).fill(' ').join('')+"DL_I2C_INTERRUPT_"+inter+" |\n";
+%    }
+%    if((inst.intController.length + inst.intTarget.length + inst.intGeneric.length) > 0){
+    /* Configure Interrupts */
+%        interArgs = interArgs.slice(0,-3); // remove last
+%        interFct = "DL_I2C_enableInterrupt("+instNameModule+",\n"+interArgs+");\n";
+    `interFct`
+%        if(inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = inst.$name + "_INST_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%    }
+%    /* DMA generation */
+%    if (inst.DMAEvent1 != "None" && inst.enableDMAEvent1) {
+    /* Configure DMA Event 1 */
+    DL_I2C_enableDMAEvent(`instNameModule`, DL_I2C_EVENT_ROUTE_1,
+                          DL_I2C_DMA_INTERRUPT_`inst.DMAEvent1`);
+%   }
+%    if (inst.DMAEvent2 != "None" && inst.enableDMAEvent2) {
+    /* Configure DMA Event 2 */
+    DL_I2C_enableDMAEvent(`instNameModule`, DL_I2C_EVENT_ROUTE_2,
+                          DL_I2C_DMA_INTERRUPT_`inst.DMAEvent2`);
+%   }
+
+%if (inst.advEnableAfterInit){
+%if ((inst.basicEnableController) || (inst.basicEnableTarget)){
+    /* Enable module */
+%if (inst.basicEnableController){
+    DL_I2C_enableController(`instNameModule`);
+%}
+%if (inst.basicEnableTarget){
+    DL_I2C_enableTarget(`instNameModule`);
+%}
+%}  // if ((inst.basicEnableController) || (inst.basicEnableTarget))
+%} // if (inst.advEnableAfterInit)
+
+%       /* Timeout Config */
+%       if(inst.enableTimeoutA){
+    DL_I2C_enableTimeoutA(`instNameModule`);
+    DL_I2C_setTimeoutACount(`instNameModule`, `inst.timeoutACount`);
+
+%       }
+%       if(inst.enableTimeoutB){
+    DL_I2C_enableTimeoutB(`instNameModule`);
+    DL_I2C_setTimeoutBCount(`instNameModule`, `inst.timeoutBCount`);
+
+%       }
+% /* SMBUS Code Generation */
+%%{
+    if(isSMBUS){
+%%}
+%       /* Controller Configuration*/
+%       if(inst.basicEnableController){
+    %       /* Controller PEC Config */
+    %       if(inst.enableControllerPEC){
+    DL_I2C_enableControllerPEC(`instNameModule`);
+    %       }
+%       }
+%       /* Target Configuration*/
+%       if(inst.basicEnableTarget){
+    %       /* Host Notify Config */
+    %       if(inst.enableDefaultHostAddr){
+    DL_I2C_enableDefaultHostAddress(`instNameModule`);
+    %       }
+    %       /* Alert Config */
+    %       if(inst.enableAlertResponseAddr){
+    DL_I2C_enableAlertResponseAddress(`instNameModule`);
+    %       }
+    %       /* ARP Config */
+    %       if(inst.enableDefaultDevAddr){
+    DL_I2C_enableDefaultDeviceAddress(`instNameModule`);
+    %       }
+    %       /* Target PEC Config */
+    %       if(inst.enableTargetPEC){
+    DL_I2C_enableTargetPEC(`instNameModule`);
+    %       }
+    %       if(inst.enableTargetPEC && inst.enableTargetPECACKNext){
+    DL_I2C_enableACKOverrideOnPECNext(`instNameModule`);
+    %       }
+    %       if(inst.enableTargetPEC && inst.enableTargetPECACKDone){
+    DL_I2C_enableACKOverrideOnPECDone(`instNameModule`);
+    %       }
+%       }
+%%{
+    }// if(isSMBUS)
+%%}
+
+}
+% } // for i < instances.length
+%
+%
+% } // printFunction()

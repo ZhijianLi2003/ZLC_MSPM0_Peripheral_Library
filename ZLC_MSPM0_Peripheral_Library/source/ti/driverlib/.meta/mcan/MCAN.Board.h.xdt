@@ -1,0 +1,144 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMER. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== MCAN.Board.h.xdt ========
+ */
+
+    let MCAN = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = MCAN.$instances;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+
+% function printDefine() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let flavor = inst.peripheral.$solution.peripheralName;
+%       let nameStr = "#define "+inst.$name+"_INST";
+%       let intHandlerStr = nameStr + "_IRQHandler";
+%       let intHandlerStr2 = flavor + "_IRQHandler";
+%       let intNumberStr = nameStr + "_INT_IRQN";
+%       let intNumberStr2 = flavor + "_INT_IRQn";
+%       let gpioStr = "GPIO_"+inst.$name;
+/* Defines for `inst.$name` */
+`nameStr.padEnd(40," ")+flavor.padStart(40," ")`
+% /* figure out pin number and pinCMx */
+%       let cantxPinName = "tx"+"Pin";
+%       let canrxPinName = "rx"+"Pin";
+%       let cantxPackagePin = inst.peripheral[cantxPinName].$solution.packagePinName;
+%       let canrxPackagePin = inst.peripheral[canrxPinName].$solution.packagePinName;
+%       let cantxPinCM = Common.getPinCM(cantxPackagePin,inst,"CANTX");
+%       let canrxPinCM = Common.getPinCM(canrxPackagePin,inst,"CANRX");
+%       let cantxGpioName = system.deviceData.devicePins[cantxPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let canrxGpioName = system.deviceData.devicePins[canrxPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let cantxPort = Common.getGPIOPortMultiPad(cantxPackagePin,inst,"CANTX");
+%       let canrxPort = Common.getGPIOPortMultiPad(canrxPackagePin,inst,"CANRX");
+%       let cantxGpioPin = Common.getGPIONumberMultiPad(cantxPackagePin,inst,"CANTX");
+%       let canrxGpioPin = Common.getGPIONumberMultiPad(canrxPackagePin,inst,"CANRX");
+% let cantxPortStr = "#define "+gpioStr+"_CAN_TX_PORT";
+`cantxPortStr.padEnd(40," ")+cantxPort.padStart(40, " ")`
+% let cantxPinStr = "#define "+gpioStr+"_CAN_TX_PIN";
+% let cantxPinStr2 = "DL_GPIO_PIN_"+cantxGpioPin;
+`cantxPinStr.padEnd(40," ")+cantxPinStr2.padStart(40," ")`
+% let cantxIOmuxStr = "#define "+gpioStr+"_IOMUX_CAN_TX";
+% let cantxIOmuxStr2 = "(IOMUX_PINCM"+cantxPinCM.toString()+")";
+`cantxIOmuxStr.padEnd(40," ")+cantxIOmuxStr2.padStart(40," ")`
+% let cantxFuncStr = "#define "+gpioStr+"_IOMUX_CAN_TX_FUNC";
+% let cantxFuncStr2 = "IOMUX_PINCM"+cantxPinCM+"_PF_"+flavor+"_CANTX";
+`cantxFuncStr.padEnd(40, " ")+cantxFuncStr2.padStart(40, " ")`
+% let canrxPortStr = "#define "+gpioStr+"_CAN_RX_PORT";
+`canrxPortStr.padEnd(40," ")+canrxPort.padStart(40, " ")`
+% let canrxPinStr = "#define "+gpioStr+"_CAN_RX_PIN";
+% let canrxPinStr2 = "DL_GPIO_PIN_"+canrxGpioPin;
+`canrxPinStr.padEnd(40," ")+canrxPinStr2.padStart(40," ")`
+% let canrxIOmuxStr = "#define "+gpioStr+"_IOMUX_CAN_RX";
+% let canrxIOmuxStr2 = "(IOMUX_PINCM"+canrxPinCM.toString()+")";
+`canrxIOmuxStr.padEnd(40," ")+canrxIOmuxStr2.padStart(40," ")`
+% let canrxFuncStr = "#define "+gpioStr+"_IOMUX_CAN_RX_FUNC";
+% let canrxFuncStr2 = "IOMUX_PINCM"+canrxPinCM+"_PF_"+flavor+"_CANRX";
+`canrxFuncStr.padEnd(40, " ")+canrxFuncStr2.padStart(40, " ")`
+%       if(inst.enableInterrupt){
+`intHandlerStr.padEnd(40, " ") + intHandlerStr2.padStart(39, " ")`
+`intNumberStr.padEnd(40, " ") + intNumberStr2.padStart(39, " ")`
+%       } //if(inst.enableInterrupt)
+
+
+/* Defines for `inst.$name` MCAN RAM configuration */
+`nameStr`_MCAN_STD_ID_FILT_START_ADDR     (`inst.flssa`)
+`nameStr`_MCAN_STD_ID_FILTER_NUM          (`inst.lss`)
+`nameStr`_MCAN_EXT_ID_FILT_START_ADDR     (`inst.flesa`)
+`nameStr`_MCAN_EXT_ID_FILTER_NUM          (`inst.lse`)
+`nameStr`_MCAN_TX_BUFF_START_ADDR         (`inst.txStartAddr`)
+`nameStr`_MCAN_TX_BUFF_SIZE               (`inst.txBufNum`)
+`nameStr`_MCAN_FIFO_1_START_ADDR          (`inst.rxFIFO1startAddr`)
+`nameStr`_MCAN_FIFO_1_NUM                 (`inst.rxFIFO1size`)
+`nameStr`_MCAN_TX_EVENT_START_ADDR        (`inst.txEventFIFOStartAddr`)
+`nameStr`_MCAN_TX_EVENT_SIZE              (`inst.txEventFIFOSize`)
+`nameStr`_MCAN_EXT_ID_AND_MASK            (0x1FFFFFFFU)
+`nameStr`_MCAN_RX_BUFF_START_ADDR         (`inst.rxBufStartAddr`)
+`nameStr`_MCAN_FIFO_0_START_ADDR          (`inst.rxFIFO0startAddr`)
+`nameStr`_MCAN_FIFO_0_NUM                 (`inst.rxFIFO0size`)
+
+%if(inst.interruptFlags.length > 0){
+%       let x = String(inst.interruptFlags).split(",").join(" | \\\n\t\t\t\t\t\t");
+%       if (!x) { x = "0";}
+`nameStr`_MCAN_INTERRUPTS (`x`)
+%}
+%
+%   }
+%}
+
+% function printDeclare() {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let name = inst.$name
+void SYSCFG_DL_`name`_init(void);
+%   }
+% }

@@ -1,0 +1,196 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== AES.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let AES = args[0];
+    let content = args[1];
+
+    /* get Common /ti/driverlib utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let stat = AES.$static;
+    if (stat.length == 0) return;
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+const AESModeInitFunctionMap = new Map([
+    ["DL_AESADV_MODE_ECB", "DL_AESADV_initECB(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CBC", "DL_AESADV_initCBC(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CTR", "DL_AESADV_initCTR(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_ICM", "DL_AESADV_initICM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CFB", "DL_AESADV_initCFB(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_OFB", "DL_AESADV_initOFB(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CMAC", "DL_AESADV_initCMAC(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CBCMAC", "DL_AESADV_initCBCMAC(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_GCM_FORCE_ZERO", "DL_AESADV_initGCM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_GCM_LOAD_HASH_KEY", "DL_AESADV_initGCM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_GCM_AUTONOMOUS", "DL_AESADV_initGCM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_GCM_HASH_ONLY", "DL_AESADV_initGCM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+    ["DL_AESADV_MODE_CCM", "DL_AESADV_initCCM(AESADV, (DL_AESADV_Config *) &gAESADV_config)"],
+]);
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+%%}
+%
+% function printCall() {
+%   if (!stat.loadApplicationKey) {
+    SYSCFG_DL_AESADV_init();
+%   }
+% }
+%
+%
+% function printReset() {
+    DL_AESADV_reset(AESADV);
+% }
+%
+% function printPower() {
+    DL_AESADV_enablePower(AESADV);
+% }
+%
+% function printFunction() {
+static const DL_AESADV_Config gAESADV_config = {
+    .mode = `stat.mode`,
+    .direction = `stat.direction`,
+    .ctr_ctrWidth = `stat.ctr_ctrWidth`,
+    .cfb_fbWidth = `stat.cfb_fbWidth`,
+    .ccm_ctrWidth = DL_AESADV_CCM_CTR_WIDTH_`stat.ccm_ctrWidth`_BYTES,
+%   let ccmTagWidthStrSuffix = (stat.ccm_tagWidth > 1) ? "_BYTES" : "_BYTE";
+    .ccm_tagWidth = DL_AESADV_CCM_TAG_WIDTH_`stat.ccm_tagWidth``ccmTagWidthStrSuffix`,
+    .iv = `(stat.iv.length) ? stat.iv : "NULL"`,
+    .nonce = `(stat.nonce.length) ? stat.nonce : "NULL"`,
+    .lowerCryptoLength = `stat.lowerCryptoLength`,
+    .upperCryptoLength = `stat.upperCryptoLength`,
+    .aadLength = `stat.aadLength`,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_AESADV_init(void)
+{
+%   if (stat.enabledInterrupts.length) {
+%%{
+        let interruptCount = 0;
+        var interruptsToEnableOR = "(";
+
+            for (let interruptToEnable in stat.enabledInterrupts)
+            {
+                if (interruptCount == 0)
+                {
+                    interruptsToEnableOR += stat.enabledInterrupts[interruptCount];
+                }
+                else
+                {
+                    interruptsToEnableOR += "\n\t\t";
+                    interruptsToEnableOR += " | " + stat.enabledInterrupts[interruptCount];
+                }
+                interruptCount++;
+            }
+            interruptsToEnableOR += ")";
+%%}
+    /* Enable AESADV interrupt */
+    DL_AESADV_clearInterruptStatus(AESADV, `interruptsToEnableOR`);
+    DL_AESADV_enableInterrupt(AESADV, `interruptsToEnableOR`);
+
+%
+%       if (stat.interruptPriority !== "DEFAULT") {
+    NVIC_SetPriority(AESADV_INT_IRQn, `stat.interruptPriority`);
+
+%        }
+%   }
+%
+%   if (!stat.loadApplicationKey) {
+    /*
+     * Wait for the engine to indicate that an input context can be written
+     * before writing the AES context
+     */
+    while (!DL_AESADV_isInputContextWriteable(AESADV))
+    {
+        ;
+    }
+
+    /*
+     * The key must be written prior to the init call since the key can
+     * come from plaintext or from the key store controller
+     */
+    DL_AESADV_setKey(AESADV, &gKey[0], `stat.keySize`);
+
+%   } else {
+    /*
+     * The key must be initialized and loaded in the application code with
+     * DL_AESADV_setKey. This must be done prior to SYSCFG_DL_AESADV_init,
+     * which places the AES engine in the selected AES mode with all of the
+     * necessary control context.
+     */
+
+%   }
+%
+    `AESModeInitFunctionMap.get(stat.mode)`;
+}
+% }

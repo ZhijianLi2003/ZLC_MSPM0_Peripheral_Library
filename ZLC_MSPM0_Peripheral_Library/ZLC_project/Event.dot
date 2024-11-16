@@ -1,0 +1,30 @@
+
+
+digraph H {
+
+  parent [
+   shape=plaintext
+   label=<
+     <table border='1' cellborder='1'>
+       <tr>
+            <td bgcolor="grey" port='chan_1'>Channel 1</td>
+            <td bgcolor="grey" port='chan_2'>Channel 2</td>
+            <td bgcolor="grey" port='chan_3'>Channel 3</td>
+            <td bgcolor="grey" port='chan_4'>Channel 4</td>
+            <td bgcolor="grey" port='chan_5'>Channel 5</td>
+            <td bgcolor="grey" port='chan_6'>Channel 6</td>
+            <td bgcolor="grey" port='chan_7'>Channel 7</td>
+            <td bgcolor="grey" port='chan_8'>Channel 8</td>
+            <td bgcolor="grey" port='chan_9'>Channel 9</td>
+            <td bgcolor="grey" port='chan_10'>Channel 10</td>
+            <td bgcolor="grey" port='chan_11'>Channel 11</td>
+            <td bgcolor="black" port='chan_12'><font color="grey">Channel 12</font></td>
+            <td bgcolor="black" port='chan_13'><font color="grey">Channel 13</font></td>
+            <td bgcolor="black" port='chan_14'><font color="grey">Channel 14</font></td>
+            <td bgcolor="black" port='chan_15'><font color="grey">Channel 15</font></td>
+         </tr>
+     </table>
+  >];
+
+
+}

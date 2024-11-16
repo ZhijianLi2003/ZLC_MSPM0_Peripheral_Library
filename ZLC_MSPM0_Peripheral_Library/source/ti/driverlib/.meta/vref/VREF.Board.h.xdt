@@ -1,0 +1,126 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== VREF.Board.h.xdt ========
+ */
+
+    let VREF = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let inst = VREF.$static;
+    //let defs = Common.genBoardHeader(inst, VREF);
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+
+% function printDefine() {
+/* Defines for VREF */
+% let vrefVoltStr = "#define VREF_VOLTAGE_MV";
+% let vrefVoltStr2 = (inst.basicVREFVoltage).toString();
+`vrefVoltStr.padEnd(40, " ")+vrefVoltStr2.padStart(40, " ")`
+%   /* This is one possible way to do GPIO defines. Good if you need to find out PINCM */
+%       let gpioStr = "GPIO_VREF";
+% if(Common.isDeviceM0G() || ((Common.isDeviceM0L() || Common.isDeviceM0C()) && (inst.basicMode.includes("DL_VREF_ENABLE_DISABLE")))){
+% /* figure out pin number and pinCMx */
+%       let vrefPosPinName = "vrefPos"+"Pin";
+%       let vrefPosPackagePin = inst.peripheral[vrefPosPinName].$solution.packagePinName;
+%       let vrefPosPinCM = Common.getPinCM(vrefPosPackagePin,inst,"VREF+");
+%       let vrefPosGpioName = system.deviceData.devicePins[vrefPosPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let vrefPosPort = Common.getGPIOPortMultiPad(vrefPosPackagePin,inst,"VREF+");
+%       let vrefPosGpioPin = Common.getGPIONumberMultiPad(vrefPosPackagePin,inst,"VREF+");
+%       let vrefPosPortStr = "#define "+gpioStr+"_VREFPOS_PORT";
+`vrefPosPortStr.padEnd(40," ")+vrefPosPort.padStart(40, " ")`
+%       let vrefPosPinStr = "#define "+gpioStr+"_VREFPOS_PIN";
+%       let vrefPosPinStr2 = "DL_GPIO_PIN_"+vrefPosGpioPin;
+`vrefPosPinStr.padEnd(40," ")+vrefPosPinStr2.padStart(40," ")`
+%       let vrefPosIOmuxStr = "#define "+gpioStr+"_IOMUX_VREFPOS";
+%       let vrefPosIOmuxStr2 = "(IOMUX_PINCM"+vrefPosPinCM.toString()+")";
+`vrefPosIOmuxStr.padEnd(40," ")+vrefPosIOmuxStr2.padStart(40," ")`
+%       let vrefPosFuncStr = "#define "+gpioStr+"_IOMUX_VREFPOS_FUNC";
+%       let vrefPosFuncStr2 = "IOMUX_PINCM"+vrefPosPinCM+"_PF_UNCONNECTED";
+`vrefPosFuncStr.padEnd(40, " ")+vrefPosFuncStr2.padStart(40, " ")`
+%       if (inst.basicVrefPins == "VREF+-") {
+%           let vrefNegPinName = "vrefNeg"+"Pin";
+%           let vrefNegPackagePin = inst.peripheral[vrefNegPinName].$solution.packagePinName;
+%           let vrefNegPinCM = Common.getPinCM(vrefNegPackagePin,inst,"VREF-");
+%           let vrefNegGpioName = system.deviceData.devicePins[vrefNegPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%           let vrefNegPort = Common.getGPIOPortMultiPad(vrefNegPackagePin,inst,"VREF-");
+%           let vrefNegGpioPin = Common.getGPIONumberMultiPad(vrefNegPackagePin,inst,"VREF-");
+%           let vrefNegPortStr = "#define "+gpioStr+"_VREFNEG_PORT";
+`vrefNegPortStr.padEnd(40," ")+vrefNegPort.padStart(40, " ")`
+%           let vrefNegPinStr = "#define "+gpioStr+"_VREFNEG_PIN";
+%           let vrefNegPinStr2 = "DL_GPIO_PIN_"+vrefNegGpioPin;
+`vrefNegPinStr.padEnd(40," ")+vrefNegPinStr2.padStart(40," ")`
+%           let vrefNegIOmuxStr = "#define "+gpioStr+"_IOMUX_VREFNEG";
+%           let vrefNegIOmuxStr2 = "(IOMUX_PINCM"+vrefNegPinCM.toString()+")";
+`vrefNegIOmuxStr.padEnd(40," ")+vrefNegIOmuxStr2.padStart(40," ")`
+%           let vrefNegFuncStr = "#define "+gpioStr+"_IOMUX_VREFNEG_FUNC";
+% let vrefNegFuncStr2 = "IOMUX_PINCM"+vrefNegPinCM+"_PF_UNCONNECTED";
+`vrefNegFuncStr.padEnd(40, " ")+vrefNegFuncStr2.padStart(40, " ")`
+%        } //  if (inst.basicVrefPins == "VREF+-")
+% }
+% // TODO: [(H) JAN] need to confirm actual delay time with Luis.(MSPSWSDK-2038)
+% if (inst.checkVREFReady) {
+% let vrefDelayStr = "#define VREF_READY_DELAY";
+%%{
+    let vrefDelayVal = 1;
+    let modSYSCTL = system.modules["/ti/driverlib/SYSCTL"];
+    if(modSYSCTL){
+        // Delay expressed in cycles based on frequency, should be 10us
+        vrefDelayVal = Math.ceil(modSYSCTL.$static.MCLK_Freq / 100000);
+    }
+%%}
+% let vrefDelayStr2 = "("+vrefDelayVal+")";
+`vrefDelayStr.padEnd(40, " ")+vrefDelayStr2.padStart(40, " ")`
+% }
+% } // function printDefine
+%
+% function printDeclare() {
+void SYSCFG_DL_VREF_init(void);
+% }

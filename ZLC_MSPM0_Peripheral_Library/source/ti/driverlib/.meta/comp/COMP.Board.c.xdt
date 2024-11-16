@@ -1,0 +1,290 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== COMP.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let MODULE = args[0];
+    let content = args[1];
+
+    /* shorthand names for some common references in template below */
+    let instances = MODULE.$instances;
+    if (instances.length == 0) return;
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* Do nothing */
+        break;
+    }
+%%}
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+    DL_COMP_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    DL_COMP_enablePower(`inst.$name`_INST);
+%   }
+% }
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       if (inst.outputEnable) {
+%           let gpioStr = "GPIO_"+inst.$name;
+%           let outIomux = gpioStr+"_IOMUX_OUT";
+%           let outFunc = gpioStr+"_IOMUX_OUT_FUNC";
+    DL_GPIO_initPeripheralOutputFunction(
+        `outIomux`, `outFunc`);
+%       }
+%       /* Peripheral GPIO Configuration */
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+%   } // for(let i in instances)
+% }
+% function printFunction(){
+% for(let i = 0; i < instances.length; i++) {
+%    let inst = instances[i];
+%    //let baseName = inst.peripheral.$solution.peripheralName
+%    let baseName = inst.$name + "_INST";
+%%{
+    // Check special cases of disabled options. specialPos/specialNeg is true if option should be disabled.
+    let specialPos = false;
+    let specialNeg = false;
+    if(inst.peripheral.$solution.peripheralName != "COMP0"){
+        if(inst.channelEnable.includes("POS")){
+            if(inst.posChannel=="DL_COMP_IPSEL_CHANNEL_6"){
+                specialPos = true;
+            }
+        }
+        if(inst.channelEnable.includes("NEG")){
+            if(inst.negChannel=="DL_COMP_IMSEL_CHANNEL_6"){
+                specialNeg = true;
+            }
+        }
+    }
+    if(baseName == "COMP2"){
+        if(inst.channelEnable.includes("POS")){
+            if(inst.posChannel=="DL_COMP_IPSEL_CHANNEL_2"){
+                specialPos = true;
+            }
+            if(inst.posChannel=="DL_COMP_IPSEL_CHANNEL_7"){
+                specialPos = true;
+            }
+        }
+        if(inst.channelEnable.includes("NEG")){
+            if(inst.negChannel=="DL_COMP_IMSEL_CHANNEL_2"){
+                specialNeg = true;
+            }
+        }
+    }
+
+    let channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_NONE"
+    if((inst.channelEnable).length == 2){
+        if(specialPos&&specialNeg){
+            // do nothing
+        }
+        else if(specialPos){
+            channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_NEG"
+        }
+        else if(specialNeg){
+            channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_POS"
+        }
+        else{
+            channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_POS_NEG"
+        }
+    }
+    else if((inst.channelEnable).length == 1){
+        if((inst.channelEnable).includes("POS")){
+            if(!specialPos){
+                channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_POS"
+            }
+        }
+        else if((inst.channelEnable).includes("NEG")){
+            if(!specialNeg){
+                channelEnableChoice = "DL_COMP_ENABLE_CHANNEL_NEG"
+            }
+        }
+    }
+%%}
+/* `inst.$name` Initialization */
+static const DL_COMP_Config g`inst.$name`Config = {
+    .channelEnable = `channelEnableChoice`,
+    .mode          = `inst.compMode`,
+    .negChannel    = `inst.negChannel`,
+    .posChannel    = `inst.posChannel`,
+    .hysteresis    = `inst.hysteresis`,
+    .polarity      = `inst.polarity`
+};
+%%{
+    /* Handle special case of INTVREF in MSPM0L122X_L222X */
+    let refSource = inst.vSource;
+    if(Common.isDeviceFamily_PARENT_MSPM0L122X_L222X() && (inst.vrefMode == "INTERNAL")){
+        if(["DL_COMP_REF_SOURCE_VREF_DAC"].includes(inst.vSource)){
+            refSource = "DL_COMP_REF_SOURCE_INT_VREF_DAC";
+        }
+        else if(["DL_COMP_REF_SOURCE_VREF"].includes(inst.vSource)){
+            refSource = "DL_COMP_REF_SOURCE_INT_VREF";
+        }
+    }
+%%}
+static const DL_COMP_RefVoltageConfig g`inst.$name`VRefConfig = {
+    .mode           = `inst.vMode`,
+    .source         = `refSource`,
+    .terminalSelect = `inst.terminalSelect`,
+    .controlSelect  = `inst.controlSelect`,
+    .inputSelect    = `inst.inputSelect`
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_`inst.$name`_init(void)
+{
+    DL_COMP_init(`baseName`, (DL_COMP_Config *) &g`inst.$name`Config);
+%   if(inst.enableOutputFilter){
+    DL_COMP_enableOutputFilter(`baseName`,`inst.selectOutputFilter`);
+%   }
+    DL_COMP_refVoltageInit(`baseName`, (DL_COMP_RefVoltageConfig *) &g`inst.$name`VRefConfig);
+%   if(["DL_COMP_REF_SOURCE_VDDA_DAC","DL_COMP_REF_SOURCE_VREF_DAC"].includes(inst.vSource)){
+%       if((inst.controlSelect == "DL_COMP_DAC_CONTROL_COMP_OUT") || (inst.inputSelect == "DL_COMP_DAC_INPUT_DACCODE0")){
+    DL_COMP_setDACCode0(`baseName`, `inst.$name`_DACCODE0);
+%       }
+%       if((inst.controlSelect == "DL_COMP_DAC_CONTROL_COMP_OUT") || (inst.inputSelect == "DL_COMP_DAC_INPUT_DACCODE1")){
+    DL_COMP_setDACCode1(`baseName`, `inst.$name`_DACCODE1);
+%       }
+%   }
+%   if((inst.enabledEvents).length>0){
+%%{
+    let eventCount = 0
+    var eventsToEnableOR = "("
+    for (let eventToEnable in inst.enabledEvents)
+    {
+        if (eventCount == 0)
+        {
+            eventsToEnableOR += inst.enabledEvents[eventCount];
+        }
+        else
+        {
+            eventsToEnableOR += "\n\t\t";
+            eventsToEnableOR += " | " + inst.enabledEvents[eventCount];
+        }
+        eventCount++;
+    }
+    eventsToEnableOR += ")";
+%%}
+    DL_COMP_enableEvent(`baseName`, `eventsToEnableOR`);
+%   }
+% if(inst.pubChanID != 0){
+    DL_COMP_setPublisherChanID(`baseName`, `inst.$name + "_INST_PUB_CH"`);
+% }
+% if(inst.enableSampledMode){
+    DL_COMP_enableSampledMode(`baseName`);
+% }
+% if(inst.enableSampledMode && inst.sub0ChanID != 0){
+    DL_COMP_setSubscriberChanID(`baseName`, DL_COMP_SUBSCRIBER_INDEX_0, `inst.$name + "_INST_SUB0_CH"`);
+% }
+% if(inst.enableSampledMode && inst.sub1ChanID != 0){
+    DL_COMP_setSubscriberChanID(`baseName`, DL_COMP_SUBSCRIBER_INDEX_1, `inst.$name + "_INST_SUB1_CH"`);
+% }
+%   if(inst.enableExchangeInputs){
+    DL_COMP_enableExchangeInputs(`baseName`);
+%   }
+%   if(inst.enableShortInputTerminals){
+    DL_COMP_enableShortInputTerminals(`baseName`);
+%   }
+% if(inst.outputInterruptEdge == "DL_COMP_OUTPUT_INT_EDGE_FALLING") {
+    DL_COMP_setOutputInterruptEdge(`baseName`, `inst.outputInterruptEdge`);
+%}
+%   if(inst.enableWinComp){
+    DL_COMP_enableWindowComparator(`baseName`);
+%   }
+% if(inst.blankingSource != "DL_COMP_BLANKING_SOURCE_DISABLE") {
+    DL_COMP_setBlankingSource(`baseName`, `inst.blankingSource`);
+%}
+%   if((inst.enabledInterrupts).length>0){
+%%{
+    let interruptCount = 0
+    var interruptsToEnableOR = "("
+    for (let interruptToEnable in inst.enabledInterrupts)
+    {
+        if (interruptCount == 0)
+        {
+            interruptsToEnableOR += inst.enabledInterrupts[interruptCount];
+        }
+        else
+        {
+            interruptsToEnableOR += "\n\t\t";
+            interruptsToEnableOR += " | " + inst.enabledInterrupts[interruptCount];
+        }
+        interruptCount++;
+    }
+    interruptsToEnableOR += ")";
+%%}
+    DL_COMP_enableInterrupt(`baseName`, `interruptsToEnableOR`);
+%   }
+
+%   // TODO: confirm this option *always* happens. otherwise add checkbox
+    DL_COMP_enable(`baseName`);
+
+}
+
+%}
+%}

@@ -1,0 +1,341 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== QEI.Board.c.xdt ========
+ */
+
+    let QEI = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = QEI.$instances;
+    if (instances.length == 0) return;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        case "RetentionDeclare":
+            printRetentionDeclare();
+            break;
+        case "RetentionSave":
+            printRetentionSave();
+            break;
+        case "RetentionRestore":
+            printRetentionRestore();
+            break;
+        case "RetentionRdy":
+            printRetentionRdy();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% /* Retention Configuration Code */
+% function printRetentionDeclare(){
+`Common.getRetentionDeclareC(instances,"Timer")`
+% }
+% function printRetentionRdy(){
+`Common.getRetentionRdyC(instances,"Timer")`
+% }
+% function printRetentionSave(){
+`Common.getRetentionSaveC(instances,"Timer")`
+% }
+% function printRetentionRestore(){
+`Common.getRetentionRestoreC(instances,"Timer")`
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let timerInstance = inst.peripheral.$solution.peripheralName;
+%       let timerName = "Timer"+(timerInstance.replace(/[0-9]/g, '')).slice(3);
+    DL_`timerName`_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+%       let timerInstance = inst.peripheral.$solution.peripheralName;
+%       let timerName = "Timer"+(timerInstance.replace(/[0-9]/g, '')).slice(3);
+    DL_`timerName`_enablePower(`inst.$name`_INST);
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%        let maxPins = 2;
+%        let gpioStr = "";
+%        if(inst.enableIndexInput)
+%            maxPins = 3;
+%
+%        for( var x = 0;x<maxPins;x++) {
+%           let qeiPin = "";
+%           let qeiPinConfig = "";
+%           if(x == 0){
+%               qeiPin = "PHA";
+%               qeiPinConfig = "ccp0";
+%           } else if (x == 1){
+%               qeiPin = "PHB";
+%               qeiPinConfig = "ccp1";
+%           } else if(x == 2){
+%               qeiPin = "IDX";
+%               qeiPinConfig = "idx";
+%           }
+%           gpioStr = "GPIO_"+inst.$name+"_"+qeiPin;
+%           /* If Pin Configuration enabled, do not generate duplicate call */
+%           try {
+%               if(!inst[qeiPinConfig+"PinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(`gpioStr`_IOMUX,`gpioStr`_IOMUX_FUNC);
+%               }
+%           } catch (x){/* ignore any exception */}
+%        }
+% let initIOMux = Common.getGPIOConfigBoardC(inst);
+% /* Check if generating empty code */
+% if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%}
+%   } // for (let i in instances)
+% }
+%
+% /* Main Function */
+% function printFunction(){
+%   let crossTriggerMainEn = false;
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let timerInstance = inst.peripheral.$solution.peripheralName;
+%       let timerName = "Timer"+(timerInstance.replace(/[0-9]/g, '')).slice(3);
+%       /* keep track if Cross Trigger is enabled as main for later code generation */
+%       if(inst.crossTriggerEn && (inst.crossTriggerAuthority == "Main")){
+%           crossTriggerMainEn = true;
+%       }
+%
+static const DL_`timerName`_ClockConfig g`inst.$name`ClockConfig = {
+    .clockSel = DL_TIMER_CLOCK_`inst.clockSource`,
+    .divideRatio = DL_TIMER_CLOCK_DIVIDE_`inst.clockDivider`,
+    .prescale = `inst.clockPrescale-1`U
+};
+
+
+SYSCONFIG_WEAK void SYSCFG_DL_`inst.$name`_init(void) {
+
+    DL_`timerName`_setClockConfig(
+        `inst.$name`_INST, (DL_`timerName`_ClockConfig *) &g`inst.$name`ClockConfig);
+
+%       if(inst.enableIndexInput && inst.enableHallInput){
+    DL_`timerName`_configQEIHallInputMode(`inst.$name`_INST);
+%       }
+%       else{
+%           let qeiMode = "DL_TIMER_QEI_MODE_2_INPUT";
+%           if(inst.enableIndexInput){
+%               qeiMode = "DL_TIMER_QEI_MODE_3_INPUT";
+%           }
+%           for( var x = 0;x<2;x++) {
+%               let indexVal = "DL_TIMER_CC_"+x+"_INDEX";
+    DL_`timerName`_configQEI(`inst.$name`_INST, `qeiMode`,
+        DL_TIMER_CC_INPUT_INV_NOINVERT, `indexVal`);
+%           }
+%       }
+    DL_`timerName`_setLoadValue(`inst.$name`_INST, `inst.loadValue`);
+%
+%   /* Interrupt generation */
+%   let interArgs = "";
+%   let interFct = "";
+%   for (let inter of inst.interrupts) {
+%       interArgs += "DL_TIMER_EVENT_"+inter+" |\n\t\t";
+%   }
+%   if(inst.interrupts.length > 0){
+%       interArgs = interArgs.slice(0,-5); // remove last OR and whitespace
+%       interFct = "DL_"+timerName+"_enableInterrupt("+inst.$name+"_INST , "+interArgs+");\n";
+    `interFct`
+%        if(inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = inst.$name + "_INST_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%   }
+%
+%
+%%{
+
+    var event_route = ["DL_TIMER_EVENT_ROUTE_1","DL_TIMER_EVENT_ROUTE_2"];
+    var event_publisher = ["DL_TIMER_PUBLISHER_INDEX_0","DL_TIMER_PUBLISHER_INDEX_1"];
+    var event_pub_inst = [inst.event1ControllerInterruptEn,inst.event2ControllerInterruptEn];
+    var event_pub_chan = [inst.event1PublisherChannel,inst.event2PublisherChannel];
+
+    for(var x = 0;x<2;x++) {
+        if(event_pub_inst[x].length > 0) {
+
+            var eventCount = 0;
+            var eventsToEnableOR = "";
+            for (var eventToEnable in event_pub_inst[x])
+            {
+                var timerPrefix = "DL_TIMER_EVENT_";
+                if (eventCount == 0)
+                {
+                    eventsToEnableOR += timerPrefix+event_pub_inst[x][eventCount];
+                }
+                else
+                {
+                    eventsToEnableOR += " |\n\t\t " + timerPrefix+event_pub_inst[x][eventCount];
+                }
+                eventCount++;
+            }
+%%}
+    DL_`timerName`_enableEvent(`inst.$name`_INST, `event_route[x]`, `eventsToEnableOR`);
+    DL_`timerName`_setPublisherChanID(`inst.$name`_INST, `event_publisher[x]`, `event_pub_chan[x]`);
+
+%        }
+%    }
+%
+% /* Cross-Triggering */
+%
+%   if(inst.crossTriggerEn){
+%       let interArgs = "";
+%       if(inst.crossTriggerAuthority == "Main"){
+%%{
+            let subsPort = "DL_TIMER_CROSS_TRIG_SRC_FSUB0";
+            let enTrigCondSelect = "DISABLED";
+            if(inst.mainCrossTriggerSource != "SW"){
+                subsPort = "DL_TIMER_CROSS_TRIG_SRC_"+inst.mainCrossTriggerSource;
+                enTrigCondSelect = "ENABLED";
+            }
+            let enInTrigCond = "DL_TIMER_CROSS_TRIGGER_INPUT_"+enTrigCondSelect;
+%%}
+%           let enCrossTrig = "DL_TIMER_CROSS_TRIGGER_MODE_ENABLED";
+%           let crossTrigFct = "DL_"+timerName+"_configCrossTrigger("+inst.$name+"_INST, "+subsPort+",\n\t"+
+%               enInTrigCond + ", " + enCrossTrig + "\n\t\t"+interArgs+");";
+%           if(inst.mainCrossTriggerSource == "SW"){
+    /* DL_TIMER_CROSS_TRIG_SRC is a Don't Care field when Cross Trigger Source is set to Software */
+%           }
+    `crossTrigFct`
+%       } // if crossTriggerAuthority == "Main"
+    /*
+     * Determines the external triggering event to trigger the module (self-triggered in main configuration)
+     * and triggered by specific timer in secondary configuration
+     */
+%%{
+    let secCrossTrigSource = "";
+    if(inst.crossTriggerAuthority == "Secondary"){
+        secCrossTrigSource = inst.secondaryCrossTriggerSource.split("InputTrigger_")[1];
+    }
+    else{
+        switch(timerInstance){
+            case "TIMA0":
+                secCrossTrigSource = "0";
+                break;
+            case "TIMA1":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG7":
+                secCrossTrigSource = "2";
+                break;
+            case "TIMG8":
+                secCrossTrigSource = "3";
+                break;
+            case "TIMG12":
+                secCrossTrigSource = "4";
+                break;
+            case "TIMG0":
+                secCrossTrigSource = "0";
+                break;
+            case "TIMG1":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG6":
+                secCrossTrigSource = "1";
+                break;
+            case "TIMG2":
+                secCrossTrigSource = "2";
+                break;
+            case "TIMG4":
+                secCrossTrigSource = "3";
+                break;
+            default:
+                /* do nothing */
+                break;
+        }
+    }
+%%}
+    DL_`timerName`_setExternalTriggerEvent(`inst.$name`_INST,DL_TIMER_EXT_TRIG_SEL_TRIG_`secCrossTrigSource`);
+    DL_`timerName`_enableExternalTrigger(`inst.$name`_INST);
+%
+%   }
+    DL_`timerName`_enableClock(`inst.$name`_INST);
+%       if(inst.timerStartTimer){
+    DL_`timerName`_startCounter(`inst.$name`_INST);
+%       }
+}
+%} // for i < instances.length
+%
+
+% if(crossTriggerMainEn){
+SYSCONFIG_WEAK void SYSCFG_DL_QEI_Cross_Trigger_init(void) {
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let timerInstance = inst.peripheral.$solution.peripheralName;
+%       let timerName =  "Timer"+(timerInstance.replace(/[0-9]/g, '')).slice(3);
+%if(inst.crossTriggerEn && (inst.crossTriggerAuthority == "Main")){
+    DL_`timerName`_generateCrossTrigger(`inst.$name`_INST);
+%}
+%   }
+}
+% }
+%
+% } // printFunction()

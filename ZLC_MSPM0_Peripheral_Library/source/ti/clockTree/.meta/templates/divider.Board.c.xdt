@@ -1,0 +1,91 @@
+%%{
+/*
+ * Copyright (c) 2022, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== oscillator.Board.c.xdt ========
+ */
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let mod = system.modules["/ti/clockTree/divider.js"];
+
+    let mdivInst = _.find(mod.$instances, ['$name', 'MDIV']);
+    let udivInst = _.find(mod.$instances, ['$name', 'UDIV']);
+    let mfpdivInst = _.find(mod.$instances, ['$name', 'HFCLK4MFPCLKDIV']);
+
+    mod = system.modules["/ti/clockTree/mux.js"];
+
+    let sysctlmuxInst = _.find(mod.$instances, ['$name', 'SYSCTLMUX'])
+
+    if(_.isUndefined(mdivInst)) {
+        throw 'Not all divider elements are defined appropriately';
+    }
+
+    let mdivStr = "";
+    let udivStr = "";
+    let mfpdivStr = "";
+
+    if(_.endsWith(sysctlmuxInst.inputSelect, "MDIV")){
+        if(mdivInst.isMDIVEnabled){
+            if(mdivInst.divideValue === 1){
+                mdivStr = "DL_SYSCTL_setMCLKDivider(DL_SYSCTL_MCLK_DIVIDER_DISABLE);"
+            } else {
+                mdivStr = "DL_SYSCTL_setMCLKDivider(DL_SYSCTL_MCLK_DIVIDER_" + mdivInst.divideValue + ");";
+            }
+        }
+    }
+
+    if(!_.isUndefined(udivInst)){
+        if(udivInst.isUDIVEnabled && !Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+            udivStr = "DL_SYSCTL_setULPCLKDivider(DL_SYSCTL_ULPCLK_DIV_" + udivInst.divideValue + ");";
+        }
+    }
+
+    if(!_.isUndefined(mfpdivInst)){
+        if(mfpdivInst.divideValue != 1){
+            mfpdivStr = "DL_SYSCTL_setHFCLKDividerForMFPCLK(DL_SYSCTL_HFCLK_MFPCLK_DIVIDER_" + mfpdivInst.divideValue + ");";
+        }
+    }
+
+%%}
+%
+% if(mdivStr !== ""){
+    `mdivStr`
+% }
+% if(udivStr !== ""){
+    `udivStr`
+% }
+% if(mfpdivStr !== ""){
+    `mfpdivStr`
+% }

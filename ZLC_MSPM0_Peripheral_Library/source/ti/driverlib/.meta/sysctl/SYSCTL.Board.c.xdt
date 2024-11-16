@@ -1,0 +1,571 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SYSCTL.Board.c.xdt ========
+ */
+
+    let SYSCTL = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+
+    /* shorthand names for some common references in template below */
+    // since sysctl is static we don't use the inst variable
+    let stat = SYSCTL.$static;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            //printReset();
+            break;
+        case "Power":
+            //printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+    SYSCFG_DL_SYSCTL_init();
+% }
+%
+%
+% function printGPIO(){
+%%{
+    let gpioStr = "GPIO_"+ stat.$name;
+%%}
+%   if(stat.clockTreeEn){
+%       let gen = system.getTemplate("/ti/driverlib/sysctl/SYSCTLclockTree.Board.c.xdt")
+`_.trimEnd(gen(SYSCTL,"GPIO"))`
+%   } else {
+%if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+%   if(stat.LFCLKSource === "LFXT"){
+    /* Configure GPIO/IOMUX for LFXT functionality */
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_LFXIN_IOMUX);
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_LFXOUT_IOMUX);
+%    }
+%   else if(stat.LFCLKSource === "LFCLK_IN"){
+    DL_GPIO_initPeripheralInputFunction(GPIO_LFCLKIN_IOMUX, GPIO_LFCLKIN_IOMUX_FUNC);
+%   }
+%    if(stat.useHFCLK && stat.HFCLKSource === "HFXT"){
+    /* Configure GPIO/IOMUX for HFXT functionality */
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_HFXIN_IOMUX);
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_HFXOUT_IOMUX);
+%    }
+%   else if(stat.useHFCLK && stat.HFCLKSource === "HFCLK_IN"){
+    DL_GPIO_initPeripheralInputFunction(GPIO_HFCLKIN_IOMUX, GPIO_HFCLKIN_IOMUX_FUNC);
+%   }
+%}
+%   if(stat.enableEXCLK){
+%        if((Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X() || Common.isDeviceM0C()) && (["HFCLK","SYSPLLOUT1"].includes(stat.EXCLKSource))){
+    /*
+     * To output a signal that is greater than 32MHz a High-Speed IO (HSIO) pin
+     * needs to be used and have high drive enabled.
+     */
+    DL_GPIO_initPeripheralOutputFunctionFeatures(GPIO_CLKOUT_IOMUX,
+        GPIO_CLKOUT_IOMUX_FUNC, DL_GPIO_INVERSION_DISABLE,
+        DL_GPIO_RESISTOR_NONE, DL_GPIO_DRIVE_STRENGTH_HIGH,
+        DL_GPIO_HIZ_DISABLE);
+%        }
+%        else{
+    DL_GPIO_initPeripheralOutputFunction(
+        GPIO_CLKOUT_IOMUX, GPIO_CLKOUT_IOMUX_FUNC);
+%        }
+    DL_GPIO_enableOutput(GPIO_CLKOUT_PORT, GPIO_CLKOUT_PIN);
+%   }
+%   if(!stat.disableSYSOSC && stat.enableROSC){
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_ROSC_IOMUX);
+%   }
+%  } // if clock tree code gen
+% } // function printGPIO
+%
+% function printReset() { return; } // empty
+% function printPower() { return; } // empty
+%
+% function printFunction() {
+%
+%
+%   if(stat.clockTreeEn){
+%       let gen = system.getTemplate("/ti/driverlib/sysctl/SYSCTLclockTree.Board.c.xdt")
+`_.trimEnd(gen(SYSCTL,"PreFunction"))`
+%   } else {
+%
+% /* SYSPLL Config */
+%%{ /* Helper function for PLL (feeding mClockSource) */
+
+    let pllConf = ``;
+    if(Common.isDeviceM0G()){
+    pllConf += `.inputFreq              = ${stat.SYSPLL_InputCLKFreqRange},\n\t`;
+
+    pllConf += `.rDivClk2x              = ${stat.SYSPLL_CLK2XDiv},\n\t`;
+    pllConf += `.rDivClk1               = ${stat.SYSPLL_CLK1Div},\n\t`;
+    pllConf += `.rDivClk0               = ${stat.SYSPLL_CLK0Div},\n\t`;
+
+    let clk2xEn = (stat.SYSPLL_CLK2XEn) ? "ENABLE": "DISABLE";
+    let clk1En = (stat.SYSPLL_CLK1En) ? "ENABLE": "DISABLE";
+    let clk0En = (stat.SYSPLL_CLK0En) ? "ENABLE": "DISABLE";
+    pllConf += `.enableCLK2x            = DL_SYSCTL_SYSPLL_CLK2X_${clk2xEn},\n\t`;
+    pllConf += `.enableCLK1             = DL_SYSCTL_SYSPLL_CLK1_${clk1En},\n\t`;
+    pllConf += `.enableCLK0             = DL_SYSCTL_SYSPLL_CLK0_${clk0En},\n\t`;
+
+    let mclkSourceFromPLL = (stat.HSCLKSource).replace(/[a-zA-Z]+/, "");
+    if((stat.usesSYSPLL).includes("MCLK")){
+    pllConf += `.sysPLLMCLK             = DL_SYSCTL_SYSPLL_MCLK_CLK${mclkSourceFromPLL},\n\t`;
+    }
+    else{
+    pllConf += `.sysPLLMCLK             = DL_SYSCTL_SYSPLL_MCLK_CLK0,\n\t`;
+    }
+    pllConf += `.sysPLLRef              = DL_SYSCTL_SYSPLL_REF_${stat.SYSPLLSource},\n\t`;
+
+    let qdiv = `${stat.SYSPLL_Qdiv}` - 1;
+    pllConf += `.qDiv                   = ${qdiv},\n\t`;
+
+    pllConf += `.pDiv                   = DL_SYSCTL_SYSPLL_PDIV_${stat.SYSPLL_Pdiv},\n\t`;
+
+    let printSYSPLL_config = pllConf;
+%%}
+%   if (stat.useSYSPLL){
+static const DL_SYSCTL_SYSPLLConfig gSYSPLLConfig = {
+    `printSYSPLL_config`
+};
+%   }
+% }
+% /* LFCLK Config */
+%   if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+    %   if(stat.LFCLKSource == "LFXT"){
+static const DL_SYSCTL_LFCLKConfig gSYSCTLConfig = {
+    .lowCap   = `stat.LFCLKLowCap`,
+    .monitor  = `stat.LFCLKMonitor`,
+    .xt1Drive = DL_SYSCTL_LFXT_DRIVE_STRENGTH_`stat.LFCLKDriveStrength`,
+};
+
+    %   }
+%   }
+% } // if Clock Tree
+SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_init(void)
+{
+% /* Power & System Configuration */
+% /* Power Policy Config */
+%%{ /* Helper function for powerPolicy */
+let nameStr = "DL_SYSCTL_setPowerPolicy";
+let policy = stat.powerPolicy;
+let printPolicy = "";
+let printPolicyComment = "\t// Run Mode is configured to be " + stat.runPowerPolicy;
+    printPolicyComment = "\n\t//Low Power Mode is configured to be " + stat.powerPolicy;
+if(!stat.powerPolicy.match(/SLEEP/)) {
+    printPolicy = nameStr + policy + "();";
+} else {
+    //printPolicy = "// No additional configuration necessary for SLEEP";
+}
+%%}
+%%{ /* Helper function for Clock Tree needs */
+    let isHSCLK = stat.MCLKSource == "HSCLK";
+    if(stat.clockTreeEn && Common.isDeviceM0G())
+    {
+        let mod = system.modules["/ti/clockTree/mux.js"];
+        let mclkMuxInst = _.find(mod.$instances, ['$name', 'SYSCTLMUX']);
+        let hsclkMuxInst = _.find(mod.$instances, ['$name', 'HSCLKMUX']);
+        if(!_.endsWith(mclkMuxInst.inputSelect, "LFCLK") &&
+            !_.endsWith(hsclkMuxInst.inputSelect, "SYSOSC")){
+            isHSCLK = true;
+        } else {
+            isHSCLK = false;
+        }
+    }
+%%}
+`printPolicyComment`
+% if (printPolicy) {
+    `printPolicy`
+% }
+% /* Disabled when TI Drivers configuration enabled */
+% if(!stat.driversEn){
+    DL_SYSCTL_setBORThreshold(DL_SYSCTL_BOR_THRESHOLD_LEVEL_`stat.BORThresh`);
+    % if (stat.enableWriteLock){
+    DL_SYSCTL_enableWriteLock();
+    % }
+    % if (stat.enableSleepOnExit){
+    DL_SYSCTL_enableSleepOnExit();
+    % }
+    % if(stat.enableEventOnPending){
+    DL_SYSCTL_enableEventOnPend();
+    % }
+    % if(stat.disableNRSTPin){
+    DL_SYSCTL_disableNRSTPin();
+    % }
+    % if(stat.vboostMode !== "ONDEMAND"){
+    DL_SYSCTL_setVBOOSTConfig(DL_SYSCTL_VBOOST_`stat.vboostMode`);
+    % }
+    % if(stat.enableFCC && !stat.clockTreeEn){
+    DL_SYSCTL_configFCC(DL_SYSCTL_FCC_TRIG_TYPE_`stat.fccTrigLvl`, DL_SYSCTL_FCC_TRIG_SOURCE_`stat.fccTrigSrc`, DL_SYSCTL_FCC_CLOCK_SOURCE_`stat.fccClkSrc`);
+        % if(stat.fccTrigLvl == "RISE_RISE"){
+    DL_SYSCTL_setFCCPeriods(DL_SYSCTL_FCC_TRIG_CNT_`stat.fccPeriods`);
+        % }
+    % }
+% } // if(!stat.driversEn)
+% /* Disabled when TI Drivers configuration enabled */
+% if(!stat.driversEn){
+%   if(isHSCLK){
+    DL_SYSCTL_setFlashWaitState(DL_SYSCTL_FLASH_WAIT_STATE_`stat.waitState`);
+%   }
+% } // if(!stat.driversEn)
+
+%  if(stat.clockTreeEn){
+%       let gen = system.getTemplate("/ti/driverlib/sysctl/SYSCTLclockTree.Board.c.xdt")
+`_.trimEnd(gen(SYSCTL,"Function"))`
+%   } else {
+%
+% /* SYSOSC Config */
+%%{
+    let printSYSOSCFreq = 0;
+    switch(stat.SYSOSC_Freq){
+        case 32000000:
+            printSYSOSCFreq = "DL_SYSCTL_SYSOSC_FREQ_BASE"
+            break;
+        case 4000000:
+            printSYSOSCFreq = "DL_SYSCTL_SYSOSC_FREQ_4M"
+            break;
+        default:
+            printSYSOSCFreq = "DL_SYSCTL_SYSOSC_FREQ_BASE"
+            break;
+    }
+%%}
+% if(!stat.disableSYSOSC){
+%   if(stat.enableSYSOSCFCL){
+%     if(stat.enableROSC) {
+    /* Enable SYSOSC FCL in External Resistor Mode */
+    DL_SYSCTL_enableSYSOSCFCLExternalResistor();
+% } else if(!stat.enableROSC){
+    /* Enable SYSOSC FCL in Internal Resistor Mode */
+    DL_SYSCTL_enableSYSOSCFCL();
+% } //(stat.enableSYSOSCFCL)
+%}
+    DL_SYSCTL_setSYSOSCFreq(`printSYSOSCFreq`);
+% }
+%if(stat.forceDefaultClkConfig) {
+    /* Set default configuration */
+    DL_SYSCTL_disableHFXT();
+%   if(!Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+    DL_SYSCTL_disableSYSPLL();
+%   }
+%}
+% /* HFCLK Config */
+% if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X() || Common.isDeviceM0C()){
+%   if(stat.useHFCLK){
+%       if(stat.HFCLKSource == "HFXT"){
+    DL_SYSCTL_setHFCLKSourceHFXTParams(`stat.HFXTRange`, `stat.HFXTStartup`, `stat.HFCLKMonitor`);
+%       }
+%       else if(stat.HFCLKSource == "HFCLK_IN"){
+    DL_SYSCTL_setHFCLKSourceHFCLKIN();
+%       }
+%   }
+% }
+% /* SYSPLL Config */
+%%{ /* Helper function for PLL (feeding mClockSource) */
+    if(Common.isDeviceM0G()){
+    let printSYSPLL_call = "DL_SYSCTL_configSYSPLL((DL_SYSCTL_SYSPLLConfig *) &gSYSPLLConfig);\n\t";
+%%}
+%   if (stat.useSYSPLL){
+    `printSYSPLL_call`
+%   }
+% }
+% /* LFCLK Config */
+%   if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+    %   if(stat.LFCLKSource == "LFXT"){
+    DL_SYSCTL_setLFCLKSourceLFXT((DL_SYSCTL_LFCLKConfig *) &gSYSCTLConfig);
+    %   }
+    %   else if(stat.LFCLKSource == "LFCLK_IN"){
+    DL_SYSCTL_setLFCLKSourceEXLF();
+    %   }
+%   }
+% /* MFCLK Config */
+% if(stat.MFCLKEn === true){
+    DL_SYSCTL_enableMFCLK();
+%}
+% /* ULPCLK Config */
+% if(Common.isDeviceM0G()){
+    DL_SYSCTL_setULPCLKDivider(DL_SYSCTL_ULPCLK_DIV_`stat.UDIV`);
+% }
+% /* MCLK Config */
+%%{ /* Helper function for mClkSource*/
+    let printMClkSource = "";
+    switch(stat.MCLKSource) {
+        case "SYSOSC":
+            // done by default no code necessary
+            break;
+       /* HSCLK Config */
+        case "HSCLK":
+            if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X() || Common.isDeviceM0C()){
+                switch(stat.HSCLKSource){
+                    case "SYSPLLCLK0":
+                        printMClkSource += "DL_SYSCTL_setMCLKSource(SYSOSC, HSCLK, DL_SYSCTL_HSCLK_SOURCE_SYSPLL);";
+                        break;
+                    case "SYSPLLCLK2X":
+                        printMClkSource += "DL_SYSCTL_setMCLKSource(SYSOSC, HSCLK, DL_SYSCTL_HSCLK_SOURCE_SYSPLL);";
+                        break;
+                    case "HFCLK":
+                        printMClkSource += "DL_SYSCTL_setMCLKSource(SYSOSC, HSCLK, DL_SYSCTL_HSCLK_SOURCE_HFCLK);";
+                        break;
+                    default:
+                        throw `unknown clock source from stat.HSCLKSource`;
+                        break;
+                }
+                break;
+            }
+        case "LFCLK":
+            printMClkSource += "DL_SYSCTL_switchMCLKfromSYSOSCtoLFCLK("+stat.disableSYSOSC.toString()+");";
+            break;
+        case "DISABLE":
+            break;
+        default:
+            throw 'unknown clock source from stat.MCLKSource';
+            break;
+    }
+%%}
+% if(printMClkSource.length>0){
+    `printMClkSource`
+%}
+% if(stat.MCLKSource != "DISABLE"){
+    DL_SYSCTL_setMCLKDivider(DL_SYSCTL_MCLK_DIVIDER_`stat.MDIV`);
+% }
+% /* MFPCLK Config */
+% if(stat.MFPCLKEn === true){
+%   if(Common.isDeviceM0G()){
+    DL_SYSCTL_setMFPCLKSource(DL_SYSCTL_MFPCLK_SOURCE_`stat.MFPCLKSource`);
+%   if(stat.MFPCLKSource === "HFCLK" && stat.HFCLK4MFPCLKDIV != "DISABLE"){
+    DL_SYSCTL_setHFCLKDividerForMFPCLK(DL_SYSCTL_HFCLK_MFPCLK_DIVIDER_`stat.HFCLK4MFPCLKDIV`);
+%   }
+%
+%   }
+    DL_SYSCTL_enableMFPCLK();
+%}
+% /* CLK_OUT Config */
+% if(stat.enableEXCLK){
+    DL_SYSCTL_enableExternalClock(DL_SYSCTL_CLK_OUT_SOURCE_`stat.EXCLKSource`, DL_SYSCTL_CLK_OUT_DIVIDE_`stat.EXCLKDivider`);
+% }
+% } // if clockTreeEn = false
+% /* Disabled when TI Drivers configuration enabled */
+% if(!stat.driversEn){
+    % /* Interrupt Config */
+    % if(stat.enableIntDone){
+    /* Enable interrupt for Flash Command execution is complete */
+    DL_FlashCTL_enableInterrupt(FLASHCTL);
+    % }
+% } // if(!stat.driversEn)
+%%{
+    let clockInterruptCount = 0
+    var interruptsToEnableOR = "("
+    if(((stat.clockInterrupts).length>0)){
+        for (let interruptToEnable in stat.clockInterrupts)
+        {
+            if (clockInterruptCount == 0)
+            {
+                interruptsToEnableOR += "DL_SYSCTL_INTERRUPT_"+stat.clockInterrupts[clockInterruptCount];
+            }
+            else
+            {
+                interruptsToEnableOR += "\n\t\t";
+                interruptsToEnableOR += " | " + "DL_SYSCTL_INTERRUPT_"+stat.clockInterrupts[clockInterruptCount];
+            }
+            clockInterruptCount++;
+        }
+    }
+
+    if(Common.isDeviceM0G()){
+        if((((stat.powerSysInterrupts).length>0) && (!stat.driversEn))){
+        let powerSysInterruptCount = 0
+        /* Disabled when TI Drivers configuration enabled */
+        if(!stat.driversEn){
+            for (let interruptToEnable in stat.powerSysInterrupts)
+            {
+                if (clockInterruptCount == 0 && powerSysInterruptCount == 0)
+                {
+                    interruptsToEnableOR += "DL_SYSCTL_INTERRUPT_"+stat.powerSysInterrupts[powerSysInterruptCount];
+                }
+                else
+                {
+                    interruptsToEnableOR += "\n\t\t";
+                    interruptsToEnableOR += " | " + "DL_SYSCTL_INTERRUPT_"+stat.powerSysInterrupts[powerSysInterruptCount];
+                }
+                powerSysInterruptCount++;
+            }
+        } // if(!stat.driversEn)
+        }
+    }
+    interruptsToEnableOR += ")";
+%%}
+% if(interruptsToEnableOR !== "()"){
+    DL_SYSCTL_enableInterrupt(`interruptsToEnableOR`);
+% }
+% /* Disabled when TI Drivers configuration enabled */
+% if(!stat.driversEn){
+    % /* NMI Config */
+    % if(stat.nmiWWDT0Behav == "Non-Maskable Interrupt") {
+    DL_SYSCTL_setWWDT0ErrorBehavior(DL_SYSCTL_ERROR_BEHAVIOR_NMI);
+    %}
+    % if(stat.nmiWWDT1Behav == "Non-Maskable Interrupt") {
+    DL_SYSCTL_setWWDT1ErrorBehavior(DL_SYSCTL_ERROR_BEHAVIOR_NMI);
+    %}
+    % if(stat.nmiFlashDedBehav == "Non-Maskable Interrupt") {
+    DL_SYSCTL_setFlashDEDErrorBehavior(DL_SYSCTL_ERROR_BEHAVIOR_NMI);
+    %}
+%} // if(!stat.driversEn)
+%
+% if(stat.intGroup0Priority !== "DEFAULT"){
+    /* INT_GROUP0 Priority */
+    NVIC_SetPriority(`stat.intGroup0IRQnStr`, `stat.intGroup0Priority`);
+% }
+% if(stat.intGroup1Priority !== "DEFAULT"){
+    /* INT_GROUP1 Priority */
+    NVIC_SetPriority(`stat.intGroup1IRQnStr`, `stat.intGroup1Priority`);
+% }
+%
+% let dmaMod = system.modules["/ti/driverlib/DMA"];
+% if(dmaMod && dmaMod.$static.mostSevereInterruptPriority !== "DEFAULT"){
+    /* DMA Group Priority */
+    NVIC_SetPriority(DMA_INT_IRQn, `dmaMod.$static.mostSevereInterruptPriority`);
+% }
+
+% /* Config End */
+}
+%%{
+    let clockSources = [];
+    if(stat.validateClkStatus){
+        if(stat.clockTreeEn){
+            if(Common.isDeviceM0G()){
+                let mod = system.modules["/ti/clockTree/divider.js"];
+                let pllClk0Inst = _.find(mod.$instances, ['$name', 'PLL_CLK0_DIV']);
+                let pllClk1Inst = _.find(mod.$instances, ['$name', 'PLL_CLK1_DIV']);
+                let pllClk2XInst = _.find(mod.$instances, ['$name', 'PLL_CLK2X_DIV']);
+                if(_.isUndefined(pllClk0Inst) || _.isUndefined(pllClk1Inst) ||
+                    _.isUndefined(pllClk2XInst))
+                {
+                    throw 'Not all PLL elements are defined appropriately';
+                    return;
+                }
+                let pllEnabled = pllClk0Inst.enable || pllClk1Inst.enable || pllClk2XInst.enable;
+                if(pllEnabled){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_SYSPLL_GOOD");
+                }
+                mod = system.modules["/ti/clockTree/mux.js"];
+                let exhfMuxInst = _.find(mod.$instances, ['$name', 'EXHFMUX']);
+                let hsclkMuxInst = _.find(mod.$instances, ['$name', 'HSCLKMUX']);
+
+                let outPin = exhfMuxInst.$ipInstance.outPins[0].name;
+                if(exhfMuxInst.$isUsed && exhfMuxInst[outPin] != 0){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_HFCLK_GOOD");
+                }
+
+                if(hsclkMuxInst.$isUsed && !_.endsWith(hsclkMuxInst.inputSelect, "SYSOSC")){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_HSCLK_GOOD");
+                }
+
+                let exlfMuxInst = _.find(mod.$instances, ['$name', 'EXLFMUX']);
+                let lfxtMuxInst = _.find(mod.$instances, ['$name', 'LFXTMUX']);
+
+                if(_.endsWith(lfxtMuxInst.inputSelect, "FALSE")){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_LFOSC_GOOD");
+                } else if (_.endsWith(exlfMuxInst.inputSelect, "XTAL")){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_LFXT_GOOD");
+                }
+
+            }
+        } else {
+            if(Common.isDeviceM0G()){
+                if(stat.useSYSPLL){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_SYSPLL_GOOD");
+                }
+                if(stat.useHFCLK){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_HFCLK_GOOD");
+                }
+                if(stat.MCLKSource === "HSCLK"){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_HSCLK_GOOD");
+                }
+            }
+            if(Common.isDeviceM0G()){
+                if(stat.LFCLKSource === "LFXT"){
+                    clockSources.push("DL_SYSCTL_CLK_STATUS_LFXT_GOOD");
+                }
+            }
+            if(stat.LFCLKSource === "LFOSC"){
+                clockSources.push("DL_SYSCTL_CLK_STATUS_LFOSC_GOOD");
+            }
+        }
+    }
+%%}
+% if(clockSources.length>0){
+SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_CLK_init(void) {
+%%{
+    let clkSrcCount = 0
+    var clkSrcsToEnableOR = "("
+    for (let clockSource in clockSources)
+    {
+        if (clkSrcCount == 0)
+        {
+            clkSrcsToEnableOR += clockSources[clkSrcCount];
+        }
+        else
+        {
+            clkSrcsToEnableOR += "\n\t\t";
+            clkSrcsToEnableOR += " | " + clockSources[clkSrcCount];
+        }
+        clkSrcCount++;
+    }
+    clkSrcsToEnableOR += ")";
+    let printCLKCheck = "while ((DL_SYSCTL_getClockStatus() & "+clkSrcsToEnableOR+")\n\t" +
+                    "       != "+clkSrcsToEnableOR+")\n\t" +
+                        "{\n" +
+                        "\t\t/* Ensure that clocks are in default POR configuration before initialization.\n" +
+                        "\t\t* Additionally once LFXT is enabled, the internal LFOSC is disabled, and cannot\n" +
+                        "\t\t* be re-enabled other than by executing a BOOTRST. */\n" +
+                        "\t\t;\n\t" +
+                        "}";
+%%}
+    `printCLKCheck`
+}
+
+% } // if clk sources length
+
+%} // printFunction()

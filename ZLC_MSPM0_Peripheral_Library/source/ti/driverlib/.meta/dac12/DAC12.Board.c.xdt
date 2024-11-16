@@ -1,0 +1,211 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== DAC12.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let DAC12 = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let inst = DAC12.$static;
+    if (inst.length == 0) return;
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall() {
+    SYSCFG_DL_DAC12_init();
+% }
+%
+% function printReset() {
+    DL_DAC12_reset(DAC0);
+% }
+%
+% function printPower() {
+%   /* another possibility depending on the driver */
+    DL_DAC12_enablePower(DAC0);
+% }
+%
+% function printGPIO(){
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_DAC12";
+%       // No need to initialize GPIOs for Analog functionality
+%       /* Peripheral GPIO Configuration */
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+% }
+%
+% function printFunction() {
+static const DL_DAC12_Config gDAC12Config = {
+% let dacOutEn = (inst.dacOutputPinEn) ? "ENABLED" : "DISABLED";
+    .outputEnable              = DL_DAC12_OUTPUT_`dacOutEn`,
+    .resolution                = DL_DAC12_RESOLUTION_`inst.dacRes`,
+    .representation            = DL_DAC12_REPRESENTATION_`inst.dacRepresentation`,
+    .voltageReferenceSource    = DL_DAC12_VREF_SOURCE_`inst.dacPosVREF`_`inst.dacNegVREF`,
+    .amplifierSetting          = DL_DAC12_AMP_`inst.dacAmplifier`,
+% let fifoStatus = (inst.dacFIFOEn) ? "ENABLED" : "DISABLED";
+    .fifoEnable                = DL_DAC12_FIFO_`fifoStatus`,
+% if(inst.dacFIFOEn){
+    .fifoTriggerSource         = DL_DAC12_FIFO_TRIGGER_`inst.dacFIFOTrigger`,
+% }
+% else {
+    .fifoTriggerSource         = DL_DAC12_FIFO_TRIGGER_SAMPLETIMER,
+% }
+% let dmaStatus = (inst.dacConfigureDMA && inst.dacDMATrigger) ? "ENABLED" : "DISABLED";
+    .dmaTriggerEnable          = DL_DAC12_DMA_TRIGGER_`dmaStatus`,
+% if(inst.dacFIFOEn && inst.dacConfigureDMA){
+    .dmaTriggerThreshold       = DL_DAC12_FIFO_THRESHOLD_`inst.dacFIFOThresh`,
+% }
+% else {
+    .dmaTriggerThreshold       = DL_DAC12_FIFO_THRESHOLD_ONE_QTR_EMPTY,
+% }
+% let sampleTimerStatus = (inst.dacSampleTimerEn) ? "ENABLE" : "DISABLE";
+    .sampleTimeGeneratorEnable = DL_DAC12_SAMPLETIMER_`sampleTimerStatus`,
+% if(inst.dacSampleTimerEn){
+    .sampleRate                = DL_DAC12_SAMPLES_PER_SECOND_`inst.dacSampleTimerRate`,
+% }
+% else {
+    .sampleRate                = DL_DAC12_SAMPLES_PER_SECOND_500,
+% }
+};
+SYSCONFIG_WEAK void SYSCFG_DL_DAC12_init(void)
+{
+    DL_DAC12_init(DAC0, (DL_DAC12_Config *) &gDAC12Config);
+% if((inst.dacRes == "8BIT")&&(inst.dacOutputPinEn)&&(inst.dacOutput8 != 0)){
+    DL_DAC12_output8(DAC0, `inst.dacOutput8`);
+% }
+% if((inst.dacRes == "12BIT")&&(inst.dacOutputPinEn)&&(inst.dacOutput12 != 0)){
+    DL_DAC12_output12(DAC0, `inst.dacOutput12`);
+% }
+% if((inst.dacEnabledInterrupts).length>0){
+%%{
+    let interruptCount = 0
+    var interruptsToEnableOR = "("
+    for (let interruptToEnable in inst.dacEnabledInterrupts)
+    {
+        if (interruptCount == 0)
+        {
+            interruptsToEnableOR += "DL_DAC12_INTERRUPT_"+inst.dacEnabledInterrupts[interruptCount];
+        }
+        else
+        {
+            interruptsToEnableOR += "\n\t\t";
+            interruptsToEnableOR += " | " + "DL_DAC12_INTERRUPT_"+inst.dacEnabledInterrupts[interruptCount];
+        }
+        interruptCount++;
+    }
+    interruptsToEnableOR += ")";
+%%}
+    DL_DAC12_enableInterrupt(DAC0, `interruptsToEnableOR`);
+%        if(inst.interruptPriority !== "DEFAULT"){
+%           let irqnStr =  "DAC12" + "_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+% }
+% if(inst.pubChanID != 0 && inst.enabledEvents.length>0){
+    DL_DAC12_setPublisherChanID(DAC0, `inst.pubChanID`);
+% }
+% if(inst.sub0ChanID != 0){
+    DL_DAC12_setSubscriberChanID(DAC0, DL_DAC12_SUBSCRIBER_INDEX_0, `inst.sub0ChanID`);
+% }
+% if(((inst.enabledEvents).length>0)&& (inst.pubChanID != 0)){
+%%{
+    let eventCount = 0
+    var eventsToEnableOR = "("
+    for (let eventToEnable in inst.enabledEvents)
+    {
+        if (eventCount == 0)
+        {
+            eventsToEnableOR += "DL_DAC12_EVENT_"+inst.enabledEvents[eventCount];
+        }
+        else
+        {
+            eventsToEnableOR += "\n\t\t";
+            eventsToEnableOR += " | " + "DL_DAC12_EVENT_"+inst.enabledEvents[eventCount];
+        }
+        eventCount++;
+    }
+    eventsToEnableOR += ")";
+%%}
+    DL_DAC12_enableEvent(DAC0, `eventsToEnableOR`);
+% }
+% if(inst.dacEnable){
+    DL_DAC12_enable(DAC0);
+% }
+}
+% } // printFunction()

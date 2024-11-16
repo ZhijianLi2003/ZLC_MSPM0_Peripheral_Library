@@ -1,0 +1,425 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== UART.Board.c.xdt ========
+ */
+
+    let UART = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = UART.$instances;
+    if (instances.length == 0) return;
+
+    /* Identify UART Peripheral */
+    let isLIN = (UART.$name == "/ti/driverlib/uartLIN");
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        case "RetentionDeclare":
+            printRetentionDeclare();
+            break;
+        case "RetentionSave":
+            printRetentionSave();
+            break;
+        case "RetentionRestore":
+            printRetentionRestore();
+            break;
+        case "RetentionRdy":
+            printRetentionRdy();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+%
+% /* Retention Configuration Code */
+% function printRetentionDeclare(){
+`Common.getRetentionDeclareC(instances,"UART")`
+% }
+% function printRetentionRdy(){
+`Common.getRetentionRdyC(instances,"UART")`
+% }
+% function printRetentionSave(){
+`Common.getRetentionSaveC(instances,"UART")`
+% }
+% function printRetentionRestore(){
+`Common.getRetentionRestoreC(instances,"UART")`
+% }
+%
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+% let flavorLower = "Main";
+% let flavorUpper = "MAIN";
+% if (inst.enableExtend || isLIN) {
+%   flavorLower = "Extend";
+%   flavorUpper = "EXTEND";
+% };
+    DL_UART_`flavorLower`_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+% for (let i in instances) {
+%       let inst = instances[i];
+% let flavorLower = "Main";
+% let flavorUpper = "MAIN";
+% if (inst.enableExtend || isLIN) {
+%   flavorLower = "Extend";
+%   flavorUpper = "EXTEND";
+% };
+    DL_UART_`flavorLower`_enablePower(`inst.$name`_INST);
+%   }
+% }
+%
+% function printGPIO(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%   let useRX = true;
+%   let useTX = true;
+%   if(inst.direction.match(/^TX$/) !== null) {
+%       useRX = false;
+%   }
+%   if(inst.direction.match(/^RX$/) !== null) {
+%       useTX = false;
+%   }
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_"+inst.$name;
+% if (useTX) {
+%       let txIomux = gpioStr+"_IOMUX_TX";
+%       let txFunc = gpioStr+"_IOMUX_TX_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["txPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `txIomux`, `txFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+% if (useRX) {
+%
+%       let rxIomux = gpioStr+"_IOMUX_RX";
+%       let rxFunc = gpioStr+"_IOMUX_RX_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["rxPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `rxIomux`, `rxFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+%}
+%       if(inst.flowControl == "RTS") {
+%       let rtsIomux = gpioStr+"_IOMUX_RTS";
+%       let rtsFunc = gpioStr+"_IOMUX_RTS_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["rtsPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `rtsIomux`, `rtsFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+% } else if (inst.flowControl == "CTS") {
+%       let ctsIomux = gpioStr+"_IOMUX_CTS";
+%       let ctsFunc = gpioStr+"_IOMUX_CTS_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["ctsPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `ctsIomux`, `ctsFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+% } else if (inst.flowControl == "RTS_CTS") {
+%       let rtsIomux = gpioStr+"_IOMUX_RTS";
+%       let rtsFunc = gpioStr+"_IOMUX_RTS_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["rtsPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralOutputFunction(
+        `rtsIomux`, `rtsFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+%       let ctsIomux = gpioStr+"_IOMUX_CTS";
+%       let ctsFunc = gpioStr+"_IOMUX_CTS_FUNC";
+%       /* If Pin Configuration enabled, do not generate duplicate call */
+%       try {
+%           if(!inst["ctsPinConfig"].enableConfig){
+    DL_GPIO_initPeripheralInputFunction(
+        `ctsIomux`, `ctsFunc`);
+%               }
+%           } catch (x){/* ignore any exception */}
+% }
+% let initIOMux = Common.getGPIOConfigBoardC(inst);
+% /* Check if generating empty code */
+% if (/\S/.test(initIOMux)) {
+    `initIOMux`
+% }
+%   } // for (let i in instances)
+% } // printGPIO
+%
+% /* Main Function */
+% function printFunction(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+%       let instName = inst.$name;
+%
+% let flavorLower = "Main";
+% let flavorUpper = "MAIN";
+% if (inst.enableExtend || isLIN) {
+%   flavorLower = "Extend";
+%   flavorUpper = "EXTEND";
+% };
+
+static const DL_UART_`flavorLower`_ClockConfig g`instName`ClockConfig = {
+    .clockSel    = DL_UART_`flavorUpper`_CLOCK_`inst.uartClkSrc`,
+    .divideRatio = DL_UART_`flavorUpper`_CLOCK_DIVIDE_RATIO_`inst.uartClkDiv`
+};
+
+static const DL_UART_`flavorLower`_Config g`instName`Config = {
+    .mode        = DL_UART_`flavorUpper`_MODE_`inst.uartMode`,
+    .direction   = DL_UART_`flavorUpper`_DIRECTION_`inst.direction`,
+    .flowControl = DL_UART_`flavorUpper`_FLOW_CONTROL_`inst.flowControl`,
+    .parity      = DL_UART_`flavorUpper`_PARITY_`inst.parity`,
+    .wordLength  = DL_UART_`flavorUpper`_WORD_LENGTH_`inst.wordLength`,
+    .stopBits    = DL_UART_`flavorUpper`_STOP_BITS_`inst.stopBits`
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_`instName`_init(void)
+{
+    DL_UART_`flavorLower`_setClockConfig(`instName`_INST, (DL_UART_`flavorLower`_ClockConfig *) &g`instName`ClockConfig);
+
+    DL_UART_`flavorLower`_init(`instName`_INST, (DL_UART_`flavorLower`_Config *) &g`instName`Config);
+    /*
+     * Configure baud rate by setting oversampling and baud rate divisors.
+     *  Target baud rate: `inst.targetBaudRate`
+     *  Actual baud rate: `inst.calculatedBaudRateNum`
+     */
+    %if(inst.uartMode == "NORMAL"){
+        %if(inst.enableExtend){
+            %if(inst.enableIrda){
+    DL_UART_Extend_setClockDivider2(`instName`_INST, DL_UART_CLOCK_DIVIDE2_RATIO_`inst.uartClkDiv2`);
+    DL_UART_Extend_enableIrDAMode(`instName`_INST);
+    DL_UART_Extend_configIrDAMode(`instName`_INST, `inst.setIrdaTxPolarity`, `inst.setIrdaPulseLength`, `inst.setIrdaTxPulseClock`);
+    %       }
+    %   }
+    %}
+% let inputFreqStr = Common.getUnitPrefix(inst.basicClockSourceCalculatedHidden,0).str+"HZ";
+% inputFreqStr = inputFreqStr.replace(" ","_");
+% let baudIBRD = inst.$name+"_IBRD_"+inputFreqStr+"_"+inst.targetBaudRate+"_BAUD";
+% let baudFBRD = inst.$name+"_FBRD_"+inputFreqStr+"_"+inst.targetBaudRate+"_BAUD";
+    DL_UART_`flavorLower`_setOversampling(`instName`_INST, DL_UART_OVERSAMPLING_RATE_`inst.ovsRate`X);
+% let divisorType = ""
+% if(inst.uartMode == "NORMAL"){
+%     if(inst.enableExtend){
+%         if(inst.enableIrda){
+%             divisorType = "IrDA"
+%         }
+%     }
+%}
+%      if(inst.uartMode == "NORMAL" && inst.enableExtend && inst.enableIrda){
+    DL_UART_`flavorLower`_set`divisorType`BaudRateDivisor(`instName`_INST,
+        `baudIBRD`,
+        `baudFBRD`,
+        DL_UART_CLOCK_DIVIDE2_RATIO_`inst.uartClkDiv2`);
+%      }
+%      else{
+    DL_UART_`flavorLower`_set`divisorType`BaudRateDivisor(`instName`_INST, `baudIBRD`, `baudFBRD`);
+%      }
+
+
+%    /* Interrupt generation */
+%    let interArgs = "";
+%    let interFct = ""
+%    for (let inter of inst.enabledInterrupts) {
+%        interArgs += Array(33).fill(' ').join('')+"DL_UART_"+flavorUpper+"_INTERRUPT_"+inter+" |\n";
+%    }
+%    if(inst.enabledInterrupts.length > 0){
+    /* Configure Interrupts */
+%        interArgs = interArgs.slice(0,-3); // remove last
+%        interFct = "DL_UART_"+ flavorLower+"_enableInterrupt("+instName+"_INST,\n"+interArgs+");";
+%
+    `interFct`
+%        if(inst.interruptPriority !== "DEFAULT"){
+%            let irqnStr = inst.$name + "_INST_INT_IRQN";
+    /* Setting the Interrupt Priority */
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+
+%        } else {
+
+%       // no prioirty, but additional spacing required.
+%        }
+%    } else {
+%        // interFct remains empty
+%    }
+%
+%    /* DMA generation */
+%    if (inst.enabledDMARXTriggers != "None" && inst.enableDMARX) {
+    /* Configure DMA Receive Event */
+    DL_UART_`flavorLower`_enableDMAReceiveEvent(`instName`_INST, `inst.enabledDMARXTriggers`);
+%   }
+%    if (inst.enabledDMATXTriggers != "None" && inst.enableDMATX) {
+    /* Configure DMA Transmit Event */
+    DL_UART_`flavorLower`_enableDMATransmitEvent(`instName`_INST);
+%   }
+%    /* FIFO config generation */
+%if (inst.enableFIFO){
+    /* Configure FIFOs */
+    DL_UART_`flavorLower`_enableFIFOs(`instName`_INST);
+%if (inst.direction == "RX"){
+    DL_UART_`flavorLower`_setRXFIFOThreshold(`instName`_INST, `inst.rxFifoThreshold`);
+%} else if (inst.direction == "TX"){
+    DL_UART_`flavorLower`_setTXFIFOThreshold(`instName`_INST, `inst.txFifoThreshold`);
+%} else if (inst.direction == "TX_RX"){
+    DL_UART_`flavorLower`_setRXFIFOThreshold(`instName`_INST, `inst.rxFifoThreshold`);
+    DL_UART_`flavorLower`_setTXFIFOThreshold(`instName`_INST, `inst.txFifoThreshold`);
+%}
+%}
+%    /* Glitch filter config generation */
+%if (inst.analogGlitchFilter != "Disabled"){
+
+    /* Configure analog glitch filter */
+    DL_UART_`flavorLower`_enableAnalogGlitchFilter(`instName`_INST);
+    DL_UART_`flavorLower`_setAnalogPulseWidth(`instName`_INST, `inst.analogGlitchFilter`);
+%}
+%if (inst.digitalGlitchFilter != 0){
+    /* Configure digital glitch filter */
+    DL_UART_setDigitalPulseWidth(`instName`_INST, `inst.digitalGlitchFilter`);
+%}
+%if (inst.rxTimeoutValue != 0){
+
+    DL_UART_`flavorLower`_setRXInterruptTimeout(`instName`_INST, `inst.rxTimeoutValue`);
+%}
+%if (inst.enableInternalLoopback){
+
+    DL_UART_`flavorLower`_enableLoopbackMode(`instName`_INST);
+%}
+%if (inst.enableMajorityVoting){
+
+    DL_UART_`flavorLower`_enableMajorityVoting(`instName`_INST);
+%}
+%if (inst.enableMSBFirst){
+
+    DL_UART_`flavorLower`_enableMSBFirst(`instName`_INST);
+%}
+%if (inst.uartMode == "IDLE_LINE" || inst.uartMode == "DALI" || inst.uartMode == "ADDR_9_BIT"){
+
+    /* Set the address mask and the address to match */
+    DL_UART_`flavorLower`_setAddressMask(`instName`_INST, `inst.addressMask`);
+    DL_UART_`flavorLower`_setAddress(`instName`_INST, `inst.address`);
+%}
+%if (inst.uartMode == "RS485"){
+
+    /* Configure the number of ticks before the START bit is sent and after the
+     * STOP bit for external driver setup of the RS485.
+     */
+    DL_UART_`flavorLower`_setExternalDriverSetup(`instName`_INST, `inst.setExtDriverSetup`);
+    DL_UART_`flavorLower`_setExternalDriverHold(`instName`_INST, `inst.setExtDriverHold`);
+%}
+%
+% if (inst.enableExtend && inst.enableManchester) {
+
+    DL_UART_Extend_enableManchesterEncoding(`instName`_INST);
+%}
+% if(isLIN) {
+
+    /* Configure LIN settings */
+% if (inst.enableLinCounter) {
+    DL_UART_Extend_enableLINCounter(`instName`_INST);
+%}
+    DL_UART_Extend_setLINCounterValue(`instName`_INST, 0);
+% if (inst.enableLinCounterCompare) {
+    DL_UART_Extend_enableLINCounterCompareMatch(`instName`_INST);
+    DL_UART_Extend_setLINCounterCompareValue(`instName`_INST, `inst.$name`_COUNTER_COMPARE_VALUE);
+%}
+% if (inst.enableLinCountWhileLow) {
+    DL_UART_Extend_enableLINCountWhileLow(`instName`_INST);
+%}
+% if (inst.enableLinFallingEdgeCapture) {
+    DL_UART_Extend_enableLINFallingEdgeCapture(`instName`_INST);
+%}
+% if (inst.enableLinCounterClearFallingEdge) {
+    DL_UART_Extend_enableLINCounterClearOnFallingEdge(`instName`_INST);
+%}
+% if (inst.enableLinRisingEdgeCapture) {
+    DL_UART_Extend_enableLINRisingEdgeCapture(`instName`_INST);
+%}
+%} // if(isLIN)
+
+    DL_UART_`flavorLower`_enable(`instName`_INST);
+}
+% } // for i < instances.length
+%
+%
+% } // printFunction()

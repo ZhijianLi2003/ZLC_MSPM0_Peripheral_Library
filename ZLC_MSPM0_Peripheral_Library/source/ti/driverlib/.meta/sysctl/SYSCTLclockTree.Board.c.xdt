@@ -1,0 +1,144 @@
+%%{
+/*
+ * Copyright (c) 2023, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SYSCTL.Board.c.xdt ========
+ */
+
+    let SYSCTL = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+
+    /* shorthand names for some common references in template below */
+    // since sysctl is static we don't use the inst variable
+    let stat = SYSCTL.$static;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "PreFunction":
+            printPreFunction();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+
+% function printGPIO() {
+%    let mod = system.modules["/ti/clockTree/pinFunction.js"];
+%    let gen = system.getTemplate(mod.templates.boardc);
+`_.trimEnd(gen(mod,"GPIO"))`
+%    mod = system.modules["/ti/clockTree/oscillator.js"];
+%    let genOSCPIN = system.getTemplate(mod.templates.boardc);
+`_.trimEnd(genOSCPIN("GPIO"))`
+% }
+% function printCall()  { return; } // empty
+% function printReset() { return; } // empty
+% function printPower() { return; } // empty
+% function printPreFunction() {
+%   if(Common.isDeviceM0G()) {
+%     let genPLL = system.getTemplate("/ti/clockTree/templates/syspll.Board.c.xdt");
+`_.trimEnd(genPLL("Config"))`
+%   }
+%     let mod = system.modules["/ti/clockTree/pinFunction.js"];
+%     let genPinFunc = system.getTemplate(mod.templates.boardc);
+`_.trimEnd(genPinFunc(mod, "PreFunction"))`
+% } // empty
+%
+%
+% function printFunction() {
+%  let funcStr = "";
+%  let tempStr = "";
+%     let genOSC = system.getTemplate("/ti/clockTree/templates/oscillator.Board.c.xdt");
+%  tempStr = _.trimEnd(genOSC("Function"));
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+% let forceDefaultClkStr = "";
+% if(stat.forceDefaultClkConfig) {
+%    funcStr += "\t/* Set default configuration */"
+%    funcStr += "\n\tDL_SYSCTL_disableHFXT();"
+%    if(!Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+%    funcStr += "\n\tDL_SYSCTL_disableSYSPLL();"
+%    }
+%    funcStr += "\n"
+%}
+%     let mod = system.modules["/ti/clockTree/pinFunction.js"];
+%     let genPinFunc = system.getTemplate(mod.templates.boardc);
+%  tempStr = _.trimEnd(genPinFunc(mod, "Function"));
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%   if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()) {
+%     let genHFCLK = system.getTemplate("/ti/clockTree/templates/hfclkSource.Board.c.xdt");
+%  tempStr = _.trimEnd(genHFCLK());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%   }
+%   if(Common.isDeviceM0G()){
+%     let genPLL = system.getTemplate("/ti/clockTree/templates/syspll.Board.c.xdt");
+%  tempStr =_.trimEnd(genPLL("Call"));
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%   } // if is M0G
+%     let genMDIV = system.getTemplate("/ti/clockTree/templates/divider.Board.c.xdt");
+%  tempStr = _.trimEnd(genMDIV());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%     let genLFCLK = system.getTemplate("/ti/clockTree/templates/lfclkSource.Board.c.xdt");
+%  tempStr = _.trimEnd(genLFCLK());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%     let genMFPCLK = system.getTemplate("/ti/clockTree/templates/mfpclk.Board.c.xdt");
+%  tempStr = _.trimEnd(genMFPCLK());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%     let genMCLK = system.getTemplate("/ti/clockTree/templates/mclkSource.Board.c.xdt");
+%  tempStr = _.trimEnd(genMCLK());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%     let genEXCLK = system.getTemplate("/ti/clockTree/templates/exclkSource.Board.c.xdt");
+%  tempStr = _.trimEnd(genEXCLK());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+%     let genFCC = system.getTemplate("/ti/clockTree/templates/fccSource.Board.c.xdt");
+%  tempStr = _.trimEnd(genFCC());
+%  funcStr += tempStr != ""?tempStr + "\n":"";
+`funcStr`
+% } // empty

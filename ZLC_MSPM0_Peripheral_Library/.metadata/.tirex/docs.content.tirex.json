@@ -1,0 +1,2336 @@
+[{
+    "name": "Release Notes",
+    "tags": [
+        "Release Notes",
+        "Documentation",
+        "MSPM0",
+        "Compatibility",
+        "Upgrade",
+        "Versioning"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../release_notes_mspm0_sdk_2_01_00_03.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "Documentation Overview",
+    "tags": [
+        "Documentation Overview",
+        "Documentation",
+        "MSPM0",
+        "SDK Overview",
+        "Components",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/MSPM0_SDK_Documentation_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "MSPM0 SDK User's Guide",
+    "tags": [
+        "MSPM0 SDK User's Guide",
+        "Documentation",
+        "SDK",
+        "Software Development Kit",
+        "Development",
+        "Examples",
+        "Example",
+        "Driver Library",
+        "TI Drivers",
+        "Quick Start",
+        "Documentation",
+        "MiddleWare",
+        "API Guide",
+        "API Guides",
+        "Application Programming Interface Guide",
+        "User Guide",
+        "Users Guide",
+        "User's Guide",
+        "User Guides",
+        "Software",
+        "RTOS",
+        "RTOS Kernel",
+        "FreeRTOS",
+        "Help"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/sdk_users_guide/MSPM0_SDK_User_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "Examples Guide",
+    "tags": [
+        "Examples Guide",
+        "Documentation",
+        "Examples List",
+        "SysConfig support",
+        "Example",
+        "Demos",
+        "Demo",
+        "Application",
+        "ADC",
+        "COMP",
+        "CRC",
+        "DMA",
+        "Flash",
+        "GPAMP",
+        "I2C",
+        "OPA",
+        "SPI",
+        "Timer",
+        "UART",
+        "VREF",
+        "WWDT",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/sdk_users_guide/doc_guide/doc_guide-srcs/examples_guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "Early Samples Migration Guide",
+    "tags": [
+        "Early Samples Migration Guide",
+        "Documentation",
+        "MSPM0 Migration Guide",
+        "early samples",
+        "early customer samples",
+        "production samples",
+        "DriverLib differences",
+        "SysConfig differences",
+        "code generation",
+        "Getting Started",
+        "compatibility breaks",
+        "help with migration"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/early_samples_migration_guide/MSPM0_Early_Samples_Migration_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "Known Issues and FAQ",
+    "tags": [
+        "Known Issues FAQ",
+        "MSPM0",
+        "Documentation",
+        "FAQ",
+        "Frequently Asked Questions",
+        "Troubleshooting",
+        "MSPM0",
+        "Recovery mechanisms",
+        "Preventive actions",
+        "Errors",
+        "Debugging",
+        "Support"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../known_issues_FAQ.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ]
+},
+{
+    "name": "Driverlib API Guide",
+    "tags": [
+        "Driverlib API Guide",
+        "Documentation",
+        "MSPM0 driverlib API Directory Reference Guide",
+        "API",
+        "ADC",
+        "COMP",
+        "CRC",
+        "DMA",
+        "Flash",
+        "GPAMP",
+        "I2C",
+        "OPA",
+        "SPI",
+        "Timer",
+        "UART",
+        "VREF",
+        "WWDT",
+        "Dependency",
+        "File Reference",
+        "Source code",
+        "Data Structure",
+        "Variables",
+        "Modules",
+        "Functions",
+        "CCS IAR Keil",
+        "Code Composer Studio",
+        "Register Level"
+    ],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/driverlib/Driverlib_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "DriverLib"
+    ]
+},
+{
+    "name": "Tools Guide Overview",
+    "tags": [
+        "Tools Guide Overview",
+        "Documentation",
+        "Tools Guide",
+        "Code Composer Studio",
+        "CCS",
+        "IAR",
+        "Keil",
+        "IDE",
+        "Compiler",
+        "TI Arm Clang",
+        "GCC",
+        "SysConfig",
+        "Uniflash",
+        "XDS-110",
+        "Segger",
+        "PEmicro",
+        "Lauterbach",
+        "Ease of use",
+        "Debugging",
+        "Programming"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/MSPM0_Tools_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "Debugging and Programming Tools Overview",
+    "tags": [
+        "Debugging and Programming Tools Overview",
+        "UniFlash Guide",
+        "Documentation",
+        "Tools",
+        "MSPM0",
+        "UniFlash",
+        "Uni Flash",
+        "Load Image to Device",
+        "Flash Image",
+        "Production Flash",
+        "Bootloader",
+        "JTAG",
+        "Binary File",
+        "Hex File",
+        "Out File",
+        "Put Program on Device",
+        "XDS-110",
+        "XDS110",
+        "MSP-GANG",
+        "GANG",
+        "BSL Host",
+        "Elprotronic",
+        "Segger",
+        "PEmicro",
+        "Lauterbach",
+        "Debugger",
+        "programmer",
+        "debug probe"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/doc_guide/doc_guide-srcs/debug_program.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) Theia IDE Guide",
+    "tags": [
+        "Code Composer Studio (CCS) Theia IDE Guide",
+        "Documentation",
+        "Tools",
+        "CCS Theia IDE Guide",
+        "Code Composer Studio Theia IDE Guide",
+        "CCS Theia",
+        "Visual Studio Code",
+        "VS Code",
+        "VSCode"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/ccs_theia_ide_guide/Code_Composer_Studio_Theia_IDE_for_MSPM0_MCUs.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) IDE Guide",
+    "tags": [
+        "Code Composer Studio (CCS) IDE Guide",
+        "Documentation",
+        "Tools",
+        "CCS IDE Guide",
+        "Code Composer Studio IDE Guide",
+        "IDE Guide",
+        "Code Composer Studio",
+        "CCS",
+        "IDE",
+        "IDE Guide"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/ccs_ide_guide/Code_Composer_Studio_IDE_for_MSPM0_MCUs.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "IAR IDE Guide",
+    "tags": [
+        "IAR IDE Guide",
+        "Documentation",
+        "Tools",
+        "IAR Embedded Workbench for Arm",
+        "EWARM",
+        "CSPY",
+        "C-SPY"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/iar_ide_guide/IAR_Embedded_Workbench_IDE_for_MSPM0_MCUs_Documentation.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "Keil IDE Guide",
+    "tags": [
+        "Keil IDE Guide",
+        "Documentation",
+        "Tools",
+        "Arm Keil MDK IDE Guide",
+        "Keil MDK-Arm",
+        "uVision",
+        "µVision"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/keil_ide_guide/Arm_Keil_MDK_IDE_for_MSPM0_MCUs_Documentation.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "SysConfig Guide",
+    "tags": [
+        "SysConfig Guide",
+        "MSPM0",
+        "SysConfig",
+        "SysConfig Cloud",
+        "SysConfig Desktop",
+        "Standalone SysConfig",
+        "Importing SysConfig Example Projects",
+        "Clocktree",
+        "Clock Tree",
+        "Code Composer Studio",
+        "CCS",
+        "IAR",
+        "Keil",
+        "IDE",
+        "Automatic Code Generation",
+        "GUI",
+        "Graphical User Interface",
+        "System Configuration",
+        "Intuitive Graphical Configuration",
+        "Real-time code preview",
+        "PinMux",
+        "NONMAIN Configurator",
+        "Event Configuration",
+        "Documentation",
+        "Tools"
+        ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/sysconfig_guide/SysConfig_Guide_for_MSPM0.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "Analog Configurator Overview",
+    "tags": [
+        "Analog Configurator Overview",
+        "Documentation",
+        "MSPM0",
+        "Quick Start Guide",
+        "User's Guide",
+        "GUI Composer",
+        "MessagePack",
+        "HAL",
+        "Live Configuration",
+        "Analog Signal Chain",
+        "Application",
+        "LaunchPad",
+        "Evaluation",
+        "Circuit Design",
+        "ADC OPA COMP GPAMP DAC",
+        "Development",
+        "Visual",
+        "SysConfig",
+        "Plotting",
+        "Code Generation"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/tools/analog_config_overview/Analog_Configurator_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Tools"
+    ]
+},
+{
+    "name": "GUI Composer Guide",
+    "tags": [
+        "GUI Composer Guide",
+        "Documentation",
+        "MSPM0 GUI Composer Library Guide",
+        "CCS",
+        "Code Composer Studio",
+        "JSON",
+        "MessagePack",
+        "GUIComm",
+        "Transport Layer Protocol",
+        "HAL",
+        "Application",
+        "LaunchPad",
+        "LP",
+        "UART"
+    ],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/gui_composer/GUI_Composer_Library_Documentation.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "GUI Composer Library"
+    ]
+},
+{
+    "name": "IQMath Guide",
+    "tags": [
+        "IQMath Guide",
+        "MSPM0",
+        "Documentation",
+        "IQmath",
+        "IQmath Library",
+        "Middleware",
+        "RTS",
+        "Compiler Runtime System",
+        "MATHACL",
+        "Hardware math accelerator",
+        "Fixed-Point Math",
+        "Floating-Point Math",
+        "Integer Math",
+        "32-bit data types",
+        "IQ value",
+        "benchmarks",
+        "highly optimized",
+        "high precision",
+        "mathematical functions",
+        "range and resolution"
+        ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/iqmath/IQMath_Documentation.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "IQMath"
+    ]
+},
+{
+    "name": "LIN Guide",
+    "tags": [
+        "LIN Guide",
+        "Documentation",
+        "LIN",
+        "LIN Library",
+        "Local Interconnect Network",
+        "Middleware",
+        "Controller",
+        "Responder",
+        "LIN 2.X"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/lin/MSPM0_LIN_Users_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "LIN"
+    ]
+},
+{
+    "name": "SENT Guide",
+    "tags": [
+        "SENT Guide",
+        "Documentation",
+        "SENT",
+        "SENT Library",
+        "Single Edge Nibble Transmission",
+        "Middleware",
+        "Transmit"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/sent/MSPM0_SENT_Users_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "SENT"
+    ]
+},
+{
+    "name": "SMBus Guide",
+    "tags": [
+        "SMBus Guide",
+        "Documentation",
+        "SMB",
+        "SMBus Library",
+        "System Management Bus",
+        "Middleware",
+        "Controller",
+        "Target",
+        "I2C"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/smbus/SMBus_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "SMBus"
+    ]
+},
+{
+    "name": "PMBus Guide",
+    "tags": [
+        "PMBus Guide",
+        "Documentation",
+        "PMB",
+        "PMBus Library",
+        "Middleware",
+        "Controller",
+        "Target",
+        "I2C"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/pmbus/PMBus_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "PMBus"
+    ]
+},
+{
+    "name": "EEPROM Library Overview",
+    "tags": [
+        "EEPROM Library Overview",
+        "Documentation",
+        "EEPROM Guide",
+        "EEPROM Emulation",
+        "Type A",
+        "Type B",
+        "API Guide"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/eeprom/EEPROM_Library_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "EEPROM"
+    ]
+},
+{
+    "name": "Diagnostic Library Overview",
+    "tags": [
+        "Diagnostic Library Overview",
+        "Documentation",
+        "Diagnostics Library Overview",
+        "Safety Manual",
+        "Diagnostic Library User’s Guide",
+        "User Guide",
+        "Diagnostic Library API Guide",
+        "Diagnostic Library Manifest",
+        "IEC60730",
+        "Class-B",
+        "IEC-61508",
+        "ISO-2626",
+        "Functional safety"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/diagnostic/Diagnostic_Library_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Diagnostic"
+    ]
+},
+{
+    "name": "Stepper Motor Control User Guide",
+    "tags": [
+        "Stepper Motor Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/motor_control_stepper/Stepper_Motor_Control_User_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Motor Control"
+    ]
+},
+{
+    "name": "Brushed Motor Control User Guide",
+    "tags": [
+        "Brushed Motor Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/motor_control_brushed/Brushed_Motor_Control_User_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Motor Control"
+    ]
+},
+{
+    "name": "Hall Sensored Trap Motor Control User Guide",
+    "tags": [
+        "Hall Sensored Trap Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/motor_control_bldc_sensored_trap_hall/Hall_sensored_Motor_Control_Software_User_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Motor Control"
+    ]
+},
+{
+    "name": "Sensorless FOC Motor Control User Guide",
+    "tags": [
+        "Sensorless FOC Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/motor_control_bldc_sensorless_foc/Sensorless_FOC_Motor_Control_User_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Motor Control"
+    ]
+},
+{
+    "name": "Secure Booting User's Guide",
+    "tags": [
+        "Secure Booting User's Guide",
+        "Documentation",
+        "BIM"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/boot_manager/Secure_Booting_Users_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Secure Booting"
+    ]
+},
+{
+    "name": "CMSIS DSP User's Guide",
+    "tags": [
+        "CMSIS DSP User's Guide",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/third_party/cmsis_dsp/CMSIS_DSP_Library_for_MSPM0.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "CMSIS DSP"
+    ]
+},
+{
+    "name": "IO-Link Support for MSPM0",
+    "tags": [
+        "IO-Link Support for MSPM0",
+        "IOLink",
+        "IEC 61131-9",
+        "TEConcept",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/third_party/io_link/IO_Link_Support_for_MSPM0.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "IO-Link"
+    ]
+},
+{
+    "name": "Zephyr Support for MSPM0",
+    "tags": [
+        "Zephyr Support for MSPM0",
+        "RTOS",
+        "Real Time Operating System",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/third_party/zephyr/Zephyr_RTOS_Support_for_MSPM0.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "Zephyr"
+    ]
+},
+{
+    "name": "DALI User's Guide",
+    "tags": [
+        "DALI User's Guide",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/dali/MSPM0_DALI_Users_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "DALI"
+    ]
+},
+{
+    "name": "Energy Metrology Guide",
+    "tags": [
+        "Energy Metrology Guide",
+        "Energy Metrology Library",
+        "Energy Library",
+        "Emeter",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/energy_metrology/Energy_Metrology_SW_Overview.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Energy Metrology Library"
+    ]
+},
+{
+    "name": "Communication Modules User's Guide",
+    "tags": [
+        "Communication Modules User's Guide",
+        "UART",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/middleware/comm_modules/Communication_Module_Users_Guide.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Middleware",
+        "Communication Modules"
+    ]
+},
+{
+    "name": "Quick Start Guide Overview",
+    "tags": [
+        "Quick Start Guide Overview",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "Code Composer Studio Quick Start Guide",
+        "Quick Start Guide",
+        "Quick Start",
+        "Code Composer Studio",
+        "CCS",
+        "IDE",
+        "Compiler",
+        "TI Arm Clang",
+        "GCC",
+        "SysConfig",
+        "Keil",
+        "Keil Quick Start Guide",
+        "Keil MDK-Arm",
+        "Keil MDK-Arm with uVision",
+        "IAR",
+        "IAR Quick Start Guide",
+        "IAR Embedded Workbench",
+        "IAR Embedded Workbench for Arm"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/quickstart_guides/MSPM0_SDK_Quick_Start_Guides.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Quick Start Guides"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) Theia Quick Start Guide",
+    "tags": [
+        "Code Composer Studio (CCS) Theia Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "CCS Theia Quick Start Guide",
+        "Code Composer Studio Theia Quick Start Guide",
+        "Visual Studio Code",
+        "VS Code",
+        "VSCode",
+        "quickstart",
+	    "quickstart guide",
+        "CCS Theia setup",
+        "Import project into Theia",
+        "Import SDK and sysconfig to Theia",
+        "Build example in Theia",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_ccs_theia.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Quick Start Guides"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) Quick Start Guide",
+    "tags": [
+        "Code Composer Studio (CCS) Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "Code Composer Studio Quick Start Guide",
+        "Code Composer Studio (CCS) Quick Start Guide",
+        "Eclipse",
+        "MSPM0 CCS Quickstart Guide",
+	    "quickstart guide",
+        "CCS Eclipse setup",
+        "Import project into CCS",
+        "Import SDK and sysconfig to CCS",
+        "Build example in CCS Eclipse",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_ccs.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Quick Start Guides"
+    ]
+},
+{
+    "name": "IAR Quick Start Guide",
+    "tags": [
+        "IAR Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "Code Composer Studio",
+        "IAR",
+        "IAR Embedded Workbench",
+        "IAR Embedded Workbench for Arm",
+        "IDE",
+        "Compiler",
+        "MSPM0 IAR Quickstart Guide",
+        "quickstart guide",
+        "IAR setup",
+        "Import project into IAR",
+        "Import SDK and sysconfig to IAR",
+        "Build example in IAR",
+        "Install MSPM0 SDK",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_iar.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Quick Start Guides"
+    ]
+},
+{
+    "name": "Keil Quick Start Guide",
+    "tags": [
+        "Keil Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "Code Composer Studio",
+        "Keil",
+        "Keil MDK-Arm",
+        "Keil MDK-Arm with uVision",
+        "CMSIS-Pack",
+        "Segger J-Link",
+        "Segger",
+        "J-Link",
+        "XDS-110",
+        "IDE",
+        "Compiler",
+        "MSPM0 Keil Quickstart Guide",
+        "quickstart guide",
+        "Keil setup",
+        "Build example in Keil",
+        "Import project into Keil",
+        "Import SDK and sysconfig to Keil",
+        "Install MSPM0 SDK",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/english/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_keil.html",
+    "mainCategories": [
+        [
+            "Documents"
+        ]
+    ],
+    "subCategories": [
+        "Quick Start Guides"
+    ]
+},
+{
+    "name": "版本说明",
+    "tags": [
+        "版本说明",
+        "Release Notes",
+        "Documentation",
+        "MSPM0",
+        "Compatibility",
+        "Upgrade",
+        "Versioning"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../release_notes_mspm0_sdk_2_01_00_03.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "文档概述",
+    "tags": [
+        "文档概述",
+        "Documentation Overview",
+        "Documentation",
+        "MSPM0",
+        "SDK Overview",
+        "Components",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/MSPM0_SDK_Documentation_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "MSPM0 SDK 用户指南",
+    "tags": [
+        "MSPM0 SDK 用户指南",
+        "MSPM0 SDK User's Guide",
+        "Documentation",
+        "SDK",
+        "Software Development Kit",
+        "Development",
+        "Examples",
+        "Example",
+        "Driver Library",
+        "TI Drivers",
+        "Quick Start",
+        "Documentation",
+        "MiddleWare",
+        "API Guide",
+        "API Guides",
+        "Application Programming Interface Guide",
+        "User Guide",
+        "Users Guide",
+        "User's Guide",
+        "User Guides",
+        "Software",
+        "RTOS",
+        "RTOS Kernel",
+        "FreeRTOS",
+        "Help"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/sdk_users_guide/MSPM0_SDK_User_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "样例指南",
+    "tags": [
+        "样例指南",
+        "Examples Guide",
+        "Documentation",
+        "Examples List",
+        "SysConfig support",
+        "Example",
+        "Demos",
+        "Demo",
+        "Application",
+        "ADC",
+        "COMP",
+        "CRC",
+        "DMA",
+        "Flash",
+        "GPAMP",
+        "I2C",
+        "OPA",
+        "SPI",
+        "Timer",
+        "UART",
+        "VREF",
+        "WWDT",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/sdk_users_guide/doc_guide/doc_guide-srcs/examples_guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "早期版本芯片移植指南",
+    "tags": [
+        "早期版本芯片移植指南",
+        "Early Samples Migration Guide",
+        "Documentation",
+        "MSPM0 Migration Guide",
+        "early samples",
+        "early customer samples",
+        "production samples",
+        "DriverLib differences",
+        "SysConfig differences",
+        "code generation",
+        "Getting Started",
+        "compatibility breaks",
+        "help with migration"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/early_samples_migration_guide/MSPM0_Early_Samples_Migration_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "已知问题和常见问题解答",
+    "tags": [
+        "已知问题和常见问题解答",
+        "Known Issues and FAQ",
+        "MSPM0",
+        "Documentation",
+        "FAQ",
+        "Frequently Asked Questions",
+        "Troubleshooting",
+        "MSPM0",
+        "Recovery mechanisms",
+        "Preventive actions",
+        "Errors",
+        "Debugging",
+        "Support"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../known_issues_FAQ.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ]
+},
+{
+    "name": "DriverLib API 指南",
+    "tags": [
+        "DriverLib API 指南",
+        "Driverlib API Guide",
+        "Documentation",
+        "MSPM0 driverlib API Directory Reference Guide",
+        "API",
+        "ADC",
+        "COMP",
+        "CRC",
+        "DMA",
+        "Flash",
+        "GPAMP",
+        "I2C",
+        "OPA",
+        "SPI",
+        "Timer",
+        "UART",
+        "VREF",
+        "WWDT",
+        "Dependency",
+        "File Reference",
+        "Source code",
+        "Data Structure",
+        "Variables",
+        "Modules",
+        "Functions",
+        "CCS IAR Keil",
+        "Code Composer Studio",
+        "Register Level"
+    ],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/driverlib/Driverlib_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "DriverLib"
+    ]
+},
+{
+    "name": "工具指南概述",
+    "tags": [
+        "工具指南概述",
+        "Tools Guide Overview",
+        "Documentation",
+        "Tools Guide",
+        "Code Composer Studio",
+        "CCS",
+        "IAR",
+        "Keil",
+        "IDE",
+        "Compiler",
+        "TI Arm Clang",
+        "GCC",
+        "SysConfig",
+        "Uniflash",
+        "XDS-110",
+        "Segger",
+        "PEmicro",
+        "Lauterbach",
+        "Ease of use",
+        "Debugging",
+        "Programming"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/MSPM0_Tools_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "调试和编程工具概述",
+    "tags": [
+        "调试和编程工具",
+        "Debugging and Programming Tools Overview",
+        "UniFlash Guide",
+        "Documentation",
+        "Tools",
+        "MSPM0",
+        "UniFlash",
+        "Uni Flash",
+        "Load Image to Device",
+        "Flash Image",
+        "Production Flash",
+        "Bootloader",
+        "JTAG",
+        "Binary File",
+        "Hex File",
+        "Out File",
+        "Put Program on Device",
+        "XDS-110",
+        "XDS110",
+        "MSP-GANG",
+        "GANG",
+        "BSL Host",
+        "Elprotronic",
+        "Segger",
+        "PEmicro",
+        "Lauterbach",
+        "Debugger",
+        "programmer",
+        "debug probe"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/doc_guide/doc_guide-srcs/debug_program_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) Theia IDE 指南",
+    "tags": [
+        "Code Composer Studio (CCS) Theia IDE 指南",
+        "Code Composer Studio (CCS) Theia IDE Guide",
+        "Documentation",
+        "Tools",
+        "CCS Theia IDE Guide",
+        "Code Composer Studio Theia IDE Guide",
+        "CCS Theia",
+        "Visual Studio Code",
+        "VS Code",
+        "VSCode"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/ccs_theia_ide_guide/Code_Composer_Studio_Theia_IDE_for_MSPM0_MCUs_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) IDE 指南",
+    "tags": [
+        "Code Composer Studio (CCS) IDE 指南",
+        "Code Composer Studio (CCS) IDE Guide",
+        "Documentation",
+        "Tools",
+        "CCS IDE Guide",
+        "Code Composer Studio IDE Guide",
+        "IDE Guide",
+        "Code Composer Studio",
+        "CCS",
+        "IDE",
+        "IDE Guide"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/ccs_ide_guide/Code_Composer_Studio_IDE_for_MSPM0_MCUs_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "IAR IDE 指南",
+    "tags": [
+        "IAR IDE 指南",
+        "IAR IDE Guide",
+        "Documentation",
+        "Tools",
+        "IAR Embedded Workbench for Arm",
+        "EWARM",
+        "CSPY",
+        "C-SPY"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/iar_ide_guide/IAR_Embedded_Workbench_IDE_for_MSPM0_MCUs_Documentation_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "Keil IDE 指南",
+    "tags": [
+        "Keil IDE 指南",
+        "Keil IDE Guide",
+        "Documentation",
+        "Tools",
+        "Arm Keil MDK IDE Guide",
+        "Keil MDK-Arm",
+        "uVision",
+        "µVision"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/keil_ide_guide/Arm_Keil_MDK_IDE_for_MSPM0_MCUs_Documentation_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "SysConfig 指南",
+    "tags": [
+        "SysConfig 指南",
+        "SysConfig Guide",
+        "MSPM0",
+        "SysConfig",
+        "SysConfig Cloud",
+        "SysConfig Desktop",
+        "Standalone SysConfig",
+        "Importing SysConfig Example Projects",
+        "Clocktree",
+        "Clock Tree",
+        "Code Composer Studio",
+        "CCS",
+        "IAR",
+        "Keil",
+        "IDE",
+        "Automatic Code Generation",
+        "GUI",
+        "Graphical User Interface",
+        "System Configuration",
+        "Intuitive Graphical Configuration",
+        "Real-time code preview",
+        "PinMux",
+        "NONMAIN Configurator",
+        "Event Configuration",
+        "Documentation",
+        "Tools"
+        ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/sysconfig_guide/SysConfig_Guide_for_MSPM0_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "Analog Configurator 概述",
+    "tags": [
+        "Analog Configurator 概述",
+        "Analog Configurator Overview",
+        "Documentation",
+        "MSPM0",
+        "Quick Start Guide",
+        "User's Guide",
+        "GUI Composer",
+        "MessagePack",
+        "HAL",
+        "Live Configuration",
+        "Analog Signal Chain",
+        "Application",
+        "LaunchPad",
+        "Evaluation",
+        "Circuit Design",
+        "ADC OPA COMP GPAMP DAC",
+        "Development",
+        "Visual",
+        "SysConfig",
+        "Plotting",
+        "Code Generation"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/tools/analog_config_overview/Analog_Configurator_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "工具"
+    ]
+},
+{
+    "name": "GUI Composer 指南",
+    "tags": [
+        "GUI Composer 指南",
+        "GUI Composer Guide",
+        "Documentation",
+        "MSPM0 GUI Composer Library Guide",
+        "CCS",
+        "Code Composer Studio",
+        "JSON",
+        "MessagePack",
+        "GUIComm",
+        "Transport Layer Protocol",
+        "HAL",
+        "Application",
+        "LaunchPad",
+        "LP",
+        "UART"
+    ],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/gui_composer/GUI_Composer_Library_Documentation_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "GUI Composer 库"
+    ]
+},
+{
+    "name": "IQMath 指南",
+    "tags": [
+        "IQMath 指南",
+        "IQMath Guide",
+        "MSPM0",
+        "Documentation",
+        "IQmath",
+        "IQmath Library",
+        "Middleware",
+        "RTS",
+        "Compiler Runtime System",
+        "MATHACL",
+        "Hardware math accelerator",
+        "Fixed-Point Math",
+        "Floating-Point Math",
+        "Integer Math",
+        "32-bit data types",
+        "IQ value",
+        "benchmarks",
+        "highly optimized",
+        "high precision",
+        "mathematical functions",
+        "range and resolution"
+        ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/iqmath/IQMath_Documentation_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "IQMath"
+    ]
+},
+{
+    "name": "LIN 指南",
+    "tags": [
+        "LIN 指南",
+        "LIN Guide",
+        "Documentation",
+        "LIN",
+        "LIN Library",
+        "Local Interconnect Network",
+        "Middleware",
+        "Controller",
+        "Responder",
+        "LIN 2.X"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/lin/MSPM0_LIN_Users_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "LIN"
+    ]
+},
+{
+    "name": "SENT 指南",
+    "tags": [
+        "SENT 指南",
+        "SENT Guide",
+        "Documentation",
+        "SENT",
+        "SENT Library",
+        "Single Edge Nibble Transmission",
+        "Middleware",
+        "Transmit"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/sent/MSPM0_SENT_Users_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "SENT"
+    ]
+},
+{
+    "name": "SMBus 指南",
+    "tags": [
+        "SMBus 指南",
+        "SMBus Guide",
+        "Documentation",
+        "SMB",
+        "SMBus Library",
+        "System Management Bus",
+        "Middleware",
+        "Controller",
+        "Target",
+        "I2C"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/smbus/SMBus_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "SMBus"
+    ]
+},
+{
+    "name": "PMBus 指南",
+    "tags": [
+        "PMBus 指南",
+        "PMBus Guide",
+        "Documentation",
+        "PMB",
+        "PMBus Library",
+        "Middleware",
+        "Controller",
+        "Target",
+        "I2C"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/pmbus/PMBus_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "PMBus"
+    ]
+},
+{
+    "name": "EEPROM 库概述",
+    "tags": [
+        "EEPROM 库概述",
+        "EEPROM Library Overview",
+        "Documentation",
+        "EEPROM Guide",
+        "EEPROM Emulation",
+        "Type A",
+        "Type B",
+        "API Guide"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/eeprom/EEPROM_Library_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "EEPROM"
+    ]
+},
+{
+    "name": "诊断库概述",
+    "tags": [
+        "诊断库概述",
+        "Diagnostic Library Overview",
+        "Documentation",
+        "Diagnostics Library Overview",
+        "Safety Manual",
+        "Diagnostic Library User’s Guide",
+        "User Guide",
+        "Diagnostic Library API Guide",
+        "Diagnostic Library Manifest",
+        "IEC60730",
+        "Class-B",
+        "IEC-61508",
+        "ISO-2626",
+        "Functional safety"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/diagnostic/Diagnostic_Library_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "Diagnostic"
+    ]
+},
+{
+    "name": "步进电机控用户指南",
+    "tags": [
+        "步进电机控用户指南",
+        "Stepper Motor Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/motor_control_stepper/Stepper_Motor_Control_User_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "电机控制"
+    ]
+},
+{
+    "name": "有刷电机控用户指南",
+    "tags": [
+        "有刷电机控用户指南",
+        "Brushed Motor Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/motor_control_brushed/Brushed_Motor_Control_User_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "电机控制"
+    ]
+},
+{
+    "name": "Hall Sensored Trap Motor Control User Guide",
+    "tags": [
+        "Hall Sensored Trap Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/motor_control_bldc_sensored_trap_hall/Hall_sensored_Motor_Control_Software_User_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "电机控制"
+    ]
+},
+{
+    "name": "Sensorless FOC Motor Control User Guide",
+    "tags": [
+        "Sensorless FOC Control User Guide",
+        "Documentation"
+    ],
+    "devices": ["$(MSPM0L11xx_L13xx_devices)"],
+    "devtools": ["$(MSPM0L11xx_L13xx_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/motor_control_bldc_sensorless_foc/Sensorless_FOC_Motor_Control_User_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "电机控制"
+    ]
+},
+{
+    "name": "Secure Booting 指南",
+    "tags": [
+        "Secure Booting 指南",
+        "Secure Booting User's Guide",
+        "Documentation",
+        "BIM"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/boot_manager/Secure_Booting_Users_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "Secure Booting"
+    ]
+},
+{
+    "name": "CMSIS DSP 管理器指南",
+    "tags": [
+        "CMSIS DSP 管理器指南",
+        "CMSIS DSP User's Guide",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/third_party/cmsis_dsp/CMSIS_DSP_Library_for_MSPM0_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "CMSIS DSP"
+    ]
+},
+{
+    "name": "IO-Link Support for MSPM0",
+    "tags": [
+        "IO-Link Support for MSPM0",
+        "IOLink",
+        "IEC 61131-9",
+        "TEConcept",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/third_party/io_link/IO_Link_Support_for_MSPM0_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "IO-Link"
+    ]
+},
+{
+    "name": "Zephyr Support for MSPM0",
+    "tags": [
+        "Zephyr Support for MSPM0",
+        "RTOS",
+        "Real Time Operating System",
+        "Documentation",
+        "Third Party"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/third_party/zephyr/Zephyr_RTOS_Support_for_MSPM0_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Third Party",
+        "Zephyr"
+    ]
+},
+{
+    "name": "DALI dali user",
+    "tags": [
+        "DALI 管理器指南",
+        "DALI User's Guide",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/dali/MSPM0_DALI_Users_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "DALI"
+    ]
+},
+{
+    "name": "Energy Metrology 指南",
+    "tags": [
+        "Energy Metrology 指南",
+        "Energy Metrology Guide",
+        "Energy Metrology Library",
+        "Energy Library",
+        "Emeter",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/energy_metrology/Energy_Metrology_SW_Overview_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "Energy Metrology 库"
+    ]
+},
+{
+    "name": "Communication Modules 管理器指南",
+    "tags": [
+        "Communication Modules 管理器指南",
+        "Communication Modules User's Guide",
+        "UART",
+        "Documentation",
+        "Middleware"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/middleware/comm_modules/Communication_Module_Users_Guide_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "Middleware 中间件",
+        "Communication Modules"
+    ]
+},
+{
+    "name": "快速上手指南概述",
+    "tags": [
+        "快速上手指南概述",
+        "Quick Start Guide Overview",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "Code Composer Studio Quick Start Guide",
+        "Quick Start Guide",
+        "Quick Start",
+        "Code Composer Studio",
+        "CCS",
+        "IDE",
+        "Compiler",
+        "TI Arm Clang",
+        "GCC",
+        "SysConfig",
+        "Keil",
+        "Keil Quick Start Guide",
+        "Keil MDK-Arm",
+        "Keil MDK-Arm with uVision",
+        "IAR",
+        "IAR Quick Start Guide",
+        "IAR Embedded Workbench",
+        "IAR Embedded Workbench for Arm"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/quickstart_guides/MSPM0_SDK_Quick_Start_Guides_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "快速上手指南"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) Theia 快速上手指南",
+    "tags": [
+        "Code Composer Studio (CCS) Theia 快速上手指南",
+        "Code Composer Studio (CCS) Theia Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "CCS Theia Quick Start Guide",
+        "Code Composer Studio Theia Quick Start Guide",
+        "Visual Studio Code",
+        "VS Code",
+        "VSCode",
+        "quickstart",
+	    "quickstart guide",
+        "CCS Theia setup",
+        "Import project into Theia",
+        "Import SDK and sysconfig to Theia",
+        "Build example in Theia",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_ccs_theia_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "快速上手指南"
+    ]
+},
+{
+    "name": "Code Composer Studio (CCS) 快速上手指南",
+    "tags": [
+        "Code Composer Studio (CCS) 快速上手指南",
+        "Code Composer Studio (CCS) Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "CCS Quick Start Guide",
+        "Code Composer Studio Quick Start Guide",
+        "Code Composer Studio (CCS) Quick Start Guide",
+        "Eclipse",
+        "MSPM0 CCS Quickstart Guide",
+	    "quickstart guide",
+        "CCS Eclipse setup",
+        "Import project into CCS",
+        "Import SDK and sysconfig to CCS",
+        "Build example in CCS Eclipse",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_ccs_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "快速上手指南"
+    ]
+},
+{
+    "name": "IAR 快速上手指南",
+    "tags": [
+        "IAR 快速上手指南",
+        "IAR Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "Code Composer Studio",
+        "IAR",
+        "IAR Embedded Workbench",
+        "IAR Embedded Workbench for Arm",
+        "IDE",
+        "Compiler",
+        "MSPM0 IAR Quickstart Guide",
+        "quickstart guide",
+        "IAR setup",
+        "Import project into IAR",
+        "Import SDK and sysconfig to IAR",
+        "Build example in IAR",
+        "Install MSPM0 SDK",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_iar_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "快速上手指南"
+    ]
+},
+{
+    "name": "Keil 快速上手指南",
+    "tags": [
+        "Keil 快速上手指南",
+        "Keil Quick Start Guide",
+        "Documentation",
+        "Tools",
+        "Code Composer Studio",
+        "Keil",
+        "Keil MDK-Arm",
+        "Keil MDK-Arm with uVision",
+        "CMSIS-Pack",
+        "Segger J-Link",
+        "Segger",
+        "J-Link",
+        "XDS-110",
+        "IDE",
+        "Compiler",
+        "MSPM0 Keil Quickstart Guide",
+        "quickstart guide",
+        "Keil setup",
+        "Build example in Keil",
+        "Import project into Keil",
+        "Import SDK and sysconfig to Keil",
+        "Install MSPM0 SDK",
+        "Getting Started"
+    ],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "resourceType": "file",
+    "resourceClass": ["document"],
+    "location": "../../docs/chinese/quickstart_guides/doc_guide/doc_guide-srcs/quickstart_guide_keil_CN.html",
+    "mainCategories": [
+        [
+            "Documents - Chinese"
+        ]
+    ],
+    "subCategories": [
+        "快速上手指南"
+    ]
+}
+]

@@ -1,0 +1,201 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== GPIO.Board.h.xdt ========
+ */
+
+    let GPIO = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = GPIO.$instances;
+    if(instances.length == 0) return;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+%
+% function printDefine() {
+% let portedGroups = [];
+% let portedInterrupts = [];
+% let instances = system.modules["/ti/driverlib/GPIO"].$instances;
+% let pinstances = system.modules["/ti/driverlib/gpio/GPIOPin"].$instances;
+% let gpioEventInfoMap = new Map();
+% for (let pin in pinstances) {
+%     let pinst = pinstances[pin];
+%     let group = pinst.$ownedBy.$name + "_";
+%     let packagePin = pinst.pin.$solution.packagePinName;
+%     let port = Common.getGPIOPortMultiPad(packagePin,pinst,undefined);
+%     /* Used in the event channel define */
+%     let pinID = Common.getGPIONumberMultiPad(packagePin,pinst,undefined);
+%     let pinCM = Common.getPinCM(packagePin,pinst,undefined);
+%     let sameGroupOtherPort = _.filter(pinstances, (pin) => {
+%           return pin.$ownedBy === pinst.$ownedBy &&
+%           Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) !== port;});
+%
+%     if(pinst.$ownedBy.port !== "Any" || sameGroupOtherPort.length === 0) {
+%     // specify a specific port per group
+%           if(!portedGroups.includes(group)){
+%               portedGroups.push(group); // allows to only happen once
+%               let portStr = "#define "+group + "PORT";
+%               let portStr2 = "(GPIO"+ port.slice(-1)+")";
+/* Port definition for Pin Group `pinst.$ownedBy.$name` */
+`portStr.padEnd(40," ")+portStr2.padStart(40," ")`
+
+/* Defines for `pinst.$name`: `port`.`pinID` with pinCMx `pinCM` on package pin `packagePin` */
+%           } else {
+/* Defines for `pinst.$name`: `port`.`pinID` with pinCMx `pinCM` on package pin `packagePin` */
+%           }
+%     } else {
+%       let portStr = "#define "+group + pinst.$name+"_PORT";
+%       let portStr2 = "(GPIO"+port.slice(-1)+")";
+/* Defines for `pinst.$name`: `port`.`pinID` with pinCMx `pinCM` on package pin `packagePin` */
+`portStr.padEnd(60," ")+portStr2.padStart(20," ")`
+%     }
+%     if(pinst.interruptEn && pinst.direction === "INPUT"){
+%       if(portedInterrupts.includes(port)){ // only define each port once
+%           // do nothing
+%       } else {
+%       portedInterrupts.push(port);
+%       let comment = "";
+%       let IrqnStr = "";
+%       let IidxStr = "";
+%       let IrqnStr2 = "("+port+"_INT_IRQn)";
+%       let IidxStr2 = "(DL_INTERRUPT_GROUP1_IIDX_"+port+")";
+%
+%       // check to see if the interrupt can be done on the group level
+%       let groupedInterrupts = _.filter(pinstances, (pin) => {
+%           return pin.interruptEn && pin.direction === "INPUT" });
+%       let otherGroupsSamePort = _.filter(groupedInterrupts, (pin) => {
+%           return pin.$ownedBy !== pinst.$ownedBy &&
+%                  Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) === port;});
+%       let sameGroupOtherPort = _.filter(groupedInterrupts, (pin) => {
+%           return pin.$ownedBy === pinst.$ownedBy &&
+%                  Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) !== port;});
+%       let sameGroupSamePort = _.filter(groupedInterrupts, (pin) => {
+%           return pin.$ownedBy === pinst.$ownedBy &&
+%                  Common.getGPIOPortMultiPad(pin.pin.$solution.packagePinName,pin,undefined) === port;});
+%
+%       if(otherGroupsSamePort.length === 0) {
+%           // good to define by group (could be different ports)
+%           if(sameGroupOtherPort.length === 0) {
+%               // all group interrupts exclusively on the same port!! (best case)
+%               let pinsOnPort = _.map(sameGroupSamePort, (pin) => pin.$name);
+%               comment = "// pins affected by this interrupt request:" + JSON.stringify(pinsOnPort);
+%               IrqnStr = "#define "+group + "INT_IRQN";
+%               IidxStr = "#define "+group + "INT_IIDX";
+%           } else {
+%               // group interrupts split. Include port identifer in description
+%               let pinsOnPort = _.uniq(_.map(sameGroupSamePort, (pin) => pin.$name));
+%               comment = "// pins affected by this interrupt request:" + JSON.stringify(pinsOnPort);
+%               IrqnStr = "#define " + group + port + "_INT_IRQN";
+%               IidxStr = "#define " + group + port + "_INT_IIDX";
+%           }
+%
+%       } else {
+%           // multiple groups have the same IRQn, name accordingly (worst case)
+%           let allGroupsOnPort = _.map(otherGroupsSamePort, (pin) => pin.$ownedBy.$name).concat(pinst.$ownedBy.$name);
+%           let groupNames = _.uniq(allGroupsOnPort);
+%           let allPinsOnPort = _.map(otherGroupsSamePort, (pin) => pin.$name).concat(_.map(sameGroupSamePort, (pin) => pin.$name));
+%           comment = "// groups represented: "+JSON.stringify(groupNames)+"\n// pins affected: "+JSON.stringify(allPinsOnPort);
+%           IrqnStr = "#define GPIO_MULTIPLE_"+port+"_INT_IRQN";
+%           IidxStr = "#define GPIO_MULTIPLE_"+port+"_INT_IIDX";
+%       }
+%
+%
+`_.trimEnd(comment)`
+`IrqnStr.padEnd(50," ")+IrqnStr2.padStart(30," ")`
+`IidxStr.padEnd(45," ")+IidxStr2.padStart(35," ")`
+%       } // if port not included
+%
+%       let pinIIDXStr = "#define " + group + pinst.$name + "_IIDX";
+%       let pinIIDXStr2 = "(DL_GPIO_IIDX_DIO" + parseInt(pinID) + ")";
+`pinIIDXStr.padEnd(60," ") + pinIIDXStr2.padStart(20," ")`
+%     } // if pinst.interruptEn
+%
+%     let pinNumStr = "#define "+group + pinst.$name+"_PIN";
+%     // parse int gets rid of leading 0
+%     let pinNumStr2= "(DL_GPIO_PIN_"+parseInt(pinID)+")";
+`pinNumStr.padEnd(60," ")+pinNumStr2.padStart(20," ")`
+%     let IOMuxStr = "#define "+group + pinst.$name+"_IOMUX";
+%     let IOMuxStr2 = "(IOMUX_PINCM"+pinCM+")";
+`IOMuxStr.padEnd(60," ")+IOMuxStr2.padStart(20," ")`
+%
+%     if (pinst.direction == "INPUT" && pinst.pubChanID) {
+%       if (pinID < 16) {
+%           gpioEventInfoMap.set(port + "pub0", pinst.pubChanID);
+%       } else {
+%           gpioEventInfoMap.set(port + "pub1", pinst.pubChanID);
+%       }
+%     }
+%
+%     if (pinst.direction == "OUTPUT" && pinst.subChanID) {
+%       if (pinID < 16) {
+%           gpioEventInfoMap.set(port + "sub0", pinst.subChanID);
+%       } else {
+%           gpioEventInfoMap.set(port + "sub1", pinst.subChanID);
+%       }
+%     }
+%   } // for let pin in pinstances
+%
+%   gpioEventInfoMap.forEach((value, key) => {
+%       let eventType = key.match(/((p|s)ub)/)[0];
+%       let eventTypeStr = (eventType == "pub") ? "_PUBLISHER_" : "_SUBSCRIBER_";
+%       let eventIndex = key.match(/\d+$/)[0];
+%       let gpioPort = key.split(eventType)[0];
+%
+%       let eventChannelStr = "#define " + gpioPort + "_EVENT" + eventTypeStr + eventIndex + "_CHANNEL";
+%       let eventChannelStr2 = "(" + value + ")";
+`eventChannelStr.padEnd(60, " ") + eventChannelStr2.padStart(20, " ")`
+%   });
+%
+% } // end of function printDefine
+%
+% function printDeclare() {
+% // do nothing, GPIO already part of defines
+% return;
+% }

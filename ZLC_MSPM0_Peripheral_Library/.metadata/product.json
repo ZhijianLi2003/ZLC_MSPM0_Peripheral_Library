@@ -1,0 +1,23 @@
+{
+    "name": "mspm0_sdk",
+    "displayName": "MSPM0 SDK",
+    "version": "2.01.00.03",
+    "documentationPath": "../docs",
+    "includePaths": [
+        "../source",
+        "."
+    ],
+    "components": [
+        "/ti/project_config/project_config.component.js",
+        "/ti/project_config/templates/linker.component.js",
+        "/ti/project_config/templates/options.component.js",
+        "/ti/project_config/templates/genlibs.component.js",
+        "/ti/driverlib/driverlib.component.js",
+        "/ti/clockTree/clockTree.component.js"
+    ],
+    "devices": [
+        "MSPM0.*",
+        "MSPS.*"
+    ],
+    "minToolVersion": "1.18.0"
+}

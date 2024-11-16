@@ -1,0 +1,243 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== LCD.Board.c.xdt ========
+ */
+
+    let LCD = args[0];
+    let content = args[1];
+
+    /* shorthand names for some common references in template below */
+    let inst = LCD.$static;
+    if (inst.length == 0) return;
+
+    /* instances represents the dma channels */
+    let lcdComMod = system.modules["/ti/driverlib/lcd/LCDCom"];
+    let comInstances = [];
+    if(!(lcdComMod === undefined)){
+        comInstances = lcdComMod.$instances;
+    }
+
+
+    /* instances represents the dma channels */
+    let segComMod = system.modules["/ti/driverlib/lcd/LCDSeg"];
+    let segInstances = [];
+    if(!(segComMod === undefined)){
+        segInstances = segComMod.$instances;
+    }
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+    SYSCFG_DL_LCD_init();
+% }
+%
+% function printReset(){
+    DL_LCD_reset(LCD);
+% }
+% function printPower(){
+    DL_LCD_enablePower(LCD);
+% }
+%
+% function printGPIO(){
+%
+% }
+%
+% /* Main Function */
+% function printFunction(){
+static const DL_LCD_Config gLCDConfig = {
+    .frequencyDivider   = DL_LCD_FREQ_DIVIDE_`inst.freqDiv`,
+    .muxRate            = DL_LCD_MUX_RATE_`(inst.muxRate==1)?"STATIC":inst.muxRate`,
+    .lowPowerWaveform   = DL_LCD_WAVEFORM_POWERMODE_`inst.waveMode`
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_LCD_init(void)
+{
+% // COM CONFIG
+%   for (let i in comInstances) {
+%       let inst = comInstances[i];
+%       let instName = inst.$name;
+    DL_LCD_setPinAsLCDFunction(LCD, DL_LCD_SEGMENT_LINE_`inst.lcdPinName.slice(3)`);
+%   }
+% // SEGMENT CONFIGURATION
+%   for (let i in segInstances) {
+%       let inst = segInstances[i];
+%       let instName = inst.$name;
+    DL_LCD_setPinAsLCDFunction(LCD, DL_LCD_SEGMENT_LINE_`inst.lcdPinName.slice(3)`);
+%   }
+% // LCD INIT
+    DL_LCD_init(LCD, (DL_LCD_Config *) &gLCDConfig);
+% if(segInstances.length > 0){
+    DL_LCD_turnSegmentsOn(LCD);
+% }
+% // Internal BIAS CONFIG
+% if(inst.biasEnable){
+    DL_LCD_setBiasVoltageSource(LCD, DL_LCD_BIAS_VOLTAGE_SOURCE_`inst.biasVSource`);
+% }
+% // ----R33
+% if(inst.vlcdSource !== "INTERNAL_VREF"){
+    DL_LCD_setR33source(LCD, DL_LCD_R33_SOURCE_`inst.vlcdSource`);
+% }
+% if(inst.biasEnable){
+    DL_LCD_enableInternalBias(LCD);
+    DL_LCD_setInternalBiasPowerMode(LCD, DL_LCD_POWER_MODE_`inst.biasPowerMode`);
+% }
+% // BIAS CONFIG
+% if(inst.muxRate>=5){
+    DL_LCD_setBias(LCD, DL_LCD_BIAS_`inst.biasSel`);
+% }
+% // BLINKING General Config
+% if(inst.blinkMode !== "DISABLED"){
+    DL_LCD_setBlinkingControl(LCD, DL_LCD_BLINKING_DIVIDE_BY_`inst.blinkFreqDiv`, DL_LCD_BLINKING_MODE_`inst.blinkMode`);
+% }
+
+% // VOLT CONFIG
+% // --PUMP CONFIGURATION
+% if(inst.pumpEnable){
+    DL_LCD_enableChargePump(LCD);
+    DL_LCD_setChargePumpFreq(LCD, DL_LCD_CHARGE_PUMP_FREQUENCY_`inst.pumpFreq`);
+% }
+% // -- OTHER VOLT CONFIG
+% // ----R13
+% if(inst.vlcdSource == "INTERNAL_VREF"){
+    DL_LCD_enableVREFInternal(LCD);
+    DL_LCD_setVREFInternal(LCD, DL_LCD_VREF_INTERNAL_`inst.vrefR13`);
+% let refMode = "STATIC";
+% if(inst.muxRate > 1){ refMode = "SWITCHED"};
+    DL_LCD_setRefMode(LCD, DL_LCD_REFERENCE_MODE_`refMode`);
+    DL_LCD_setVrefOnTimeCycles(LCD, DL_LCD_VREFGEN_CYCLES_`inst.vrefCycles`);
+% }
+% // -- VBOOST
+% if(inst.vboostEnable){
+    DL_LCD_enableVBOOST(LCD);
+% }
+% // SEG CONFIG
+%    /* Clear LCD memory */
+    DL_LCD_clearAllMemoryRegs(LCD); //
+%   for (let i in segInstances) {
+%       let inst = segInstances[i];
+%       let instName = inst.$name;
+%%{
+
+        let memMaskCount = 0
+        var memMasksToEnableOR = "("
+        var blinkMemMasksToEnableOR = "("
+        for (let memMaskToEnable in inst.memMask)
+        {
+            if (memMaskCount == 0)
+            {
+                memMasksToEnableOR += "DL_LCD_MEMORY_BIT_"+inst.memMask[memMaskCount];
+
+                blinkMemMasksToEnableOR += "DL_LCD_BLINK_MEMORY_BIT_"+inst.memMask[memMaskCount];
+            }
+            else
+            {
+                memMasksToEnableOR += "\n\t\t";
+                memMasksToEnableOR += " | " + "DL_LCD_MEMORY_BIT_"+inst.memMask[memMaskCount];
+
+                blinkMemMasksToEnableOR += "\n\t\t";
+                blinkMemMasksToEnableOR += " | " + "DL_LCD_BLINK_MEMORY_BIT_"+inst.memMask[memMaskCount];
+            }
+            memMaskCount++;
+        }
+        memMasksToEnableOR += ")";
+        blinkMemMasksToEnableOR += ")";
+%%}
+%       if(inst.memSet){
+    DL_LCD_setMemory(LCD, DL_LCD_MEMORY_`inst.memIndex`, `memMasksToEnableOR`);
+%       }
+%       if(inst.blinkSet){
+    DL_LCD_setBlinkingMemory(LCD, DL_LCD_BLINKING_MEMORY_`inst.memIndex`, `blinkMemMasksToEnableOR`);
+%       }
+%   }
+%   // INTERRUPT CONFIGURATION
+%%{
+    if(inst.enabledInterrupts.length > 0){
+        let interruptCount = 0
+        var interruptsToEnableOR = "("
+        for (let interruptToEnable in inst.enabledInterrupts)
+        {
+            if (interruptCount == 0)
+            {
+                interruptsToEnableOR += "DL_LCD_INTERRUPT_"+inst.enabledInterrupts[interruptCount];
+            }
+            else
+            {
+                interruptsToEnableOR += "\n\t\t";
+                interruptsToEnableOR += " | " + "DL_LCD_INTERRUPT_"+inst.enabledInterrupts[interruptCount];
+            }
+            interruptCount++;
+        }
+        interruptsToEnableOR += ")";
+%%}
+    DL_LCD_enableInterrupt(LCD, `interruptsToEnableOR`);
+%        if(inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = "LCD" + "_INT_IRQn";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%   } // if(inst.enabledInterrupts.length > 0)
+%   // COM Configuration
+%   for (let i in comInstances) {
+%       let inst = comInstances[i];
+%       let instName = inst.$name;
+    DL_LCD_setPinAsCommon(LCD, DL_LCD_SEGMENT_LINE_`inst.lcdPinName.slice(3)`, DL_LCD_COM_`inst.comNumber.slice(4)`);
+%   }
+    DL_LCD_enable(LCD);
+}
+%
+%
+% } // printFunction()

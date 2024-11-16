@@ -1,0 +1,377 @@
+%%{
+/*
+ * Copyright (c) 2024 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SECCONFIG.Board.h.xdt ========
+ */
+
+    let SECCONFIG = system.modules["/ti/driverlib/SECCONFIG"];
+    let inst = SECCONFIG.$static;
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* Helper function to create hex-formatted string */
+    function createHexFormattedString(str)
+    {
+        return "(0x" + str.toString(16).toUpperCase() + ")";
+    }
+%%}
+/*
+ * Copyright (c) 2024, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef __CUSTOMER_SECURE_CONFIG_H__
+#define __CUSTOMER_SECURE_CONFIG_H__
+
+/* Top-Level configuration file for the customer secure code and customer secure
+ * sample image.
+ *
+ * This will define functionality that is present in the customer
+ * secure code such that a user can pick-and-choose components that will be
+ * useful in their application.
+ *
+ * This file and its configuration must be shared between both projects
+ */
+
+/*******************************************************************************
+ * VERIFICATION MECHANISMS / SECURITY FEATURES                                 *
+ ******************************************************************************/
+% if (inst.privVerifyOptions == "asymmetric") {
+%   if (inst.enableCMACAcceleration) {
+/* CSC_ENABLE_CMAC_ACCELERATION - used exclusively by the CSC during privileged
+ * mode on power up. If an image has been previously verified using ECDSA, the
+ * CMAC key and tag can be computed and stored in a read-protected region of
+ * flash. During power up, if the image has not been updated (and is the same
+ * verison), the tag can be re-computed for the image using the key and ECDSA
+ * can be bypassed.
+ *
+ * This greatly speeds up power-on-resets/bootrsts where updates are not
+ * being performed without compromising a thorough, 128-bit secure verification
+ * (as key and tag are not exposed).
+ *
+ * This also is separate from a standard symmetric encryption as the CMAC key
+ * is unique per device, thus the leaking of a CMAC key does not represent a
+ * breach in security to all devices, or that a user can begin signing arbitrary
+ * images that will run in all devices.
+ */
+#define CSC_ENABLE_CMAC_ACCELERATION
+
+%   }
+% } else {
+/* CSC_SYMMETRIC_ENCRYPTION_ONLY - This option enables a user to use a shared
+ * secret key for validation that is stored within the secret region. This
+ * shared secret should be used to both sign and verify images using CMAC as the
+ * signature and tag. This greatly speeds up boot verification times but the
+ * shared secret is on every device.
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_SYMMETRIC_ENCRYPTION_ONLY
+
+%   if (inst.enableSymmEncOnlyNoECDSA) {
+/* CSC_SYMMETRIC_ENCRYPTION_ONLY_REMOVE_ECDSA_SUPPORT - This option will remove
+ * additional ECDSA cryptographic primitives if selected.
+ *
+ * Requires: CSC_SYMMETRIC_ENCRYPTION_ONLY
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_SYMMETRIC_ENCRYPTION_ONLY_REMOVE_ECDSA_SUPPORT
+
+%   }
+% }
+%
+% if (inst.unprivVerifyOptions.includes("addHashVerify")) {
+/* CSC_UNPRIVILEGED_HASH_VERIFY - this option enables an additional hash
+ * verification of the image during the unprivileged state before the image is
+ * jumped to. This can allow the CSC to pick up on electromagnetic interference
+ * or flash corruption after an image has been verified without performing an
+ * additional boot step
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_UNPRIVILEGED_HASH_VERIFY
+
+% }
+%
+% if (inst.unprivVerifyOptions.includes("addECDSAVerify")) {
+/* CSC_UNPRIVILEGED_ECDSA_VERIFY - if the customer wishes to perform an ECDSA
+ * verification on every SYSRST of a write protected image, this is the way this
+ * can be accomplished.
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_UNPRIVILEGED_ECDSA_VERIFY
+
+% }
+%
+% if (inst.enableRollbackProtection) {
+/* CSC_ENABLE_ROLLBACK_PROTECTION - if the customer uploads a newer version of
+ * the application, rollback protection will disallow previous versions from
+ * being loaded onto the device.
+ */
+#define CSC_ENABLE_ROLLBACK_PROTECTION
+
+% }
+/*******************************************************************************
+ *   KEY CONFIGURATION                                                         *
+ ******************************************************************************/
+% if (inst.enableStaticSharedSecretKey) {
+/* CSC_STATIC_SHARED_SECRET_KEY - this option adds a 256-bit shared secret
+ * exclusively used in the privileged mode of execution. This shared secret
+ * may be used in order to decrypt incoming keys/messages, or to use symmetric
+ * authentication of incoming messages.
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_STATIC_SHARED_SECRET_KEY
+
+%   if (inst.enableStaticSharedSecretKeyInternal) {
+/* CSC_STATIC_SHARED_SECRET_KEY_INTERNAL - stores the secret inside the program
+ * at compile time, rather than provisioned separately.
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_STATIC_SHARED_SECRET_KEY_INTERNAL
+
+%   }
+% }
+%
+% if (inst.enableKeystore) {
+/* ENABLE_KEYSTORE - enables the CSC to write keys into the KEYSTORE - an IP
+ * that allows the privileged mode of execution to utilize but not read certain
+ * keys used by the AES engine. The KEYSTORE is configured every boot routine
+ * (as it is in volatile memory), so keys used are stored persistently in the
+ * secret memory.
+ *
+ * Note: Keys used exclusively during the privileged execution should not be
+ *       placed in the keystore.
+ * Note: if the application does not use the AES specifically, it is not
+ *       necessary to enable this option.
+ *
+ * Must be enabled if the application is attempting to read from the keystore.
+ *
+ */
+#define CSC_ENABLE_KEYSTORE
+
+%   if (inst.keystoreProvisionMethods.includes("compileTime")) {
+/* CSC_ENABLE_KEYSTORE_STATIC_KEY - include an additional secret key at compile
+ * time into the secret region of memory that will be added to the keystore for
+ * use by the application
+ *
+ * requires: CSC_ENABLE_KEYSTORE
+ *
+ */
+#define CSC_ENABLE_KEYSTORE_STATIC_KEY
+
+%   }
+%
+%   if (inst.keystoreProvisionMethods.includes("runTime")) {
+/* ENABLE_KEYSTORE_DYNAMIC_KEY - allows the CSC to import additional keys
+ * referred to in application headers using a hash such that the application
+ * can introduce new keys to be used in the field without directly containing
+ * key material.
+ *
+ * requires: CSC_ENABLE_KEYSTORE
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_ENABLE_KEYSTORE_DYNAMIC_KEY
+
+#ifdef CSC_ENABLE_KEYSTORE_DYNAMIC_KEY
+#define CSC_NUM_DYNAMIC_KEYS (4)
+#endif  // CSC_ENABLE_KEYSTORE_DYNAMIC_KEY
+
+%   }
+% }
+/*******************************************************************************
+ *  MISCELLANEOUS                                                           *
+ ******************************************************************************/
+% if (inst.developmentOptions.includes("enablePseudoRandom")) {
+/*
+ * CSC_OMIT_TRNG - an option such that a consistent CMAC key will be generated
+ * rather than generating a new key with the true random number generator.
+ *
+ * This can be used for testing purposes such that the device will always
+ * generate the same key using rand() and a predictable seed.
+ */
+#define CSC_OMIT_TRNG
+
+% }
+%
+% if (inst.developmentOptions.includes("enableDevErrorCodes")) {
+/* CSC_ENABLE_DEV_ERROR_CODES - the CSC output section will notify the
+ * application why it has failed, and the area of code that was unmatched.
+ * Designed to be used for development only.
+ *
+ * NOTE: Currently unsupported
+ */
+//#define CSC_ENABLE_DEV_ERROR_CODES
+
+% }
+%
+% if (inst.enableIPProtection) {
+/* CSC_ENABLE_IP_PROTECTION - the customer will provide an IP Protection range
+ * in the header, such that the CSC can enable the IP Protect firewall over a
+ * region of memory. The IP Protect firewall will prevent reading of that
+ * segment of memory but will still allow the device to execute the code
+ *
+ * NOTE: Currently Unsupported
+ */
+//#define CSC_ENABLE_IP_PROTECTION
+
+% }
+%
+% if (inst.exposeSecurityPrimitives) {
+/* CSC_EXPOSE_SECURITY_PRIMITIVES - the CSC will provide external symbols
+ * such that the application can perform hashing and ECDSA by way of a
+ * function table in the output.
+ *
+ * NOTE: Currently unsupported
+ */
+//#define CSC_EXPOSE_SECURITY_PRIMITIVES
+
+% }
+%
+% function createMemoryMapStrings() {
+%   if (inst.cscBankSize) {
+%       let bankSizeStr = "#define CSC_BANK_SIZE";
+%       let bankSizeStr2 = createHexFormattedString(inst.cscBankSize);
+`bankSizeStr.padEnd(40, " ") + bankSizeStr2.padStart(39, " ")`
+
+%   }
+%
+%   if (inst.cscSecretAddress) {
+%       let secretAddrStr = "#define CSC_SECRET_ADDR";
+%       let secretAddrStr2 = createHexFormattedString(inst.cscSecretAddress);
+`secretAddrStr.padEnd(40, " ") + secretAddrStr2.padStart(39, " ")`
+%
+%       if (inst.cscSecretSize) {
+%           let secretSizeStr = "#define CSC_SECRET_SIZE";
+%           let secretSizeStr2 = createHexFormattedString(inst.cscSecretSize);
+`secretSizeStr.padEnd(40, " ") + secretSizeStr2.padStart(39, " ")`
+#define CSC_SECRET_END                  (CSC_SECRET_ADDR + CSC_SECRET_SIZE - 1)
+
+#define CSC_LOCK_STORAGE_ADDR               (CSC_SECRET_ADDR + CSC_SECRET_SIZE)
+%           if (inst.cscLockStorageSize) {
+%               let lockStorageSizeStr = "#define CSC_LOCK_STORAGE_SIZE";
+%               let lockStorageSizeStr2 = createHexFormattedString(inst.cscLockStorageSize);
+`lockStorageSizeStr.padEnd(40, " ") + lockStorageSizeStr2.padStart(39, " ")`
+%           }
+%       }
+
+%   }
+%
+%   if (inst.cscAppImageBaseAddr) {
+%       let appImageBaseAddrStr = "#define CSC_APPLICATION_IMAGE_BASE_ADDR";
+%       let appImageBaseAddrStr2 = createHexFormattedString(inst.cscAppImageBaseAddr);
+`appImageBaseAddrStr.padEnd(40, " ") + appImageBaseAddrStr2.padStart(39, " ")`
+%
+%       if (inst.cscAppImageSize) {
+%           let appImageSizeStr = "#define CSC_APPLICATION_IMAGE_SIZE";
+%           let appImageSizeStr2 = createHexFormattedString(inst.cscAppImageSize);
+`appImageSizeStr.padEnd(40, " ") + appImageSizeStr2.padStart(39, " ")`
+
+#define CSC_PRIMARY_SLOT_OFFSET               (CSC_APPLICATION_IMAGE_BASE_ADDR)
+%       }
+%
+%   if (inst.keystoreProvisionMethods.includes("runTime")) {
+#ifdef CSC_ENABLE_KEYSTORE_DYNAMIC_KEY
+#define CSC_KEY_EXCHANGE_REGION_BASE_ADDR   (CSC_APPLICATION_IMAGE_BASE_ADDR + \
+                                                     CSC_APPLICATION_IMAGE_SIZE)
+#define CSC_KEY_EXCHANGE_SIZE                                            (0x400)
+
+#define CSC_KEYSTORE_MAX_REQUESTS                                            (2)
+#endif
+%       }
+%   }
+% }
+%
+/*******************************************************************************
+ *  MEMORY MAPS                                                                *
+ ******************************************************************************/
+
+/* clang-format off */
+
+% createMemoryMapStrings()
+/* clang-format on */
+
+/*******************************************************************************
+ * CONFIGURATION CHECKS - DO NOT EDIT                                          *
+ ******************************************************************************/
+#if (((defined(CSC_ENABLE_KEYSTORE_STATIC_KEY) ||      \
+          defined(CSC_ENABLE_KEYSTORE_DYNAMIC_KEY)) && \
+         !defined(CSC_ENABLE_KEYSTORE)) ||             \
+     (defined(CSC_ENABLE_KEYSTORE) &&                  \
+         (!defined(CSC_ENABLE_KEYSTORE_DYNAMIC_KEY) && \
+             !defined(CSC_ENABLE_KEYSTORE_STATIC_KEY))))
+#error "Keystore must support a static or dynamic key, and be enabled"
+#endif
+
+#if (defined(CSC_SYMMETRIC_ENCRYPTION_ONLY_REMOVE_ECDSA_SUPPORT) && \
+     !defined(CSC_SYMMETRIC_ENCRYPTION_ONLY))
+#error \
+    "ECDSA Support can only be removed if Symmetric Encryption only is enabled"
+#endif
+
+#endif  //__CUSTOMER_SECURE_CONFIG_H__

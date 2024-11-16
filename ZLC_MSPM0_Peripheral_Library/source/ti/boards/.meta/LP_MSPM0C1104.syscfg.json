@@ -1,0 +1,169 @@
+/*
+ * Copyright (c) 2022 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== LP_MSPM0C1104.syscfg.json ========
+ */
+
+ {
+    "name": "LP_MSPM0C1104",
+    "displayName": "MSPM0C1104 LaunchPad",
+    "device": "MSPM0C110X",
+    "part": "Default",
+    "package": "VSSOP-20(DGS20)",
+    "headers": [
+        {
+            /* http://www.ti.com/tools-software/launchpads/boosterpacks/build.html */
+            "type": "BoosterPack 40 pin",
+            "default": true,
+            "name": "boosterpack",
+            "displayName": "BoosterPack Standard Header",
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 10 },
+
+                    { "blank": true },
+
+                    { "top": 20, "bottom": 11 }
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,     /* 3.3 V */
+                    "name": "3V3"
+                },
+                {
+                    "number": 2,     /* Analog in */
+                    "name": "PA25",
+                    "ball": "20"
+                },
+                {
+                    "number": 3,     /* UART RX */
+                    "name": "PA26",
+                    "ball": "1"
+                },
+                {
+                    "number": 4,     /* UART TX */
+                    "name": "PA27",
+                    "ball": "2"
+                },
+                {
+                    "number": 5,     /* GPIO (with interrupt) */
+                    "name": "PA24",
+                    "ball": "19"
+                },
+                {
+                    "number": 6,     /* Analog in */
+                    "name": "PA28",
+                    "ball": "3"
+                },
+                {
+                    "number": 7,
+                    "name": "PA6",
+                    "ball": "10",
+                    "preferredType": ["SPI_SCLK"]
+                },
+                {
+                    "number": 8,     /* GPIO (with interrupt) */
+                    "name": "PA22",
+                    "ball": "17"
+                },
+                {
+                    "number": 9,     /* I2C SCL */
+                    "name": "PA11",
+                    "ball": "11",
+                    "preferredType": ["I2C_SCL"]
+                },
+                {
+                    "number": 10,    /* I2C SDA */
+                    "name": "PA0",
+                    "ball": "4",
+                    "preferredType": ["I2C_SDA"]
+                },
+
+                {
+                    "number": 20,    /* Ground */
+                    "name": "GND"
+                },
+                {
+                    "number": 19,    /* PWM | GPIO (with interrupt) */
+                    "name": "PA16",
+                    "ball": "12"
+                },
+                {
+                    "number": 18,    /* PWM | GPIO (with interrupt) */
+                    "name": "PA17",
+                    "ball": "13"
+                },
+                {
+                    "number": 17,    /* GPIO */
+                    "name": "PA19",
+                    "ball": "15"
+                },
+                {
+                    "number": 16,    /* PA1 | Reset */
+                    "name": "PA1",
+                    "ball": "5"
+                },
+                {
+                    "number": 15,
+                    "name": "PA18",
+                    "ball": "14",
+                    "preferredType" : ["SPI_PICO"]
+                },
+                {
+                    "number": 14,
+                    "name": "PA4",
+                    "ball": "9",
+                    "preferredType" : ["SPI_POCI"]
+                },
+                {
+                    "number": 13,    /* SPI CS (Display) | GPIO (with interrupt) */
+                    "name": "PA2",
+                    "ball": "8"
+                },
+                {
+                    "number": 12,    /* SPI CS (other) | GPIO (with interrupt) */
+                    "name": "PA23",
+                    "ball": "18"
+                },
+                {
+                    "number": 11,    /* GPIO (with interrupt) */
+                    "name": "PA20",
+                    "ball": "16"
+                }
+            ]
+        }
+    ],
+    "components": {}
+}

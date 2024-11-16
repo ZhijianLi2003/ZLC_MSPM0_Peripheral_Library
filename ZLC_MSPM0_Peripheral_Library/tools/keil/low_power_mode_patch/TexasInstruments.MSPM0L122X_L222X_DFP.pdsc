@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<package schemaVersion="1.4" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="PACK.xsd">
+    <vendor>TexasInstruments</vendor>
+    <name>MSPM0L122X_L222X_DFP</name>
+    <description>Device Family Pack for Texas Instruments MSPM0L122X_L222X Series</description>
+    <url>http://software-dl.ti.com/msp430/esd/MSPM0-CMSIS/MSPM0L122X_L222X/latest/exports/</url>
+    <supportContact>https://e2e.ti.com/support/microcontrollers/</supportContact>
+    <license>01_Pack/license.txt</license>
+
+    <releases>
+        <release version="1.0.0" date="2024-01-25">
+        Initial release of MSPM0L122X_L222X series device familiy pack.
+        New device support:
+            * MSPM0L122X
+            * MSPM0L222X
+        </release>
+    </releases>
+
+    <keywords>
+        <!-- keywords for indexing -->
+        <keyword>Texas Instruments</keyword>
+        <keyword>MSPM0</keyword>
+        <keyword>MSPM0L</keyword>
+        <keyword>MSPM0L1</keyword>
+        <keyword>MSPM0L122</keyword>
+        <keyword>MSPM0L1228</keyword>
+        <keyword>MSPM0L1227</keyword>
+        <keyword>MSPM0L2</keyword>
+        <keyword>MSPM0L22</keyword>
+        <keyword>MSPM0L222</keyword>
+        <keyword>MSPM0L2228</keyword>
+        <keyword>MSPM0L2227</keyword>
+        <keyword>Device Support</keyword>
+        <keyword>Device Family Package Texas Instruments</keyword>
+      </keywords>
+
+    <!-- devices section (mandatory for Device Family Packs) -->
+    <devices>
+        <family Dfamily="MSPM0L122X_L222X Series" Dvendor="Texas Instruments:16">
+            <processor Dcore="Cortex-M0+" DcoreVersion="r0p1" Dfpu="NO_FPU" Dclock="32000000" Dmpu="MPU" Dendian="Little-endian"/>
+            <debugconfig default="swd" clock="5000000" swj="1"/>
+            <book name="https://developer.arm.com/documentation/dui0662/latest/" title="Cortex-M0+ Generic User Guide"/>
+            <description>
+MSPM0L122X_L222X microcontrollers (MCUs) are part of the MSP highly-integrated
+ultra-low-power 32-bit MCU family based on the enhanced Arm®Cortex®-M0+ core
+platform operating at up to 32-MHz frequency.
+
+These cost-optimized MCUs offer high-performance analog peripheral integration,
+support extended temperature ranges from -40°C to 125°C, and operate with
+supply voltages from 1.62 V to 3.6 V.
+
+The MSPM0L122X_L222X devices provide up to 16KB embedded flash program memory with
+32KB SRAM. These MCUs incorporate a high-speed on-chip oscillator with an
+accuracy up to ±1%, eliminating the need for an external crystal. Additional
+features include a 7-channel DMA, 16-bit and 32-bit CRC accelerator, and a variety of
+high-performance analog peripherals such as one 12-bit 1.68-Msps ADC with
+configurable internal voltage reference, and an on-chip temperature sensor.
+These devices also offer intelligent digital peripherals such as one 16-bit
+advanced timer, one 32-bit general purpose timer, four additional 16-bit general purpose timers,
+one windowed watchdog timer, and a variety of communication peripherals including five UART,
+two SPI, and three I2C. These communication peripherals offer protocol support for LIN, IrDA,
+DALI, Manchester, Smart Card, SMBus, and PMBus
+            </description>
+            <debug>
+                <!-- Patched ROM Table for a Cortex-M0+ -->
+                <datapatch  type="AP" __dp="0" __ap="0" address="0xF8" value="0xF0000003" info="AP BASE Register, ROM Table at 0xF0000002"/>
+            </debug>
+            <!-- debug sequences -->
+            <sequences>
+                <sequence name="DebugPortStart">
+                    <block>
+                        __var nReset = 0x80;
+                        __var canReadPins = 0;
+                        // De-assert nRESET line to activate the hardware reset
+                        canReadPins = (DAP_SWJ_Pins(0x00, nReset, 0) != 0xFFFFFFFF);
+                    </block>
+
+                    <!-- Keep reset active for 50 ms -->
+                    <control while="1" timeout="50000"/>
+
+                    <control if="canReadPins">
+
+                        <!-- Assert nRESET line and wait max. 1s for recovery -->
+                        <control while="(DAP_SWJ_Pins(nReset, nReset, 0) &amp; nReset) == 0" timeout="1000000"/>
+
+                    </control>
+
+                    <control if="!canReadPins">
+
+                        <block>
+                        // Assert nRESET line
+                        DAP_SWJ_Pins(nReset, nReset, 0);
+                        </block>
+
+                        <!-- Wait 100ms for recovery if nRESET not readable -->
+                        <control while="1" timeout="100000"/>
+
+                    </control>
+
+                    <block>
+                        __var SW_DP_ABORT       = 0x0;
+                        __var DP_CTRL_STAT      = 0x4;
+                        __var DP_SELECT         = 0x8;
+                        __var powered_down      = 0;
+
+                        //Beyond here do not modify
+                        // Switch to DP Register Bank 0
+                        WriteDP(DP_SELECT, 0x00000000);
+
+                        // Read DP CTRL/STAT Register and check if CSYSPWRUPACK and CDBGPWRUPACK bits are set
+                        powered_down = ((ReadDP(DP_CTRL_STAT) &amp; 0xA0000000) != 0xA0000000);
+                    </block>
+                    <control if="powered_down">
+                        <block>
+                            // Request Debug/System Power-Up
+                            Message(0, "Debug/System power-up request sent");
+                            WriteDP(DP_CTRL_STAT, 0x50000000);
+                        </block>
+
+                        <!-- Wait for Power-Up Request to be acknowledged -->
+                        <control while="(ReadDP(DP_CTRL_STAT) &amp; 0xA0000000) != 0xA0000000" timeout="1000000"/>
+
+                        <!-- JTAG Specific Part of sequence -->
+                        <control if="(__protocol &amp; 0xFFFF) == 1">
+
+                            <block>
+                                // Init AP Transfer Mode, Transaction Counter, and Lane Mask (Normal Transfer Mode, Include all Byte Lanes)
+                                // Additionally clear STICKYORUN, STICKYCMP, and STICKYERR bits by writing '1'
+                                WriteDP(DP_CTRL_STAT, 0x50000F32);
+                            </block>
+
+                        </control>
+
+                        <!-- SWD Specific Part of sequence -->
+                        <control if="(__protocol &amp; 0xFFFF) == 2">
+                            <block>
+                                Message(0, "executing SWD power up");
+                                // Init AP Transfer Mode, Transaction Counter, and Lane Mask (Normal Transfer Mode, Include all Byte Lanes)
+                                WriteDP(DP_CTRL_STAT, 0x50000F00);
+
+                                // Clear WDATAERR, STICKYORUN, STICKYCMP, and STICKYERR bits of CTRL/STAT Register by write to ABORT register
+                                WriteDP(SW_DP_ABORT, 0x0000001E);
+                            </block>
+                        </control>
+                    </control>
+                    <block>
+                        __var DPREC0_VAL        = 0;
+                        __var DEBUG_PORT_VAL    = 0;
+                        __var ACCESS_POINT_VAL  = 0;
+                        __ap = 4;
+
+                        ACCESS_POINT_VAL = ReadAP(0x00);//Reading current state of DPREC0
+                        Message(0, "Current state of DPREC0 is: %x",ACCESS_POINT_VAL);
+                    </block>
+                    <control if = "(ACCESS_POINT_VAL &amp; 0x00E00000) == 0">
+                        <block>
+                            WriteAP(0x00, 0x190008);
+                            __ap = 0; //reset AP selection
+                        </block>
+                    </control>
+                    <control if = "(ACCESS_POINT_VAL &amp; 0x00E00000) != 0">
+                        <block>
+                            Message(0, "STICKY BITS ENABLED");
+
+                            WriteAP(0xF0, 0x00000001);
+
+                            WriteAP(0x00, 0xF90008);
+
+                            __ap = 0; //reset AP selection
+                        </block>
+                    </control>
+                </sequence>
+                <sequence name="DebugDeviceUnlock">
+                    <block>
+                        __var deviceID = 0;
+                        __var version = 0;
+                        __var partNum = 0;
+                        __var manuf = 0;
+                        __var isMSPM0L122X_L222X = 0;
+                        __var isProduction = 0;
+                        __var continueId = 0;
+                        deviceID =   Read32(0x41C40004);
+                        version = deviceID >> 28;
+                        partNum = (deviceID &amp; 0x0FFFF000) >> 12;
+                        manuf = (deviceID &amp; 0x00000FFE) >> 1;
+                        isMSPM0L122X_L222X = (partNum == 0xBB9F) &amp;&amp; (manuf == 0x17);
+                        isProduction = (version &gt; 0);
+                    </block>
+                    <!-- Check if device ID is correct -->
+                    <control if="!isMSPM0L122X_L222X">
+                        <block>
+                            continueId = Query(1, "Incorrect ID. This support package is for  MSPM0L122X_L222X devices. Continue?", 4);
+                        </block>
+                    </control>
+                    <control if="continueId == 4">
+                        <block>
+                            Message(2, "Invalid ID");
+                        </block>
+                    </control>
+                </sequence>
+            </sequences>
+            <!-- features common for the whole family -->
+            <feature type="NVIC" n="32" name="Nested Vectored Interrupt Controller (NVIC)"/>
+            <feature type="DMA" n="7" name="Direct Memory Access (DMA)"/>
+            <feature type="MemoryOther" name="Up to 256KB Flash memory"/>
+            <feature type="MemoryOther" name="Up to 32KB SRAM"/>
+            <feature type="ClockOther" name="Internal 32MHz oscillator with +-1% accuracy (SYSOSC)"/>
+            <feature type="ClockOther" name="Internal 32kHz oscillator (LFOSC)"/>
+            <feature type="ClockOther" name="External 32kHz crystal oscillator (LFXT)"/>
+            <feature type="ClockOther" name="External 4-to-32MHz crystal oscillator (HFXT)"/>
+            <feature type="PowerMode" n="11" name="RUN0, RUN1, RUN2, SLEEP0, SLEEP1, SLEEP2, STOP0, STOP1, STOP2, STANDBY0, STANDBY1, SHUTDOWN"/>
+            <feature type="VCC" n="1.62" m="3.6"/>
+            <feature type="Temp" n="-40" m="125" name="Extended Operating Temperature Range"/>
+            <feature type="AnalogOther" n="1" name="Configurable 1.4V or 2.5V internal shared voltage reference (VREF)"/>
+            <feature type="AnalogOther" n="1" name="High-speed comparator (COMP) with 8-bit reference DACs"/>
+            <feature type="TimerOther" n="1" name="32-bit general purpose timer supporting low power operation in STANDBY mode"/>
+            <feature type="TimerOther" n="4" name="16-bit general purpose timer supporting low power operation in STANDBY mode"/>
+            <feature type="WDT" n="1" name="Window-watchdog timer"/>
+            <feature type="RTC" n="32768" name="Internal RTC with alarm and calendar modes"/>
+            <feature type="I2C" n="3" name="I2C interface supporting up to FM+ (1Mbps), SMBus/PMBus, and wakeup from STOP mode"/>
+            <feature type="SPI" n="2" m="12000000" name="SPI interface"/>
+            <feature type="UART" n="5" name="UART interface, supporting LIN, IrDA, DALI, Smart Card, Manchester, and low-power operation in STANDBY mode"/>
+            <feature type="ADC" n="26" m="12" name="866-Ksps analog-to-digital converters with up to 10-ch (ADC)"/>
+            <feature type="Crypto" n="128.256" name="AES accelerator with support for GCM/GMAC, CCM/CBC-MAC, CBC, CTR"/>
+            <feature type="RNG" n="1" name="True Random Number generator (TRNG)"/>
+            <feature type="IOs" n="73" name="General purpose I/Os, including two 5-V tolerant open-drain IOs"/>
+<!-- ************************  Subfamily MSPM0L122X  **************************** -->
+            <subFamily DsubFamily="MSPM0L122X">
+                <!-- *************************  Device MSPM0L1228  ***************************** -->
+                <device Dname="MSPM0L1228">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00040000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20200000" size="0x00008000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1228__"/>
+                    <debug      svd="03_SVD/MSPM0L122X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_MAIN_256KB.FLM" start="0x00000000" size="0x00040000" RAMstart="0x20200000" RAMsize="0x00008000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20200000" RAMsize="0x00008000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1227  ***************************** -->
+                <device Dname="MSPM0L1227">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00020000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20200000" size="0x00008000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L1227__"/>
+                    <debug      svd="03_SVD/MSPM0L122X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_MAIN_128KB.FLM" start="0x00000000" size="0x00020000" RAMstart="0x20200000" RAMsize="0x00008000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20200000" RAMsize="0x00008000" default="0"/>
+                </device>
+            </subFamily>
+            <subFamily DsubFamily="MSPM0L222X">
+                <feature type="LCD" n="1" m="8.51" name="Ultra-low power segmented LCD controller supporting up to 8x51 / 4x55 LCD displays"/>
+                <!-- *************************  Device MSPM0L2228  ***************************** -->
+                <device Dname="MSPM0L2228">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00040000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20200000" size="0x00008000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L2228__"/>
+                    <debug      svd="03_SVD/MSPM0L222X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_MAIN_256KB.FLM" start="0x00000000" size="0x00040000" RAMstart="0x20200000" RAMsize="0x00008000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20200000" RAMsize="0x00008000" default="0"/>
+                </device>
+                <!-- *************************  Device MSPM0L1227  ***************************** -->
+                <device Dname="MSPM0L2227">
+                    <memory     name="IROM1" access="rx"  start="0x00000000" size="0x00020000" startup="1" default="1"/>
+                    <memory     name="IRAM1" access="rwx" start="0x20200000" size="0x00008000" default="1"/>
+                    <memory     name="NonMain" access="r"  start="0x41C00000" size="0x00000200" default="1"/>
+                    <memory     name="Factory" access="r"  start="0x41C40000" size="0x00000080" default="1"/>
+                    <compile    define="__MSPM0L2227__"/>
+                    <debug      svd="03_SVD/MSPM0L222X.svd"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_MAIN_128KB.FLM" start="0x00000000" size="0x00020000" RAMstart="0x20200000" RAMsize="0x00008000" default="1"/>
+                    <algorithm  name="02_Flash_Programming/FlashARM/MSPM0L122X_L222X_NONMAIN.FLM" start="0x41C00000" size="0x00000200" RAMstart="0x20200000" RAMsize="0x00008000" default="0"/>
+                </device>
+            </subFamily>
+        </family>
+    </devices>
+
+    <boards>
+        <board vendor="TexasInstruments" name="LP-MSPM0L2228" salesContact="http://www.ti.com/general/docs/contact.tsp">
+            <description>MSPM0L2228 LaunchPad</description>
+            <mountedDevice    deviceIndex="0" Dvendor="Texas Instruments:16" Dname="MSPM0L2228"/>
+            <compatibleDevice deviceIndex="0" Dvendor="Texas Instruments:16" Dfamily="MSPM0L122X_L222X Series" DsubFamily="MSPM0L222X"/>
+            <debugInterface adapter="XDS110" connector="XDS110 Onboard Emulator"/>
+            <debugInterface adapter="SWD" connector="10-pin Cortex Debug Connector (0.05 inch connector)"/>
+            <feature type="USB" n="1" name="USB Device,  Micro-B receptacle"/>
+            <feature type="Button" n="2" name="reset and one user push-button"/>
+            <feature type="LED" n="1" name="LED for user interaction"/>
+            <feature type="ConnOther" n="1" name="20 pin BoosterPack Connector"/>
+        </board>
+    </boards>
+
+</package>

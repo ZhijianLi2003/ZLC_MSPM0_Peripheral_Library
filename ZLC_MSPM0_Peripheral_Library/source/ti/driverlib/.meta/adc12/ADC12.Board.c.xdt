@@ -1,0 +1,326 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== ADC12.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let MODULE  = args[0];
+    let content = args[1];
+    let Common = system.getScript("/ti/driverlib/Common.js");
+    /* shorthand names for some common references in template below */
+    let instances = MODULE.$instances;
+    if (instances.length == 0) return;
+
+    /* ADCMEM range varies per device family */
+    const adcMemRange = (Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()) ? 11:3;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+
+    }
+%%}
+% function printCall(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    SYSCFG_DL_`inst.$name`_init();
+%   }
+% }
+% function printReset(){
+% for (let i in instances) {
+%       let inst = instances[i];
+    DL_ADC12_reset(`inst.$name`_INST);
+%   }
+% }
+% function printPower(){
+%   for (let i in instances) {
+%       let inst = instances[i];
+    DL_ADC12_enablePower(`inst.$name`_INST);
+%   }
+% }
+% function printGPIO(){
+%   for(let i in instances) {
+%       let inst =instances[i];
+%       /* Peripheral GPIO Configuration */
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+%   } // for(let i in instances)
+% }
+%%{
+function printFunction(){
+%%}
+% for(let i = 0; i < instances.length; i++) {
+%   let inst = instances[i];
+%   let baseName = inst.$name + "_INST";
+/* `inst.$name` Initialization */
+%%{
+    // Check if default case for Clock Config
+    if(!(
+        (inst.sampClkSrc=="DL_ADC12_CLOCK_SYSOSC")&&
+        (inst.sampClkDiv=="DL_ADC12_CLOCK_DIVIDE_1")&&
+        (inst.sampClkFreqRange=="DL_ADC12_CLOCK_FREQ_RANGE_1_TO_4")
+    )){
+%%}
+static const DL_ADC12_ClockConfig g`inst.$name`ClockConfig = {
+    .clockSel       = `inst.sampClkSrc`,
+    .divideRatio    = `inst.sampClkDiv`,
+    .freqRange      = `inst.sampClkFreqRange`,
+};
+%   }
+SYSCONFIG_WEAK void SYSCFG_DL_`inst.$name`_init(void)
+{
+%%{
+    /* Check if default case for Clock Config */
+    if(!(
+        (inst.sampClkSrc=="DL_ADC12_CLOCK_SYSOSC")&&
+        (inst.sampClkDiv=="DL_ADC12_CLOCK_DIVIDE_1")&&
+        (inst.sampClkFreqRange=="DL_ADC12_CLOCK_FREQ_RANGE_1_TO_4"))){
+%%}
+    DL_ADC12_setClockConfig(`baseName`, (DL_ADC12_ClockConfig *) &g`inst.$name`ClockConfig);
+%}
+%    /* Check if SYSOSC need to be force to run at baseName
+%    RUN or STOP */
+%    if(inst.sampClkSrc=="DL_ADC12_CLOCK_SYSOSC"){
+%        if(inst.adcClk_Freq_cconstop == true){
+    DL_ADC12_forceSYSOSCOnInStopMode(`baseName`);
+%        }
+%        if(inst.adcClk_Freq_cconrun == true){
+    DL_ADC12_forceSYSOSCOnInRunMode(`baseName`);
+%        }
+%    }
+%%{
+    let chosenRepeatMode = "DL_ADC12_REPEAT_MODE_DISABLED";
+    if(inst.repeatMode){
+        chosenRepeatMode = "DL_ADC12_REPEAT_MODE_ENABLED";
+    }
+%%}
+%   if (inst.samplingOperationMode == "sequence") {
+%     /* Strings less than length 2 will be padded with a leading 0 */
+%     var startAddStr = "DL_ADC12_SEQ_START_ADDR_" + (inst.startAdd.toString()).padStart(2, "0");
+%     var endAddStr = "DL_ADC12_SEQ_END_ADDR_" + (inst.endAdd.toString()).padStart(2, "0");
+
+    DL_ADC12_initSeqSample(`baseName`,
+        `chosenRepeatMode`, `inst.sampleMode`, `inst.trigSrc`,
+        `startAddStr`, `endAddStr`, `inst.resolution`,
+        `inst.dataFormat`);
+%   }
+%   else if(inst.samplingOperationMode == "single"){
+%%{
+        /* Check if default case for Single Sampling config */
+        // TODO: check REPEAT MODE default
+        if(!(
+            (chosenRepeatMode=="DL_ADC12_REPEAT_MODE_DISABLED")&&
+            (inst.sampleMode=="DL_ADC12_SAMPLING_SOURCE_AUTO")&&
+            (inst.trigSrc=="DL_ADC12_TRIG_SRC_SOFTWARE")&&
+            (inst.resolution=="DL_ADC12_SAMP_CONV_RES_12_BIT")&&
+            (inst.dataFormat=="DL_ADC12_SAMP_CONV_DATA_FORMAT_UNSIGNED")
+        )){
+%%}
+    DL_ADC12_initSingleSample(`baseName`,
+        `chosenRepeatMode`, `inst.sampleMode`, `inst.trigSrc`,
+        `inst.resolution`, `inst.dataFormat`);
+%       }
+%       if(!(inst.startAdd == 0)){
+%           let startAddSingleStr = "DL_ADC12_SEQ_START_ADDR_" + (inst.startAdd.toString()).padStart(2, "0");
+    DL_ADC12_setStartAddress(`baseName`, `startAddSingleStr`);
+%       }
+%   }
+%   for(let adcMemIdx = 0; adcMemIdx <= adcMemRange; adcMemIdx++){
+%       if ((inst.enabledADCMems).includes(adcMemIdx)){
+%%{
+        let chosenAVGen = "DL_ADC12_AVERAGING_MODE_DISABLED";
+        if(inst["adcMem" + adcMemIdx.toString() + "avgen"]){
+            chosenAVGen = "DL_ADC12_AVERAGING_MODE_ENABLED";
+        }
+
+        let chosenBCSen = "DL_ADC12_BURN_OUT_SOURCE_DISABLED";
+        if(inst["adcMem" + adcMemIdx.toString() + "bcsen"]){
+            chosenBCSen = "DL_ADC12_BURN_OUT_SOURCE_ENABLED";
+        }
+        let chosenWinComp = "DL_ADC12_WINDOWS_COMP_MODE_DISABLED";
+        if(inst["adcMem" + adcMemIdx.toString() + "wincomp"]){
+            chosenWinComp = "DL_ADC12_WINDOWS_COMP_MODE_ENABLED";
+        }
+%%}
+%%{
+        /* Check if default case for ADCMEM configuration */
+        if(!(
+            (inst["adcMem" + adcMemIdx.toString() + "chansel"]=="DL_ADC12_INPUT_CHAN_0")&&
+            (inst["adcMem" + adcMemIdx.toString() + "vref"]=="VDD")&&
+            (inst["adcMem" + adcMemIdx.toString() + "stime"]=="DL_ADC12_SAMPLE_TIMER_SOURCE_SCOMP0")&&
+            (chosenAVGen=="DL_ADC12_AVERAGING_MODE_DISABLED")&&
+            (chosenBCSen=="DL_ADC12_BURN_OUT_SOURCE_DISABLED")&&
+            (inst["adcMem" + adcMemIdx.toString() + "trig"]=="DL_ADC12_TRIGGER_MODE_AUTO_NEXT")&&
+            (chosenWinComp=="DL_ADC12_WINDOWS_COMP_MODE_DISABLED")
+        )){
+%%}
+    DL_ADC12_configConversionMem(`baseName`, `inst.$name+"_ADCMEM_"+inst["adcMem"+adcMemIdx+"_name"]`,
+        `inst["adcMem" + adcMemIdx.toString() + "chansel"]`, `inst["adcMem" + adcMemIdx.toString() + "vrefDependency"]`, `inst["adcMem" + adcMemIdx.toString() + "stime"]`, `chosenAVGen`,
+        `chosenBCSen`, `inst["adcMem" + adcMemIdx.toString() + "trig"]`, `chosenWinComp`);
+%       }
+%   }
+% }
+%       if(inst.enableFIFO){
+    DL_ADC12_enableFIFO(`baseName`);
+%       }
+%       /* Check if default case for power down mode */
+%       if(inst.powerDownMode != "DL_ADC12_POWER_DOWN_MODE_AUTO"){
+    DL_ADC12_setPowerDownMode(`baseName`,`inst.powerDownMode`);
+%       }
+%           if(inst.enableHWAverage){
+%               /* Check if default case for HW Avg Config */
+%               if((inst.hwNumerator != 0)&&(inst.hwDenominator != 0)){
+    DL_ADC12_configHwAverage(`baseName`,`inst.hwNumerator`,`inst.hwDenominator`);
+%               }
+%           }
+%       /* Check if default case for sample time config */
+%       if(inst.sampleTime0 != '0 ms'){
+    DL_ADC12_setSampleTime0(`baseName`,`inst.sampleTime0_cycles`);
+%       }
+%       if(inst.sampleTime1 != '0 ms'){
+    DL_ADC12_setSampleTime1(`baseName`,`inst.sampleTime1_cycles`);
+%       }
+%       if(inst.enableWinComp){
+%           if(inst.configWinCompLowThld != 0){
+    DL_ADC12_configWinCompLowThld(`baseName`,`inst.$name`_WIN_COMP_LOW_THLD_VAL);
+%           }
+%           if(inst.configWinCompHighThld != 0){
+    DL_ADC12_configWinCompHighThld(`baseName`,`inst.$name`_WIN_COMP_HIGH_THLD_VAL);
+%           }
+%       }
+%%{
+    let triggerCount = 0
+    var triggersToEnableOR = "("
+    for (let triggerToEnable in inst.enabledDMATriggers)
+    {
+        if (triggerCount == 0)
+        {
+            triggersToEnableOR += inst.enabledDMATriggers[triggerCount];
+        }
+        else
+        {
+            triggersToEnableOR += "\n\t\t";
+            triggersToEnableOR += " | " + inst.enabledDMATriggers[triggerCount];
+        }
+        triggerCount++;
+    }
+    triggersToEnableOR += ")";
+%%}
+%       if(inst.configureDMA){
+%           if(inst.enableDMA){
+    DL_ADC12_enableDMA(`baseName`);
+%           }
+    DL_ADC12_setDMASamplesCnt(`baseName`,`inst.sampCnt`);
+%if (triggerCount > 0) {
+    DL_ADC12_enableDMATrigger(`baseName`,`triggersToEnableOR`);
+%}
+%       }
+%       /* Check if default case for publisher/subscriber configuration */
+%       if(inst.pubChanID != 0){
+    DL_ADC12_setPublisherChanID(`baseName`,`inst.$name`_INST_PUB_CH);
+%       }
+%       if(inst.subChanID != 0){
+    DL_ADC12_setSubscriberChanID(`baseName`,`inst.$name`_INST_SUB_CH);
+%       }
+%       if((inst.enabledEvents).length>0){
+%%{
+    let eventCount = 0
+    var eventsToEnableOR = "("
+    for (let eventToEnable in inst.enabledEvents)
+    {
+        if (eventCount == 0)
+        {
+            eventsToEnableOR += inst.enabledEvents[eventCount];
+        }
+        else
+        {
+            eventsToEnableOR += "\n\t\t";
+            eventsToEnableOR += " | " + inst.enabledEvents[eventCount];
+        }
+        eventCount++;
+    }
+    eventsToEnableOR += ")";
+%%}
+    DL_ADC12_enableEvent(`baseName`,`eventsToEnableOR`);
+%       }
+%       if((inst.enabledInterrupts).length>0){
+%%{
+            let interruptCount = 0
+            var interruptsToEnableOR = "("
+            for (let interruptToEnable in inst.enabledInterrupts)
+            {
+                if (interruptCount == 0)
+                {
+                    interruptsToEnableOR += inst.enabledInterrupts[interruptCount];
+                }
+                else
+                {
+                    interruptsToEnableOR += "\n\t\t";
+                    interruptsToEnableOR += " | " + inst.enabledInterrupts[interruptCount];
+                }
+                interruptCount++;
+            }
+            interruptsToEnableOR += ")";
+%%}
+    /* Enable ADC12 interrupt */
+    DL_ADC12_clearInterruptStatus(`baseName`,`interruptsToEnableOR`);
+    DL_ADC12_enableInterrupt(`baseName`,`interruptsToEnableOR`);
+%        if(inst.interruptPriority !== "DEFAULT"){
+%               let irqnStr = inst.$name + "_INST_INT_IRQN";
+    NVIC_SetPriority(`irqnStr`, `inst.interruptPriority`);
+%        }
+%       } // if enabled interrupt length > 0
+    DL_ADC12_enableConversions(`baseName`);
+}
+%       }
+%   }

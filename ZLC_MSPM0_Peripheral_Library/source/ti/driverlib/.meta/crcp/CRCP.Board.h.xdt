@@ -1,0 +1,84 @@
+%%{
+/*
+ * Copyright (c) 2023 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== CRC.Board.h.xdt ========
+ */
+
+    let CRC = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let inst = CRC.$static;
+    let defs = Common.genBoardHeader(inst, CRC);
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+%%}
+%
+%
+% function printDefine() {
+%       let seed = inst.seed.toString(16).toUpperCase();
+%       let seedStr = "#define CRCP_SEED"
+%       let seedStr2 = "(0x" + seed + ")"
+/* Defines for CRC */
+`seedStr.padEnd(40," ")+seedStr2.padStart(40," ")`
+
+% if(inst.polynomial.slice(14) == "CUSTOM"){
+%       let customPoly = inst.polynomialTypeIn.toString(16).toUpperCase();
+%       let customPolyStr = "#define CUSTOM_POLY"
+%       let customPolyStr2 = "(0x" + customPoly + ")"
+/* Defines for CRC */
+`customPolyStr.padEnd(40," ")+customPolyStr2.padStart(40," ")`
+% }
+
+
+
+
+% } // function printDefine
+%
+% function printDeclare() {
+void SYSCFG_DL_CRCP_init(void);
+% }// function printDeclare

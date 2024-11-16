@@ -1,0 +1,644 @@
+/*
+ * Copyright (c) 2022 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== LP_MSPM0L2228.syscfg.json ========
+ *  Board schematics: http://www.ti.com/lit/ug/slau597f/slau597f.pdf
+ */
+
+ {
+    "name": "LP_MSPM0L2228",
+    "displayName": "MSPM0L2228 LaunchPad",
+    "device": "MSPM0L222X",
+    "part": "Default",
+    "package": "LQFP-80(PN)",
+    "headers": [
+        {
+            /* http://www.ti.com/tools-software/launchpads/boosterpacks/build.html */
+            "type": "BoosterPack 40 pin",
+            "default": true,
+            "name": "boosterpack",
+            "displayName": "BoosterPack Standard Header",
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 10 },
+                    { "top": 21, "bottom": 30 },
+
+                    { "blank": true },
+
+                    { "top": 40, "bottom": 31 },
+                    { "top": 20, "bottom": 11 }
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,     /* 3.3 V */
+                    "name": "3V3"
+                },
+                {
+                    "number": 2,     /* Analog in */
+                    "name": "PA24",
+                    "ball": "73"
+                },
+                {
+                    "number": 3,     /* UART RX */
+                    "name": "PA9",
+                    "ball": "23"
+                },
+                {
+                    "number": 4,     /* UART TX */
+                    "name": "PA8",
+                    "ball": "22"
+                },
+                {
+                    "number": 5,     /* GPIO (with interrupt) */
+                    "name": "PA7",
+                    "ball": "17"
+                },
+                {
+                    "number": 6,     /* Analog in */
+                    "name": "PA22",
+                    "ball": "62"
+                },
+                {
+                    "number": 7,
+                    "name": "PA17",
+                    "ball": "54",
+                    "preferredType": ["SPI_SCLK"]
+                },
+                {
+                    "number": 8,     /* GPIO (with interrupt) */
+                    "name": "PA21",
+                    "ball": "61"
+                },
+                {
+                    "number": 9,     /* I2C SCL */
+                    "name": "PA1",
+                    "ball": "2",
+                    "preferredType": ["I2C_SCL"]
+                },
+                {
+                    "number": 10,    /* I2C SDA */
+                    "name": "PA0",
+                    "ball": "1",
+                    "preferredType": ["I2C_SDA"]
+                },
+
+                {
+                    "number": 21,    /* 5 V */
+                    "name": "5V"
+                },
+                {
+                    "number": 22,    /* Ground */
+                    "name": "GND"
+                },
+                {
+                    "number": 23,    /* Analog input */
+                    "name": "PA18",
+                    "ball": "55"
+                },
+                {
+                    "number": 24,    /* Analog input */
+                    "name": "PA16",
+                    "ball": "45"
+                },
+                {
+                    "number": 25,    /* Analog input */
+                    "name": "PA15",
+                    "ball": "44"
+                },
+                {
+                    "number": 26,    /* Analog input */
+                    "name": "PA14",
+                    "ball": "43"
+                },
+                {
+                    "number": 27,    /* Analog input | I2S WS */
+                    "name": "PA13",
+                    "ball": "42"
+                },
+                {
+                    "number": 28,    /* Analog input | I2S SCLX */
+                    "name": "PA12",
+                    "ball": "41"
+                },
+                {
+                    "number": 29,    /* Analog Out | I2S SDout */
+                    "name": "PA11",
+                    "ball": "29",
+                    "preferredType" : ["AIN"]
+                },
+                {
+                    "number": 30,    /* Analog Out | I2S SDin */
+                    "name": "PA10",
+                    "ball": "28",
+                    "preferredType" : ["AIN"]
+                },
+
+                {
+                    "number": 40,    /* PWM | GPIO (with interrupt) */
+                    "name": "PB3",
+                    "ball": "19"
+                },
+                {
+                    "number": 39,    /* PWM | GPIO (with interrupt) */
+                    "name": "PB2",
+                    "ball": "18"
+                },
+                {
+                    "number": 38,    /* PWM | GPIO (with interrupt) */
+                    "name": "PB1",
+                    "ball": "16"
+                },
+                {
+                    "number": 37,    /* PWM | GPIO (with interrupt) */
+                    "name": "PB0",
+                    "ball": "15"
+                },
+                {
+                    "number": 36,    /* Timer Capture | GPIO (with interrupt) */
+                    "name": "PA30",
+                    "ball": "5"
+                },
+                {
+                    "number": 35,    /* Timer Capture | GPIO (with interrupt) */
+                    "name": "PA29",
+                    "ball": "4"
+                },
+                {
+                    "number": 34,    /* GPIO (with interrupt) */
+                    "name": "PA28",
+                    "ball": "3"
+                },
+                {
+                    "number": 33,    /* GPIO (with interrupt) */
+                    "name": "PA27",
+                    "ball": "79"
+                },
+                {
+                    "number": 32,    /* GPIO (with interrupt) */
+                    "name": "PA26",
+                    "ball": "78"
+                },
+                {
+                    "number": 31,    /* GPIO (with interrupt) */
+                    "name": "PA25",
+                    "ball": "74"
+                },
+
+                {
+                    "number": 20,    /* Ground */
+                    "name": "GND"
+                },
+                {
+                    "number": 19,    /* PWM | GPIO (with interrupt) */
+                    "name": "PB16",
+                    "ball": "40"
+                },
+                {
+                    "number": 18,    /* SPI CS (Wireless) | GPIO (with interrupt) */
+                    "name": "PB15",
+                    "ball": "39"
+                },
+                {
+                    "number": 17,    /* GPIO */
+                    "name": "PB14",
+                    "ball": "38"
+                },
+                {
+                    "number": 16,    /* Reset */
+                    "name": "RST"
+                },
+                {
+                    "number": 15,
+                    "name": "PB8",
+                    "ball": "32",
+                    "preferredType" : ["SPI_MOSI"]
+                },
+                {
+                    "number": 14,
+                    "name": "PB7",
+                    "ball": "31",
+                    "preferredType" : ["SPI_MISO"]
+                },
+                {
+                    "number": 13,    /* SPI CS (Display) | GPIO (with interrupt) */
+                    "name": "PB6",
+                    "ball": "30"
+                },
+                {
+                    "number": 12,    /* SPI CS (other) | GPIO (with interrupt) */
+                    "name": "PB5",
+                    "ball": "21"
+                },
+                {
+                    "number": 11,    /* GPIO (with interrupt) */
+                    "name": "PB4",
+                    "ball": "20"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J14 Edge Connector",
+            "default": true,
+            "name": "j14_expansion",
+            "displayName": "Display for XDS110-ET to LP ",
+            "displayNumbers": true,
+            "dimensions": {
+                "rows": [
+                    { "left":  2, "right": 1},
+                    { "left":  4, "right": 3},
+                    { "left":  6, "right": 5},
+                    { "left":  8, "right": 7},
+                    { "left":  10, "right": 9},
+                    { "left":  12, "right": 11},
+                    { "left":  14, "right": 13},
+                    { "left":  16, "right": 15},
+                    { "left":  18, "right": 17},
+                    { "left":  20, "right": 19}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,    /* Ground */
+                    "name": "GND"
+                },
+                {
+                    "number": 2,    /* XDS Ground */
+                    "name": "XDS_GND"
+                },
+                {
+                    "number": 3,    /* 5 V */
+                    "name": "5V"
+                },
+                {
+                    "number": 4,    /* XDS VBUS */
+                    "name": "XDS_VBUS"
+                },
+                {
+                    "number": 5,    /* 3 V */
+                    "name": "3V"
+                },
+                {
+                    "number": 6,    /* XDS VCCTARGET */
+                    "name": "XDS_VCCTARGET"
+                },
+                {
+                    "number": 7,    /* GPIO */
+                    "name": "PA11",
+                    "ball": "29"
+                },
+                {
+                    "number": 8,    /* XDS TXD */
+                    "name": "XDS_TXD"
+                },
+                {
+                    "number": 9,    /* GPIO */
+                    "name": "PA10",
+                    "ball": "28"
+                },
+                {
+                    "number": 10,    /* XDS RXD */
+                    "name": "XDS_RXD"
+                },
+                {
+                    "number": 11,    /* Reset */
+                    "name": "RST"
+                },
+                {
+                    "number": 12,    /* XDS Reset Out */
+                    "name": "XDS_RESET_OUT"
+                },
+                {
+                    "number": 13,    /* SWDIO */
+                    "name": "PA19",
+                    "ball": "56"
+                },
+                {
+                    "number": 14,    /* XDS TMS SWDIO */
+                    "name": "XDS_TMS_SWDIO"
+                },
+                {
+                    "number": 15,    /* SWCLK */
+                    "name": "PA20",
+                    "ball": "57"
+                },
+                {
+                    "number": 16,    /* XDS TCK SWDCLK */
+                    "name": "XDS_TCK_SWDCLK"
+                },
+                {
+                    "number": 17,    /* GPIO */
+                    "name": "PA18",
+                    "ball": "55"
+                },
+                {
+                    "number": 18,    /* XDS TDO SWO */
+                    "name": "XDS_TDO_SWO"
+                },
+                {
+                    "number": 19,    /* VBAT IN */
+                    "name": "VBAT_IN"
+                },
+                {
+                    "number": 20,    /* XDS VCCTARGET */
+                    "name": "XDS_VCCTARGET"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J10 Edge Connector",
+            "default": true,
+            "name": "j10_expansion",
+            "displayName": "Display for LCD Interface 1",
+            "displayNumbers": true,
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 18}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,    /* VBAT_IN */
+                    "name": "VBAT_IN"
+                },
+                {
+                    "number": 2,    /* 3 V */
+                    "name": "3V"
+                },
+                {
+                    "number": 3,    /* LCD-P1 */
+                    "name": "PB11",
+                    "ball": "35"
+                },
+                {
+                    "number": 4,    /* LCD-P2 */
+                    "name": "PB12",
+                    "ball": "36"
+                },
+                {
+                    "number": 5,    /* LCD-P3 */
+                    "name": "PB13",
+                    "ball": "37"
+                },
+                {
+                    "number": 6,    /* LCD-P4 */
+                    "name": "PB17",
+                    "ball": "58"
+                },
+                {
+                    "number": 7,    /* LCD-P5 */
+                    "name": "PB18",
+                    "ball": "59"
+                },
+                {
+                    "number": 8,    /* LCD-P6 */
+                    "name": "PB19",
+                    "ball": "60"
+                },
+                {
+                    "number": 9,    /* LCD-P7 */
+                    "name": "PB20",
+                    "ball": "67"
+                },
+                {
+                    "number": 10,    /* LCD-P8 */
+                    "name": "PB21",
+                    "ball": "68"
+                },
+                {
+                    "number": 11,    /* LCD-P9 */
+                    "name": "PB22",
+                    "ball": "69"
+                },
+                {
+                    "number": 12,    /* LCD-P10 */
+                    "name": "PB23",
+                    "ball": "70"
+                },
+                {
+                    "number": 13,    /* LCD-P11 */
+                    "name": "PB24",
+                    "ball": "71"
+                },
+                {
+                    "number": 14,    /* LCD-P12 */
+                    "name": "PB25",
+                    "ball": "75"
+                },
+                {
+                    "number": 15,    /* LCD-P13 */
+                    "name": "PB26",
+                    "ball": "76"
+                },
+                {
+                    "number": 16,    /* LCD-P14 */
+                    "name": "PB27",
+                    "ball": "77"
+                },
+                {
+                    "number": 17,
+                    "name": "PA2_NC",
+                    "ball": "10"
+                },
+                {
+                    "number": 18,
+                    "name": "PA3_NC",
+                    "ball": "11"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J11 Edge Connector",
+            "default": true,
+            "name": "j11_expansion",
+            "displayName": "Display for LCD Interface 2",
+            "displayNumbers": true,
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 18}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,    /* Ground */
+                    "name": "GND"
+                },
+                {
+                    "number": 2,
+                    "name": "PA6_NC",
+                    "ball": "14"
+                },
+                {
+                    "number": 3,    /* LCD-P28 */
+                    "name": "PC9",
+                    "ball": "66"
+                },
+                {
+                    "number": 4,    /* LCD-P27 */
+                    "name": "PC8",
+                    "ball": "65"
+                },
+                {
+                    "number": 5,    /* LCD-P26 */
+                    "name": "PC7",
+                    "ball": "64"
+                },
+                {
+                    "number": 6,    /* LCD-P25 */
+                    "name": "PC6",
+                    "ball": "63"
+                },
+                {
+                    "number": 7,    /* LCD-P24 */
+                    "name": "PC5",
+                    "ball": "53"
+                },
+                {
+                    "number": 8,    /* LCD-P23 */
+                    "name": "PC4",
+                    "ball": "52"
+                },
+                {
+                    "number": 9,    /* LCD-P22 */
+                    "name": "PC3",
+                    "ball": "51"
+                },
+                {
+                    "number": 10,    /* LCD-P21 */
+                    "name": "PC2",
+                    "ball": "50"
+                },
+                {
+                    "number": 11,    /* LCD-P20 */
+                    "name": "PC1",
+                    "ball": "47"
+                },
+                {
+                    "number": 12,    /* LCD-P19 */
+                    "name": "PC0",
+                    "ball": "46"
+                },
+                {
+                    "number": 13,    /* LCD-P18 */
+                    "name": "PB31",
+                    "ball": "27"
+                },
+                {
+                    "number": 14,    /* LCD-P17 */
+                    "name": "PB30",
+                    "ball": "26"
+                },
+                {
+                    "number": 15,    /* LCD-P16 */
+                    "name": "PB29",
+                    "ball": "25"
+                },
+                {
+                    "number": 16,    /* LCD-P15 */
+                    "name": "PB28",
+                    "ball": "24"
+                },
+                {
+                    "number": 17,
+                    "name": "PA5_NC",
+                    "ball": "13"
+                },
+                {
+                    "number": 18,
+                    "name": "PA4_NC",
+                    "ball": "12"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J4 Edge Connector",
+            "default": true,
+            "name": "j4_expansion",
+            "displayName": "Display for Blue LED4",
+            "displayNumbers": true,
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 1}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,
+                    "name": "PA23",
+                    "ball": "72"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J5 Edge Connector",
+            "default": true,
+            "name": "j5_expansion",
+            "displayName": "Display for Red LED4 ",
+            "displayNumbers": true,
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 1}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,
+                    "name": "PB10",
+                    "ball": "34"
+                }
+            ]
+        },
+        {
+            "type": "MSPM0L2228 J6 Edge Connector",
+            "default": true,
+            "name": "j6_expansion",
+            "displayName": "Display for Green LED4 ",
+            "displayNumbers": true,
+            "dimensions": {
+                "columns": [
+                    { "top":  1, "bottom": 1}
+                ]
+            },
+            "pins": [
+                {
+                    "number": 1,
+                    "name": "PB9",
+                    "ball": "33"
+                }
+            ]
+        }
+    ],
+
+    "components": {}
+}

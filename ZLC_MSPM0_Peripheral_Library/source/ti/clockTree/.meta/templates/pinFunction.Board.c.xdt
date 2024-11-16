@@ -1,0 +1,147 @@
+%%{
+/*
+ * Copyright (c) 2022, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SYSCTL.Board.c.xdt ========
+ */
+
+    let PINFUNC = args[0]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let content = args[1]; /* passed by /ti/drivers/templates/Board.c.xdt */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    // since sysctl is static we don't use the inst variable
+    let instances = PINFUNC.$instances;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            //printReset();
+            break;
+        case "Power":
+            //printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "PreFunction":
+            printPreFunction();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+        }
+%%}
+%
+% function printGPIO(){
+% for(let inst of instances) {
+%   if(inst.$ipInstance.outPins.length > 0){
+%       // Functions for inputs
+%       if(inst.enable){
+%           if(_.endsWith(inst.$name,"EXT")){
+%           let prefix = _.trimEnd(inst.$name, "EXT");
+%           let string = prefix + "IN"
+%           if(prefix == "FCC") { string = "FCC_IN"; }
+%           if(prefix == "HFCLK" || prefix == "LFCLK") {
+    DL_GPIO_initPeripheralInputFunction(GPIO_`string`_IOMUX, GPIO_`string`_IOMUX_FUNC);
+%}
+%           else {
+    DL_GPIO_initDigitalInput(GPIO_`string`_IOMUX);
+%}
+
+%           } else { // HFXT or LFXT crystal
+%           let prefix = _.trimEnd(inst.$name, "T");
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_`prefix`IN_IOMUX);
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_`prefix`OUT_IOMUX);
+%           }
+%       } // if (inst.enable)
+%   } else {
+%       // check outputs for CLKOUT (only output)
+%       if(inst.enable) {
+%           // exclk pin is used
+%           if(Common.isDeviceM0G() && inst.ClkOutHighDriveEn){
+%               /*
+%                * To output a signal that is greater than 32MHz a High-Speed IO (HSIO) pin
+%                * needs to be used and have high drive enabled.
+%                */
+    DL_GPIO_initPeripheralOutputFunctionFeatures(GPIO_CLKOUT_IOMUX,
+        GPIO_CLKOUT_IOMUX_FUNC, DL_GPIO_INVERSION_DISABLE,
+        DL_GPIO_RESISTOR_NONE, DL_GPIO_DRIVE_STRENGTH_HIGH,
+        DL_GPIO_HIZ_DISABLE);
+
+%           } else {
+    DL_GPIO_initPeripheralOutputFunction(GPIO_CLKOUT_IOMUX, GPIO_CLKOUT_IOMUX_FUNC);
+%            }
+    DL_GPIO_enableOutput(GPIO_CLKOUT_PORT, GPIO_CLKOUT_PIN);
+
+%       } // if output is enabled
+%   } // if inPins.length > 0 (if an input pinFunction)
+% } // for (let inst in instances)
+%} // function printGPIO
+%
+%
+% function printPreFunction() {
+%   if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+%   let lfxtInst = _.find(instances, ['$name','LFXT']);
+%   let exlfInst = _.find(instances, ['$name','LFCLKEXT']);
+%       if(lfxtInst.enable || exlfInst.enable){
+%           let lowCap = false;
+%           let monitor = false;
+%           let driveStrength = "HIGHEST"
+%           if(lfxtInst.enable) {
+%               monitor = lfxtInst.LFCLKMonitorEnable;
+%               lowCap = lfxtInst.LFCLKLowCap;
+%               driveStrength = lfxtInst.LFCLKDriveStrength;
+%           } else {
+%               monitor = exlfInst.LFCLKMonitorEnable;
+%           }
+static const DL_SYSCTL_LFCLKConfig gLFCLKConfig = {
+    .lowCap   = `lowCap`,
+    .monitor  = `monitor`,
+    .xt1Drive = DL_SYSCTL_LFXT_DRIVE_STRENGTH_`driveStrength`,
+};
+
+%       }
+%   }
+% } // function printPreFunction
+%
+% function printFunction(){
+% return;
+% }

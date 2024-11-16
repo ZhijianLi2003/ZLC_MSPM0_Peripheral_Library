@@ -1,0 +1,169 @@
+%%{
+/*
+ * Copyright (c) 2018-2019, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== VREF.Board.c.xdt ========
+ */
+
+    let VREF = args[0];
+    let content = args[1];
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let instances = VREF.$static;
+    if (instances.length == 0) return;
+
+/*
+ * Standard Trampoline:
+ * In order to preserve spacing, it is important to also set the boolean
+ * values in the templates object based on whether that condition should
+ * produce any code
+ * Example:
+ * templates: {
+ *       boardc: "/ti/driverlib/comp/COMP.Board.c.xdt",
+ *       boardh: "/ti/driverlib/comp/COMP.Board.h.xdt",
+ *       Call: true,
+ *       Reset: false,
+ *       Power: true,
+ *       GPIO: false,
+ *       Function: true
+ * },
+ */
+
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printCall(){
+    SYSCFG_DL_VREF_init();
+% }
+%
+% function printReset(){
+    DL_VREF_reset(VREF);
+%
+% }
+% function printPower(){
+%       /* another possibility depending on the driver */
+    DL_VREF_enablePower(VREF);
+% }
+%
+% function printGPIO(){
+%       let inst = instances;
+%       /* all of these are defined in the header */
+%       let gpioStr = "GPIO_VREF";
+%       // No need to initialize GPIOs for Analog functionality
+%       /* Peripheral GPIO Configuration */
+%       let initIOMux = Common.getGPIOConfigBoardC(inst);
+%       /* Check if generating empty code */
+%       if (/\S/.test(initIOMux)) {
+    `initIOMux`
+%       }
+% }
+%
+% /* Main Function */
+% function printFunction(){
+%   let inst = instances;
+
+%   if (inst.advClockConfigEnable == true) {
+static const DL_VREF_ClockConfig gVREFClockConfig = {
+    .clockSel = `inst.advClkSrc`,
+    .divideRatio = `inst.advClkDiv`,
+};
+%   } // if (inst.advClockConfigEnable == true)
+static const DL_VREF_Config gVREFConfig = {
+% let vrefEn = ((inst.basicMode.includes("DL_VREF_ENABLE_ENABLE"))?"DL_VREF_ENABLE_ENABLE":"DL_VREF_ENABLE_DISABLE")
+    .vrefEnable     = `vrefEn`,
+%   if (inst.basicMode.includes("DL_VREF_ENABLE_ENABLE")){
+%   // Internal mode
+    .bufConfig      = `inst.basicIntVolt`,
+%   } else{
+%   // External mode
+    .bufConfig      = DL_VREF_BUFCONFIG_OUTPUT_2_5V,
+%   }
+%   if (inst.advSHEnable == true){
+    .shModeEnable   = DL_VREF_SHMODE_ENABLE,
+    .holdCycleCount = `inst.advSHSample`,
+    .shCycleCount   = `inst.advSHHold`,
+%   } else {
+    .shModeEnable   = DL_VREF_SHMODE_DISABLE,
+    .holdCycleCount = DL_VREF_HOLD_MIN,
+    .shCycleCount   = DL_VREF_SH_MIN,
+%   }
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_VREF_init(void) {
+%   if (inst.advClockConfigEnable == true) {
+    DL_VREF_setClockConfig(VREF,
+        (DL_VREF_ClockConfig *) &gVREFClockConfig);
+%   }
+    DL_VREF_configReference(VREF,
+        (DL_VREF_Config *) &gVREFConfig);
+%   if(Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+%       if(inst.enableCOMPVREF){
+    DL_VREF_enableInternalRefCOMP(VREF);
+%       }
+%   }
+%
+% /* After writing VREF_EN to '1', wait for fix time instead of relying on VREF_READY status. */
+% if (inst.checkVREFReady) {
+    delay_cycles(VREF_READY_DELAY);
+%%{ // TODO: [(H) JAN] this code is likely to be removed in favor of the delay (MSPSWSDK-2038).
+    // while (DL_VREF_CTL1_READY_NOTRDY == DL_VREF_getStatus(VREF))
+    //     ;
+%%}
+% }
+}
+
+% } // printFunction()

@@ -1,0 +1,250 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== DEBUG.Board.h.xdt ========
+ */
+
+    let SYSCTL = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    // since sysctl is static we don't use the inst variable
+    let stat = SYSCTL.$static;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+%
+% function printDefine() {
+%   if(stat.clockTreeEn){
+%       let gen = system.getTemplate("/ti/driverlib/sysctl/SYSCTLclockTree.Board.h.xdt")
+`_.trimEnd(gen(SYSCTL,"Define"))`
+%   } else {
+%   /* This is one possible way to do GPIO defines. Good if you need to find out PINCM */
+%       let gpioStr = "GPIO"
+% if(Common.isDeviceM0G() || Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+%    if(stat.LFCLKSource === "LFXT"){
+% /* figure out pin number and pinCMx */
+% /* LFXIN pins */
+%       let lfxInPinName = "lfxIn"+"Pin";
+%       let lfxInPackagePin = stat.peripheral[lfxInPinName].$solution.packagePinName;
+%       let lfxInPinCM = Common.getPinCM(lfxInPackagePin,stat,"LFXIN");
+%       let lfxInGpioName = system.deviceData.devicePins[lfxInPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let lfxInPort = Common.getGPIOPortMultiPad(lfxInPackagePin,stat,"LFXIN");
+%       let lfxInGpioPin = Common.getGPIONumberMultiPad(lfxInPackagePin,stat,"LFXIN");
+% let lfxInPortStr = "#define "+gpioStr+"_LFXT_PORT";
+`lfxInPortStr.padEnd(40," ")+lfxInPort.padStart(40, " ")`
+% let lfxInPinStr = "#define "+gpioStr+"_LFXIN_PIN";
+% let lfxInPinStr2 = "DL_GPIO_PIN_"+lfxInGpioPin;
+`lfxInPinStr.padEnd(40," ")+lfxInPinStr2.padStart(40," ")`
+% let lfxInIOmuxStr = "#define "+gpioStr+"_LFXIN_IOMUX";
+% let lfxInIOmuxStr2 = "(IOMUX_PINCM"+lfxInPinCM.toString()+")";
+`lfxInIOmuxStr.padEnd(40," ")+lfxInIOmuxStr2.padStart(40," ")`
+% /* LFXOUT pins */
+%       let lfxOutPinName = "lfxOut"+"Pin";
+%       let lfxOutPackagePin = stat.peripheral[lfxOutPinName].$solution.packagePinName;
+%       let lfxOutPinCM = Common.getPinCM(lfxOutPackagePin,stat,"LFXOUT");
+%       let lfxOutGpioName = system.deviceData.devicePins[lfxOutPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let lfxOutGpioPin = Common.getGPIONumberMultiPad(lfxOutPackagePin,stat,"LFXOUT");
+% let lfxOutPinStr = "#define "+gpioStr+"_LFXOUT_PIN";
+% let lfxOutPinStr2 = "DL_GPIO_PIN_"+lfxOutGpioPin;
+`lfxOutPinStr.padEnd(40," ")+lfxOutPinStr2.padStart(40," ")`
+% let lfxOutIOmuxStr = "#define "+gpioStr+"_LFXOUT_IOMUX";
+% let lfxOutIOmuxStr2 = "(IOMUX_PINCM"+lfxOutPinCM.toString()+")";
+`lfxOutIOmuxStr.padEnd(40," ")+lfxOutIOmuxStr2.padStart(40," ")`
+% }
+% else if(stat.LFCLKSource === "LFCLK_IN"){
+% /* LFCLK IN pins */
+%       let lfclkInPinName = "lfclkIn"+"Pin";
+%       let lfclkInPackagePin = stat.peripheral[lfclkInPinName].$solution.packagePinName;
+%       let lfclkInPinCM = Common.getPinCM(lfclkInPackagePin,stat,"LFCLKIN");
+%       let lfclkInGpioName = system.deviceData.devicePins[lfclkInPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let lfclkInPort = Common.getGPIOPortMultiPad(lfclkInPackagePin,stat,"LFCLKIN");
+%       let lfclkInGpioPin = Common.getGPIONumberMultiPad(lfclkInPackagePin,stat,"LFCLKIN");
+% let lfclkInPortStr = "#define "+gpioStr+"_LFCLKIN_PORT";
+`lfclkInPortStr.padEnd(40," ")+lfclkInPort.padStart(40, " ")`
+% let lfclkInPinStr = "#define "+gpioStr+"_LFCLKIN_PIN";
+% let lfclkInPinStr2 = "DL_GPIO_PIN_"+lfclkInGpioPin;
+`lfclkInPinStr.padEnd(40," ")+lfclkInPinStr2.padStart(40," ")`
+% let lfclkInIOmuxStr = "#define "+gpioStr+"_LFCLKIN_IOMUX";
+% let lfclkInIOmuxStr2 = "(IOMUX_PINCM"+lfclkInPinCM.toString()+")";
+`lfclkInIOmuxStr.padEnd(40," ")+lfclkInIOmuxStr2.padStart(40," ")`
+% let lfclkInFuncStr = "#define "+gpioStr+"_LFCLKIN_IOMUX_FUNC";
+% let lfclkInFuncStr2 = "IOMUX_PINCM"+lfclkInPinCM+"_PF_"+"SYSCTL_LFCLKIN";
+`lfclkInFuncStr.padEnd(40, " ")+lfclkInFuncStr2.padStart(40, " ")`
+%}
+%}
+% if(Common.isDeviceM0G()){
+% /* HFXOUT pins */
+% if(stat.useHFCLK && stat.HFCLKSource === "HFXT"){
+%       let hfxInPinName = "hfxIn"+"Pin";
+%       let hfxInPackagePin = stat.peripheral[hfxInPinName].$solution.packagePinName;
+%       let hfxInPinCM = Common.getPinCM(hfxInPackagePin,stat,"HFXIN");
+%       let hfxInGpioName = system.deviceData.devicePins[hfxInPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let hfxInPort = Common.getGPIOPortMultiPad(hfxInPackagePin,stat,"HFXIN");
+%       let hfxInGpioPin = Common.getGPIONumberMultiPad(hfxInPackagePin,stat,"HFXIN");
+% let hfxInPortStr = "#define "+gpioStr+"_HFXT_PORT";
+`hfxInPortStr.padEnd(40," ")+hfxInPort.padStart(40, " ")`
+% let hfxInPinStr = "#define "+gpioStr+"_HFXIN_PIN";
+% let hfxInPinStr2 = "DL_GPIO_PIN_"+hfxInGpioPin;
+`hfxInPinStr.padEnd(40," ")+hfxInPinStr2.padStart(40," ")`
+% let hfxInIOmuxStr = "#define "+gpioStr+"_HFXIN_IOMUX";
+% let hfxInIOmuxStr2 = "(IOMUX_PINCM"+hfxInPinCM.toString()+")";
+`hfxInIOmuxStr.padEnd(40," ")+hfxInIOmuxStr2.padStart(40," ")`
+% /* HFXIN pins */
+%       let hfxOutPinName = "hfxOut"+"Pin";
+%       let hfxOutPackagePin = stat.peripheral[hfxOutPinName].$solution.packagePinName;
+%       let hfxOutPinCM = Common.getPinCM(hfxOutPackagePin,stat,"HFXOUT");
+%       let hfxOutGpioName = system.deviceData.devicePins[hfxOutPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let hfxOutGpioPin = Common.getGPIONumberMultiPad(hfxOutPackagePin,stat,"HFXOUT");
+% let hfxOutPinStr = "#define "+gpioStr+"_HFXOUT_PIN";
+% let hfxOutPinStr2 = "DL_GPIO_PIN_"+hfxOutGpioPin;
+`hfxOutPinStr.padEnd(40," ")+hfxOutPinStr2.padStart(40," ")`
+% let hfxOutIOmuxStr = "#define "+gpioStr+"_HFXOUT_IOMUX";
+% let hfxOutIOmuxStr2 = "(IOMUX_PINCM"+hfxOutPinCM.toString()+")";
+`hfxOutIOmuxStr.padEnd(40," ")+hfxOutIOmuxStr2.padStart(40," ")`
+% }
+% else if(stat.useHFCLK && stat.HFCLKSource === "HFCLK_IN"){
+% /* HFCLK IN pins */
+%       let hfclkInPinName = "hfclkIn"+"Pin";
+%       let hfclkInPackagePin = stat.peripheral[hfclkInPinName].$solution.packagePinName;
+%       let hfclkInPinCM = Common.getPinCM(hfclkInPackagePin,stat,"HFCLKIN");
+%       let hfclkInGpioName = system.deviceData.devicePins[hfclkInPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let hfclkInPort = Common.getGPIOPortMultiPad(hfclkInPackagePin,stat,"HFCLKIN");
+%       let hfclkInGpioPin = Common.getGPIONumberMultiPad(hfclkInPackagePin,stat,"HFCLKIN");
+% let hfclkInPortStr = "#define "+gpioStr+"_HFCLKIN_PORT";
+`hfclkInPortStr.padEnd(40," ")+hfclkInPort.padStart(40, " ")`
+% let hfclkInPinStr = "#define "+gpioStr+"_HFCLKIN_PIN";
+% let hfclkInPinStr2 = "DL_GPIO_PIN_"+hfclkInGpioPin;
+`hfclkInPinStr.padEnd(40," ")+hfclkInPinStr2.padStart(40," ")`
+% let hfclkInIOmuxStr = "#define "+gpioStr+"_HFCLKIN_IOMUX";
+% let hfclkInIOmuxStr2 = "(IOMUX_PINCM"+hfclkInPinCM.toString()+")";
+`hfclkInIOmuxStr.padEnd(40," ")+hfclkInIOmuxStr2.padStart(40," ")`
+% let hfclkInFuncStr = "#define "+gpioStr+"_HFCLKIN_IOMUX_FUNC";
+% let hfclkInFuncStr2 = "IOMUX_PINCM"+hfclkInPinCM+"_PF_"+"SYSCTL_HFCLKIN";
+`hfclkInFuncStr.padEnd(40, " ")+hfclkInFuncStr2.padStart(40, " ")`
+    %}
+% } // M0Gx device-specific pins
+% if(stat.enableEXCLK){
+% /* CLKOUT IN pins */
+%       let clkOutPinName = "clkOut"+"Pin";
+%       let clkOutPackagePin = stat.peripheral[clkOutPinName].$solution.packagePinName;
+%       let clkOutPinCM = Common.getPinCM(clkOutPackagePin,stat,"CLK_OUT");
+%       let clkOutGpioName = system.deviceData.devicePins[clkOutPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let clkOutPort = Common.getGPIOPortMultiPad(clkOutPackagePin,stat,"CLK_OUT");
+%       let clkOutGpioPin = Common.getGPIONumberMultiPad(clkOutPackagePin,stat,"CLK_OUT");
+% let clkOutPortStr = "#define "+gpioStr+"_CLKOUT_PORT";
+`clkOutPortStr.padEnd(40," ")+clkOutPort.padStart(40, " ")`
+% let clkOutPinStr = "#define "+gpioStr+"_CLKOUT_PIN";
+% let clkOutPinStr2 = "DL_GPIO_PIN_"+clkOutGpioPin;
+`clkOutPinStr.padEnd(40," ")+clkOutPinStr2.padStart(40," ")`
+% let clkOutIOmuxStr = "#define "+gpioStr+"_CLKOUT_IOMUX";
+% let clkOutIOmuxStr2 = "(IOMUX_PINCM"+clkOutPinCM.toString()+")";
+`clkOutIOmuxStr.padEnd(40," ")+clkOutIOmuxStr2.padStart(40," ")`
+% let clkOutFuncStr = "#define "+gpioStr+"_CLKOUT_IOMUX_FUNC";
+% let clkOutFuncStr2 = "IOMUX_PINCM"+clkOutPinCM+"_PF_"+"SYSCTL_CLK_OUT";
+`clkOutFuncStr.padEnd(40, " ")+clkOutFuncStr2.padStart(40, " ")`
+%}
+% /* Temporary Workaround for MSPM0L122X_L222X */
+% if(!stat.disableSYSOSC && stat.enableROSC && Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+% /* ROSC pins */
+% let roscPortStr = "#define "+gpioStr+"_ROSC_PORT";
+`roscPortStr.padEnd(40," ")+"GPIOA".padStart(40, " ")`
+% let roscPinStr = "#define "+gpioStr+"_ROSC_PIN";
+% let roscPinStr2 = "DL_GPIO_PIN_2";
+`roscPinStr.padEnd(40," ")+roscPinStr2.padStart(40," ")`
+% let roscIOmuxStr = "#define "+gpioStr+"_ROSC_IOMUX";
+% let roscIOmuxStr2 = "(IOMUX_PINCM7"+")";
+`roscIOmuxStr.padEnd(40," ")+roscIOmuxStr2.padStart(40," ")`
+%   }
+% /* Standard Pin Configuration for ROSC */
+% if(!stat.disableSYSOSC && stat.enableROSC && !Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+% /* ROSC pins */
+%       let roscPinName = "rosc"+"Pin";
+%       let roscPackagePin = stat.peripheral[roscPinName].$solution.packagePinName;
+%       let roscPinCM = Common.getPinCM(roscPackagePin,stat,"ROSC");
+%       let roscGpioName = system.deviceData.devicePins[roscPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let roscPort = Common.getGPIOPortMultiPad(roscPackagePin,stat,"ROSC");
+%       let roscGpioPin = Common.getGPIONumberMultiPad(roscPackagePin,stat,"ROSC");
+% let roscPortStr = "#define "+gpioStr+"_ROSC_PORT";
+`roscPortStr.padEnd(40," ")+roscPort.padStart(40, " ")`
+% let roscPinStr = "#define "+gpioStr+"_ROSC_PIN";
+% let roscPinStr2 = "DL_GPIO_PIN_"+roscGpioPin;
+`roscPinStr.padEnd(40," ")+roscPinStr2.padStart(40," ")`
+% let roscIOmuxStr = "#define "+gpioStr+"_ROSC_IOMUX";
+% let roscIOmuxStr2 = "(IOMUX_PINCM"+roscPinCM.toString()+")";
+`roscIOmuxStr.padEnd(40," ")+roscIOmuxStr2.padStart(40," ")`
+%   }
+% } // if stat.clockTreeEn
+%
+% /* CPU Clock speed define */
+% let cpuclkSpeedStr = "#define CPUCLK_FREQ";
+% let cpuclkSpeedStr2 = stat.CPUCLK_Freq.toString();
+`cpuclkSpeedStr.padEnd(40, " ")+cpuclkSpeedStr2.padStart(40, " ")`
+%}
+
+%
+% function printDeclare() {
+void SYSCFG_DL_SYSCTL_init(void);
+%%{
+    let clkSrcCheck = false;
+    if(stat.validateClkStatus){
+        if(stat.LFCLKSource === "LFOSC"){
+            clkSrcCheck = true;
+        }
+        else if(Common.isDeviceM0G()){
+            clkSrcCheck = (stat.useSYSPLL || (stat.useHFCLK) || (stat.MCLKSource === "HSCLK") || (stat.LFCLKSource === "LFXT"));
+        }
+        else if(Common.isDeviceFamily_PARENT_MSPM0L122X_L222X()){
+            clkSrcCheck = (stat.LFCLKSource === "LFXT");
+        }
+    }
+%%}
+%   if(clkSrcCheck){
+void SYSCFG_DL_SYSCTL_CLK_init(void);
+%   }
+% }

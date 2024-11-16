@@ -1,0 +1,110 @@
+%%{
+/*
+ * Copyright (c) 2022, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== oscillator.Board.c.xdt ========
+ */
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let mod = system.modules["/ti/clockTree/oscillator.js"];
+    let content = args[0];
+
+    let sysoscInst = _.find(mod.$instances, ['$name', 'SYSOSC']);
+    let lfoscInst = _.find(mod.$instances, ['$name', 'LFOSC']);
+
+    if(_.isUndefined(sysoscInst) || _.isUndefined(lfoscInst)) {
+        throw 'Not all oscillator elements are defined appropriately';
+    }
+
+    switch(content){
+        case "Call":
+            //printCall();
+            break;
+        case "Reset":
+            //printReset();
+            break;
+        case "Power":
+            //printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "PreFunction":
+            //printPreFunction();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+%%}
+%
+% function printGPIO(){
+%   if(!sysoscInst.disableSYSOSC && sysoscInst.enableROSC){
+    DL_GPIO_initPeripheralAnalogFunction(GPIO_ROSC_IOMUX);
+%   }
+% }
+%
+% function printFunction(){
+%%{
+    let sysoscStr = "";
+
+    if(!sysoscInst.disableSYSOSC)
+    {
+        // frequency correction loop
+        if(sysoscInst.enableSYSOSCFCL){
+            if(sysoscInst.enableROSC) {
+                sysoscStr = "\n\t/* Enable SYSOSC FCL in External Resistor Mode */"
+                sysoscStr += "\n\tDL_SYSCTL_enableSYSOSCFCLExternalResistor();"
+            } else if(!sysoscInst.enableROSC){
+                sysoscStr = "\n\t/* Enable SYSOSC FCL in Internal Resistor Mode */"
+                sysoscStr += "\n\tDL_SYSCTL_enableSYSOSCFCL();"
+            }
+        }
+        if(sysoscInst.frequencySelect === 4){
+            sysoscStr += "\n\tDL_SYSCTL_setSYSOSCFreq(DL_SYSCTL_SYSOSC_FREQ_4M);";
+        } else {
+            sysoscStr += "\n\tDL_SYSCTL_setSYSOSCFreq(DL_SYSCTL_SYSOSC_FREQ_BASE);";
+        }
+
+    }
+%%}
+%
+    `sysoscStr`
+%
+% } // function printFunction

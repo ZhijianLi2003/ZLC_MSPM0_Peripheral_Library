@@ -1,0 +1,107 @@
+%%{
+/*
+ * Copyright (c) 2023-2024, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== IWDT.Board.c.xdt ========
+ */
+    /* args[] passed by /ti/drivers/templates/Board.c.xdt during function call: */
+    let IWDT = args[0];
+    let content = args[1];
+
+    /* get Common /ti/driverlib utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    /* shorthand names for some common references in template below */
+    let stat = IWDT.$static;
+    if (stat.length == 0) return;
+
+    switch(content){
+        case "Call":
+            printCall();
+            break;
+        case "Reset":
+            printReset();
+            break;
+        case "Power":
+            printPower();
+            break;
+        case "GPIO":
+            printGPIO();
+            break;
+        case "Function":
+            printFunction();
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+%%}
+%
+% function printCall() {
+%   if (!stat.loadApplicationKey) {
+    SYSCFG_DL_IWDT_init();
+%   }
+% }
+%
+%
+% function printReset() {
+% }
+%
+% function printPower() {
+% }
+%
+% function printFunction() {
+SYSCONFIG_WEAK void SYSCFG_DL_IWDT_init(void)
+{
+    % let instName = "IWDT_INST";
+    /*
+    *   Initialize IWDT with following settings:
+    *   Watchdog Source Clock = (LFOSC Freq) / (IWDT Clock Divider)
+    *                         = 32768Hz / `stat.clockDivider` = `stat.clockSourceCalculated`
+    *   Watchdog Period       = (IWDT Clock Divider) ∗ (IWDT Period Count) / 32768Hz
+    *                         = `stat.clockDivider` * 2^`stat.periodCount` / 32768Hz = `stat.periodCalculated`
+    */
+    DL_IWDT_setClockDivider(`instName`, DL_IWDT_CLOCK_DIVIDE_`stat.clockDivider`);
+    DL_IWDT_setTimerPeriod(`instName`, DL_IWDT_TIMER_PERIOD_`stat.periodCount`_BITS);
+
+    % if(stat.enableFreeRun) {
+    /* Enables the IWDT to continue counting during a debug state */
+    DL_IWDT_enableFreeRun(`instName`);
+    % }
+    % if(stat.enableWriteProtect) {
+    DL_IWDT_enableWriteProtect(`instName`);
+    % }
+    DL_IWDT_enableModule(`instName`);
+}
+% }

@@ -1,0 +1,164 @@
+%%{
+/*
+ * Copyright (c) 2022, Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== SYSCTL.Board.c.xdt ========
+ */
+
+    let Common = system.getScript("/ti/driverlib/Common.js");
+    let content = args[0]; // passed by SYSCTLclockTree.Board.c.xdt
+
+    /* shorthand names for some common references in template below */
+    // since sysctl is static we don't use the inst variable
+
+    switch(content){
+        case "Config":
+            printConfig();
+            break;
+        case "Call":
+            printCall();
+            break;
+        default:
+            /* do nothing */
+            return;
+            break;
+    }
+
+%%}
+% /* SYSPLL Config */
+% function printConfig() {
+%%{ /* Helper function for PLL using Clock Tree */
+
+    let mod = system.modules["/ti/clockTree/divider.js"];
+
+    let pllClk0Inst = _.find(mod.$instances, ['$name', 'PLL_CLK0_DIV']);
+    let pllClk1Inst = _.find(mod.$instances, ['$name', 'PLL_CLK1_DIV']);
+    let pllClk2XInst = _.find(mod.$instances, ['$name', 'PLL_CLK2X_DIV']);
+    let pDivInst = _.find(mod.$instances, ['$name', 'PLL_PDIV']);
+
+    mod = system.modules["/ti/clockTree/multiplier.js"];
+    let qDivInst = _.find(mod.$instances, ['$name', 'PLL_QDIV']);
+
+    mod = system.modules["/ti/clockTree/mux.js"];
+    let inMuxInst = _.find(mod.$instances, ['$name', 'SYSPLLMUX']);
+    let hsclkMuxInst = _.find(mod.$instances, ['$name', 'HSCLKMUX']);
+
+    if(_.isUndefined(pllClk0Inst) || _.isUndefined(pllClk1Inst) ||
+       _.isUndefined(pllClk2XInst) || _.isUndefined(pDivInst) ||
+       _.isUndefined(qDivInst) || _.isUndefined(inMuxInst) ||
+       _.isUndefined(hsclkMuxInst)) {
+        throw 'Not all PLL elements are defined appropriately';
+        return;
+    }
+
+    let pllEnabled = pllClk0Inst.enable || pllClk1Inst.enable || pllClk2XInst.enable;
+    let printSYSPLL_config;
+
+    if(pllEnabled){
+
+    // based off of output of PDiv (which is input freq/Pdiv)
+    let inValue = pDivInst[pDivInst.$ipInstance.outPins[0].name];
+    let inputFrequencyRangeStr = "";
+    if(inValue >= 32){
+        inputFrequencyRangeStr = "DL_SYSCTL_SYSPLL_INPUT_FREQ_32_48_MHZ";
+    } else if (inValue >= 16) {
+        inputFrequencyRangeStr = "DL_SYSCTL_SYSPLL_INPUT_FREQ_16_32_MHZ";
+    } else if (inValue >= 8) {
+        inputFrequencyRangeStr = "DL_SYSCTL_SYSPLL_INPUT_FREQ_8_16_MHZ";
+    } else { // >= 4
+        inputFrequencyRangeStr = "DL_SYSCTL_SYSPLL_INPUT_FREQ_4_8_MHZ";
+    }
+
+    let clk2xDivValue = pllClk2XInst.divideValue - 1;
+    let clk1DivValue = (pllClk1Inst.divideValue)/2 - 1;
+    let clk0DivValue = (pllClk0Inst.divideValue)/2 - 1;
+    let pllConf = ``;
+
+    // determine inputFrequency Range
+    pllConf += `.inputFreq              = ${inputFrequencyRangeStr},\n\t`;
+
+    pllConf += `.rDivClk2x              = ${clk2xDivValue},\n\t`;
+    pllConf += `.rDivClk1               = ${clk1DivValue},\n\t`;
+    pllConf += `.rDivClk0               = ${clk0DivValue},\n\t`;
+
+    let clk2xEn = (pllClk2XInst.enable) ? "ENABLE": "DISABLE";
+    let clk1En = (pllClk1Inst.enable) ? "ENABLE": "DISABLE";
+    let clk0En = (pllClk0Inst.enable) ? "ENABLE": "DISABLE";
+    pllConf += `.enableCLK2x            = DL_SYSCTL_SYSPLL_CLK2X_${clk2xEn},\n\t`;
+    pllConf += `.enableCLK1             = DL_SYSCTL_SYSPLL_CLK1_${clk1En},\n\t`;
+    pllConf += `.enableCLK0             = DL_SYSCTL_SYSPLL_CLK0_${clk0En},\n\t`;
+
+    //let mclkSourceFromPLL = (stat.HSCLKSource).replace(/[a-zA-Z]+/, "");
+    let mclkSource = "CLK0";
+    if(_.endsWith(hsclkMuxInst.inputSelect, "SYSPLL2X")){
+        mclkSource = "CLK2X";
+    }
+    pllConf += `.sysPLLMCLK             = DL_SYSCTL_SYSPLL_MCLK_${mclkSource},\n\t`;
+    let syspllSource = inMuxInst.inputSelect.replace("SYSPLLMUX_","");
+    if(_.startsWith(syspllSource,"z")) { syspllSource =  _.trimStart(syspllSource,"z"); }
+    pllConf += `.sysPLLRef              = DL_SYSCTL_SYSPLL_REF_${syspllSource},\n\t`;
+
+    pllConf += `.qDiv                   = ${qDivInst.multiplyValue - 1},\n\t`;
+    pllConf += `.pDiv                   = DL_SYSCTL_SYSPLL_PDIV_${pDivInst.divideValue}`;
+
+    printSYSPLL_config = pllConf;
+
+    } // if pllEnabled
+
+%%}
+%   if (printSYSPLL_config){
+static const DL_SYSCTL_SYSPLLConfig gSYSPLLConfig = {
+    `printSYSPLL_config`
+};
+
+%   }
+% } // print config
+%
+%
+%
+% function printCall() {
+%%{
+    let mod = system.modules["/ti/clockTree/divider.js"];
+    let pllClk2XInst = _.find(mod.$instances, ['$name', 'PLL_CLK2X_DIV']);
+    let pllClk0Inst = _.find(mod.$instances, ['$name', 'PLL_CLK0_DIV']);
+    let pllClk1Inst = _.find(mod.$instances, ['$name', 'PLL_CLK1_DIV']);
+    if(_.isUndefined(pllClk0Inst) || _.isUndefined(pllClk1Inst) || _.isUndefined(pllClk2XInst)) {
+        throw 'Not all PLL elements are defined appropriately';
+    }
+    let pllEnabled = pllClk0Inst.enable || pllClk1Inst.enable || pllClk2XInst.enable;
+%%}
+%   if(pllEnabled){
+    DL_SYSCTL_configSYSPLL((DL_SYSCTL_SYSPLLConfig *) &gSYSPLLConfig);
+%   }
+% } // function printCall

@@ -1,0 +1,21 @@
+[{
+    "id": "MSPM0-SDK",
+    "name": "MSPM0 SDK",
+    "version": "2.01.00.03",
+    "type": "software",
+    "image": "",
+    "description": "<p>The MSPM0 SDK provides the ultimate collection of software, tools and documentation to accelerate the development of applications for the MSPM0 MCU platform. The software is designed for optimal performance and memory utilization, providing a consistent and cohesive experience with a wide variety of drivers, libraries and easy-to-use examples under a single software package.</p>",
+    "dependencies": [{
+        "packageId": "arm.gnu",
+        "version": "9.2.1",
+        "require" : "mandatory"
+    },
+    {
+        "packageId": "sysconfig",
+        "version": "1.19.0",
+        "require": "mandatory"
+    }],
+    "devices": ["$(MSPM0_all_devices)"],
+    "devtools": ["$(MSPM0_all_devtools)"],
+    "metadataVersion": "3.1.0"
+}]

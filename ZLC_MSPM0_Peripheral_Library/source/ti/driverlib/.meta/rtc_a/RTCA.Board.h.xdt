@@ -1,0 +1,99 @@
+%%{
+/*
+ * Copyright (c) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/*
+ *  ======== RTCA.Board.h.xdt ========
+ */
+
+    /* args[] passed by /ti/driverlib/templates/Board.h.xdt */
+    let RTC_A = args[0];
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let stat = RTC_A.$static;
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+%%}
+
+% function printDefine() {
+/* Defines for RTC_A */
+%       let gpioStr = "GPIO"
+% /* RTC_OUT pin */
+%       let rtcOutPinName = "rtcaOut"+"Pin";
+%       let rtcOutPackagePin = stat.peripheral[rtcOutPinName].$solution.packagePinName;
+%       let rtcOutPinCM = Common.getPinCM(rtcOutPackagePin,stat,"RTC_A_OUT");
+%       let rtcOutGpioName = system.deviceData.devicePins[rtcOutPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%       let rtcOutPort = "("+Common.getGPIOPortMultiPad(rtcOutPackagePin,stat,"RTC_A_OUT")+")";
+%       let rtcOutGpioPin = Common.getGPIONumberMultiPad(rtcOutPackagePin,stat,"RTC_A_OUT");
+% let rtcOutPortStr = "#define GPIO_RTC_A_RTCOUT_PORT";
+`rtcOutPortStr.padEnd(40," ")+rtcOutPort.padStart(40, " ")`
+% let rtcOutPinStr = "#define GPIO_RTC_A_RTCOUT_PIN";
+% let rtcOutPinStr2 = "(DL_GPIO_PIN_"+rtcOutGpioPin+")";
+`rtcOutPinStr.padEnd(40," ")+rtcOutPinStr2.padStart(40," ")`
+% let rtcOutIOmuxStr = "#define GPIO_RTC_A_IOMUX_RTCOUT";
+%   let rtcOutIOmuxStr2 = "(IOMUX_PINCM"+rtcOutPinCM.toString()+")";
+`rtcOutIOmuxStr.padEnd(40," ")+rtcOutIOmuxStr2.padStart(40," ")`
+% let rtcOutIOmuxStrFunc = "#define GPIO_RTC_A_IOMUX_RTCOUT_FUNC";
+% let rtcOutIOmuxStrFunc2 = "(IOMUX_PINCM"+rtcOutPinCM.toString()+"_PF_LFSS_RTC_OUT)";
+`rtcOutIOmuxStrFunc.padEnd(40," ")+rtcOutIOmuxStrFunc2.padStart(40," ")`
+% // add handler and IRQn number
+% let irqHandlerStr = "#define " + "RTC_A" + "_INST_IRQHandler"
+% let irqHandlerStr2 = "LFSS" + "_IRQHandler";
+% let irqnStr = "#define " + "RTC_A" + "_INST_INT_IRQN";
+% let irqnStr2 = "(" + "LFSS" + "_INT_IRQn)";
+`irqHandlerStr.padEnd(40," ")+irqHandlerStr2.padStart(40," ")`
+`irqnStr.padEnd(40," ")+irqnStr2.padStart(40," ")`
+%       /* Create defines for event publisher channels */
+%       if ((stat.pubChanID != 0)) {
+%           let eventPubChannelStr = "#define RTC_A_PUB_CH";
+%           let eventPubChannelStr2 = "(" + stat.pubChanID + ")";
+`eventPubChannelStr.padEnd(40, " ") + eventPubChannelStr2.padStart(40, " ")`
+%       }
+%} //printDefine()
+%
+% function printDeclare() {
+void SYSCFG_DL_RTC_A_init(void);
+% }

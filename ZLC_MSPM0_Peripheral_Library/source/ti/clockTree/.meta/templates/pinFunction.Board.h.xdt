@@ -1,0 +1,129 @@
+%%{
+/*
+ * Copyright (c) 2022 Texas Instruments Incorporated - http://www.ti.com
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+ /*
+ *  ======== pinFunction.Board.h.xdt ========
+ */
+
+    let PINFUNC = args[0]; /* passed by /ti/driverlib/templates/Board.c.xdt */
+    let content = args[1];
+
+    /* get ti/drivers common utility functions */
+    let Common = system.getScript("/ti/driverlib/Common.js");
+
+    let instances = PINFUNC.$instances;
+    let gpioStr = "GPIO"
+
+    switch(content) {
+        case "Define":
+            printDefine();
+            break;
+        case "Declare":
+            printDeclare();
+            break;
+        default:
+            /* do nothing */
+            return;
+    }
+
+%%}
+%
+% function printDefine() {
+%    for(let inst of instances){
+%       if(inst.enable){
+%           let prefix = inst.$name;
+%           if(!_.endsWith(inst.$name,"EXT")){ // XTAL, do in pin and out pin
+%               if (["HFXT", "LFXT"].includes(prefix)){ prefix = _.trimEnd(prefix,"T")}
+%           } else {
+%               prefix = _.trimEnd(prefix,"EXT"); // trim prefix to appropriate size
+%           }
+%               let string = prefix;
+%               let Pin1_Name = _.lowerCase(prefix) + "InPin";
+%               if(prefix == "ROSC") { Pin1_Name = "roscPin"; }
+%               if(prefix == "CLKOUT") { Pin1_Name = "clkOutPin";}
+%               if(_.endsWith(prefix, "CLK")) { string = prefix + "IN"; }
+%               if(prefix == "FCC") { string = "FCC_IN"; }
+%               let Pin1_PackagePin = inst.peripheral[Pin1_Name].$solution.packagePinName;
+%%{
+                let postfix = "";
+                if(_.endsWith(prefix, "CLK")) { postfix = "IN"; }
+                else if(prefix == "FCC") { postfix = "_IN"; }
+                let pinInterfaceName = prefix+postfix; // TODO: add logic to get the pinInterfaceName extracted from the prefix and the given conditions
+%%}
+%               let Pin1_CM = Common.getPinCM(Pin1_PackagePin,inst,pinInterfaceName);
+%               let Pin1_GpioName = system.deviceData.devicePins[Pin1_PackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%               let Pin1_Port = Common.getGPIOPortMultiPad(Pin1_PackagePin,inst,pinInterfaceName);
+%               let Pin1_GpioPin = Common.getGPIONumberMultiPad(Pin1_PackagePin,inst,pinInterfaceName);
+%               if (["HFX", "LFX"].includes(prefix)) {  string =  prefix + "T" }
+%               let Pin1_PortStr = "#define "+gpioStr+"_"+string+"_PORT";
+%               if (["HFX", "LFX"].includes(prefix)) {  string =  prefix + "IN" }
+`Pin1_PortStr.padEnd(40," ")+Pin1_Port.padStart(40, " ")`
+%               let Pin1Str = "#define "+gpioStr+"_"+string+"_PIN";
+%               let Pin1Str2 = "DL_GPIO_PIN_"+Pin1_GpioPin;
+`Pin1Str.padEnd(40," ")+Pin1Str2.padStart(40," ")`
+%               let InIOmuxStr = "#define "+gpioStr+"_"+string+"_IOMUX";
+%               let InIOmuxStr2 = "(IOMUX_PINCM"+Pin1_CM.toString()+")";
+`InIOmuxStr.padEnd(40," ")+InIOmuxStr2.padStart(40," ")`
+%
+%
+%           if(["HFXT","LFXT"].includes(inst.$name)){ // XTAL, do in pin and out pin
+%              // do out pin (two pins for XTAL, only one for digital ins)
+%              let pinInterfaceName = prefix+"OUT";
+%              let OutPinName = _.lowerCase(prefix) + "OutPin";
+%              let OutPackagePin = inst.peripheral[OutPinName].$solution.packagePinName;
+%              let OutPinCM = Common.getPinCM(OutPackagePin,inst,pinInterfaceName);
+%              let OutGpioName = system.deviceData.devicePins[OutPackagePin].mux.muxSetting[0].peripheralPin.peripheralName;
+%              let OutGpioPin = Common.getGPIONumberMultiPad(OutPackagePin,inst,pinInterfaceName);
+%              let OutPinStr = "#define "+gpioStr+"_"+prefix+"OUT_PIN";
+%              let OutPinStr2 = "DL_GPIO_PIN_"+OutGpioPin;
+`OutPinStr.padEnd(40," ")+OutPinStr2.padStart(40," ")`
+%              let OutIOmuxStr = "#define "+gpioStr+"_"+prefix+"OUT_IOMUX";
+%              let OutIOmuxStr2 = "(IOMUX_PINCM"+OutPinCM.toString()+")";
+`OutIOmuxStr.padEnd(40," ")+OutIOmuxStr2.padStart(40," ")`
+%           } else if(prefix != "ROSC") {
+%               // in this case it's necessary to have an additional PIN func
+%               let FuncStr = "#define " + gpioStr + "_"+ string +"_IOMUX_FUNC";
+%               if(string === "CLKOUT") { string = "CLK_OUT"; }
+%               let FuncStr2 = "IOMUX_PINCM" + Pin1_CM.toString() + "_PF_SYSCTL_" + string;
+`FuncStr.padEnd(40, " ")+FuncStr2.padStart(40, " ")`
+%           }
+%       } // if inst.enable
+%    } // for (inst of instances)
+%
+%
+% } // function printDefine()
+
+% function printDeclare() {
+
+% } // function printDeclare
