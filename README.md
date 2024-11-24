@@ -3,13 +3,13 @@
 
 ​        This is an open source peripheral library developed in the KEIL development environment. It can be used to drive MSPM0G3507 microcontroller.  It is based on TI's official SDK and some third-party driver code. It can represent our work in the 2024 Chinese Undergraduate Electronic Design Competition (Question H) and we won the First Prize!. And our introductory video will be online soon.
 
-​                                                                                                                                                  ————SDU-ZLC Electronic Design Competition Group
+​                                                                        ————SDU-ZLC Electronic Design Competition Group
 
-​                                                                                                                                                                                                            2024.11.20
+​                                                                                                    2024.11.20
 
 ### Ⅱ. Hardware Preparation
 
-![hardware](images\hardware.jpg) 
+![hardware](images/hardware.jpg) 
 
 ​       In this project,we used the MSPM0G3507 Launchpad development board. If you want to enter the undergraduate Electronic Design Competition, this development board can be [applied for free](https://www.nuedc-training.com.cn/index/evm/index_2024). In order to make it easier for everyone to develop and use it,  we have designed its expansion board. It can provide a common interface to drive car models. [If you want to learn more, please click here.](http://oshwhub.com/hurricanchen/zlc_-dian-sai-mspm0g3507-launchpad-kuo-zhan-ban)
 
