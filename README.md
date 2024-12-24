@@ -1,7 +1,7 @@
 # ZLC_MSPM0_Peripheral_Library
 ### Ⅰ. Introduction
 
-&emsp;&emsp;​This is an open source peripheral library developed in the KEIL development environment. It can be used to drive MSPM0G3507 microcontroller.  It is based on TI's official SDK and some third-party driver code. It can represent our work in the 2024 Chinese Undergraduate Electronic Design Competition (Question H) and we won the First Prize!. And our introductory video will be online soon.
+&emsp;&emsp;This is an open source peripheral library developed in the KEIL development environment. It can be used to drive MSPM0G3507 microcontroller.  It is based on TI's official SDK and some third-party driver code. It can represent our work in the 2024 Chinese Undergraduate Electronic Design Competition (Question H) and we won the First Prize!. And our [introductory video is already online](https://www.bilibili.com/video/BV1UJzgY7E3s/).
 
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;           ————SDU-ZLC Electronic Design Competition Group
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;2024.11.20
@@ -10,7 +10,7 @@
 
 ![hardware](images/hardware.jpg) 
 
-​&emsp;&emsp;In this project,we used the MSPM0G3507 Launchpad development board. If you want to enter the undergraduate Electronic Design Competition, this development board can be [applied for free](https://www.nuedc-training.com.cn/index/evm/index_2024). In order to make it easier for everyone to develop and use it,  we have designed its expansion board. It can provide a common interface to drive car models. [If you want to learn more, please click here.](http://oshwhub.com/hurricanchen/zlc_-dian-sai-mspm0g3507-launchpad-kuo-zhan-ban)
+&emsp;&emsp;In this project,we used the MSPM0G3507 Launchpad development board. If you want to enter the undergraduate Electronic Design Competition, this development board can be [applied for free](https://www.nuedc-training.com.cn/index/evm/index_2024). In order to make it easier for everyone to develop and use it,  we have designed its expansion board. It can provide a common interface to drive car models. [If you want to learn more, please click here.](http://oshwhub.com/hurricanchen/zlc_-dian-sai-mspm0g3507-launchpad-kuo-zhan-ban)
 
 ​       Here are our hardware connection：
 
@@ -80,10 +80,10 @@
 | ---------------------------------- | -------------- |
 | GPIO                               | PB13           |
 
-​&emsp;&emsp;Please make sure your development environment is configured before compiling. For  details about the configuration, you can refer to **KEIL_MSPM0_Environment_Config.pdf** in folder Development_Document. And Our software design can be found in the **Design_Report(2024_Question_H).pdf**.
+&emsp;&emsp;Please make sure your development environment is configured before compiling. For  details about the configuration, you can refer to **KEIL_MSPM0_Environment_Config.pdf** in folder Development_Document. And Our software design can be found in the **Design_Report(2024_Question_H).pdf**.
 
 ### Ⅲ. Acknowledgements
 
-​&emsp;&emsp;We are very grateful to [TI](https://www.ti.com.cn/) and [DarWin](https://darwinlearns.com/) for the invitation. And we also thank the Smart-Car-Lab of Shandong University (Weihai) for providing us with the competition platform. **You don't have to be great to start,but you have to start to be great.**
+&emsp;&emsp;We are very grateful to [TI](https://www.ti.com.cn/) and [DarWin](https://darwinlearns.com/) for the invitation. And we also thank the Smart-Car-Lab of Shandong University (Weihai) for providing us with the competition platform. **You don't have to be great to start,but you have to start to be great.**
 
 ​                                                                                                                            
