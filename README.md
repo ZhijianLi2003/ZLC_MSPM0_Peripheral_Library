@@ -1,4 +1,17 @@
-# ZLC_MSPM0_Peripheral_Library
+
+
+<h1 align="center">  ZLC_MSPM0_Peripheral_Library </h1>
+
+<h5 align="center">
+  
+[![](https://img.shields.io/badge/Technical_report-pdf-yellow)](https://github.com/ZhijianLi2003/ZLC_MSPM0_Peripheral_Library/blob/main/Design_Report(2024_Question_H).pdf)
+[![](https://img.shields.io/badge/Bilibili-Video-pink)](https://www.bilibili.com/video/BV1UJzgY7E3s/)
+[![](https://img.shields.io/badge/OSHW_Hub-PCB-orange)](https://oshwhub.com/hurricanchen/zlc_-dian-sai-mspm0g3507-launchpad-kuo-zhan-ban)
+[![](https://img.shields.io/badge/达尔闻-山大威海电赛小组-blue)](https://mp.weixin.qq.com/s/myNNyuCjdw6GLClBg8NKMQ)
+
+</h5>
+
+  
 ### Ⅰ. Introduction
 
 &emsp;&emsp;This is an open source peripheral library developed in the KEIL development environment. It can be used to drive MSPM0G3507 microcontroller.  It is based on TI's official SDK and some third-party driver code. It can represent our work in the 2024 Chinese Undergraduate Electronic Design Competition (Question H) and we won the First Prize!. And our [introductory video is already online](https://www.bilibili.com/video/BV1UJzgY7E3s/).
